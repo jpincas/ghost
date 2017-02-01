@@ -1,0 +1,29 @@
+{{ template "header-top.html" . }} {{ template "header-bottom.html" . }} {{ $table := .table }}
+
+{{ template "cart.html" . }}
+
+<section class="section">
+    <div class="container">
+        <div class="heading">
+            <h1 class="title">{{ .category.title }}</h1>
+            <h2 class="subtitle">
+                {{ .category.subtitle }}
+            </h2>
+            <p>{{ .category.description }}</p>
+        </div>
+        <hr />
+        <div class="columns is-multiline">
+            {{ range .records }}
+            <div class="column is-one-quarter">
+                <img src="http://placehold.it/350x150">
+                <!--If you had your image at .image, then you'd have this:
+                <img src="/img/{{ .image }}?width=300" />-->
+                <h1 class="title is-4"><a href="/site/{{ $table }}/{{ .slug }}">{{ .title }}</a></h1>
+                <button class="button is-primary" onClick="addToList('{{ .title }}')">Add to List</button>
+            </div>
+            {{ end }}
+        </div>
+    </div>
+</section>
+
+{{ template "footer.html" . }}
