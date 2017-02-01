@@ -53,7 +53,7 @@ The following is a list of available command line flags when starting the server
 | -createadminwithemail | Bootstrap the installation with an admin user with this email address |          |                |
 | -web                  | Whether to generate a website or not     |          | TRUE           |
 | -siteslug             | The URL slug for the public facing website |          | "site"         |
-| -privateslug          | The URL slug for the authenticated HTML api |          | "Private"      |
+| -privateslug          | The URL slug for the authenticated HTML api |          | "private"      |
 | -smtphost             | SMTP server for outgoing emails          |          |                |
 | -smtpuser             | SMTP authentication username             |          |                |
 | -smtppw               | SMTP authentication password             |          |                |
@@ -66,3 +66,5 @@ SMTP settings for outgoing email are not strictly required, but the login system
 
 If complete credentials are provided, the system will ping the server to test the connection.  If the ping fails, startup will exit.
 
+###Licence
+**Build freely with EcoSystem**.  The EcoSystem Server and The EcoSystem Admin Panel App are licensed under Apache 2.0.  The content on the [EcoSystem website] (http://www.ecosystem.software) is licensed under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/).  Neither licence grants permission to use the trade names, trademarks, service marks, or product names of EcoSystem Software LLP, including the EcoSystem logo and symbol, except as required for reasonable and customary use.
