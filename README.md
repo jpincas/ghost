@@ -51,7 +51,6 @@ The following is a list of available command line flags when starting the server
 | -pguser               | Username of database superuser with which to connect to the database for initial setup | YES      |                |
 | -secret               | The secret used to sign JWTs             | YES      |                |
 | -createadminwithemail | Bootstrap the installation with an admin user with this email address |          |                |
-| -web                  | Whether to generate a website or not     |          | TRUE           |
 | -siteslug             | The URL slug for the public facing website |          | "site"         |
 | -privateslug          | The URL slug for the authenticated HTML api |          | "private"      |
 | -smtphost             | SMTP server for outgoing emails          |          |                |

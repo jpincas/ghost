@@ -26,6 +26,16 @@ import (
 
 func main() {
 
+	///////////////////////////////////
+	// Static Server for Admin Panel //
+	///////////////////////////////////
+
+	adminServer := gin.Default()
+
+	adminServer.StaticFS("/", http.Dir("ecosystem-admin/build/unbundled/"))
+
+	go adminServer.Run(":8080")
+
 	////////////////
 	// Web Server //
 	////////////////
