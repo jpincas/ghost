@@ -23,8 +23,10 @@ import (
 )
 
 //Command line arguments
-var pgUser = flag.String("pguser", "", "The Postgres superuser used for initial configuration")
-var pgServer = flag.String("pgserver", "localhost:5432", "The location of the Postgres server")
+var pgUser = flag.String("pguser", "postgres", "The Postgres superuser used for initial configuration")
+var pgPW = flag.String("pgpw", "", "The Postgres password")
+var pgPort = flag.String("pgport", "5432", "The Postgres password")
+var pgServer = flag.String("pgserver", "localhost", "The location of the Postgres server")
 var pgName = flag.String("pgname", "", "The name of the Postgres DB to connect to")
 var pgDisableSSL = flag.Bool("pgdisablessl", false, "Postgres connection SSL mode")
 var adminEmail = flag.String("createadminwithemail", "", "The email address of an admin user to create")
@@ -62,13 +64,7 @@ func dbSetup() {
 		log.Fatal("No Postgres database name specified")
 	}
 
-	//Second, check to make sure a Postgres superuser has been specified.
-	//There is no sensible defaul prodivded for this setting, server will exit of nothing provided
-	if *pgUser == "" {
-		log.Fatal("No Postgres superuser specified")
-	}
-
-	//Third, check to make sure a secret has been provided
+	//Second, check to make sure a secret has been provided
 	//No default provided as a security measure, server will exit of nothing provided
 	if *secret == "" {
 		log.Fatal("No signing secret provided")
@@ -79,14 +75,19 @@ func dbSetup() {
 	/////////////////////////////////
 
 	//Establish a temporary connection as the super user
-	dbTempConnection := "postgres://" + *pgUser + "@" + *pgServer + "/" + *pgName
+	//Set the password string if a password has been supplied
+	var pwString = ""
+	if *pgPW != "" {
+		pwString = ":" + *pgPW
+	}
+	dbTempConnection := "postgres://" + *pgUser + pwString + "@" + *pgServer + ":" + *pgPort + "/" + *pgName
 
 	//If disabled SSL flag specified,
 	if *pgDisableSSL {
 		dbTempConnection += "?sslmode=disable"
 	}
 
-	//Initialise databse
+	//Initialise database
 	dbTemp, _ := sql.Open("postgres", dbTempConnection)
 	//Ping database to check connectivity
 	if err := dbTemp.Ping(); err != nil {
@@ -113,6 +114,8 @@ func dbSetup() {
 
 	//Create the server role - the only thing it can do is switch to other roles
 	dbTemp.Exec("CREATE ROLE server NOINHERIT LOGIN;")
+	dbTemp.Exec(fmt.Sprintf("ALTER ROLE server WITH PASSWORD '%s';", *secret))
+	dbTemp.Exec("ALTER ROLE server VALID UNTIL 'infinity';")
 	//Create other built in roles: anon, web and admin
 	dbTemp.Exec("CREATE ROLE anon;")
 	dbTemp.Exec("CREATE ROLE admin BYPASSRLS;")
@@ -136,13 +139,15 @@ func dbSetup() {
 
 	//Establish the permanent connect with built in role Server
 	//Defualt looks like: postgres://server@localhost:5432/PGNAME
-	dbConnection := "postgres://server@" + *pgServer + "/" + *pgName
+	dbConnection := "postgres://server:" + *secret + "@" + *pgServer + ":" + *pgPort + "/" + *pgName
 
 	//If disabled SSL flag specified,
 	//Defualt looks like: postgres://server@localhost:5432/PGNAME?sslmode=disable
 	if *pgDisableSSL {
 		dbConnection += "?sslmode=disable"
 	}
+
+	log.Println("Attempting to connect to ", dbConnection)
 
 	//Initialise databse
 	db, _ = sql.Open("postgres", dbConnection)

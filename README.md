@@ -46,9 +46,11 @@ The following is a list of available command line flags when starting the server
 | Flag                  | Function                                 | Required | Default        |
 | --------------------- | ---------------------------------------- | -------- | -------------- |
 | -pgname               | The name of the Postgres database to connect to | YES      |                |
-| -pgserver             | The server address for the Postgres connection |          | Localhost:5432 |
+| -pgserver             | The server address for the Postgres connection |          | localhost |
+| -pgport               | The server port for the Postgres connection |          | 5432 |
 | -pgdisablessl         | Disbles SSL mode in the Postgres connection (for development) |          | FALSE          |
-| -pguser               | Username of database superuser with which to connect to the database for initial setup | YES      |                |
+| -pguser               | Username of database superuser with which to connect to the database for initial setup |       | postgres               |
+| -pgpw                 | Postgres connection password |          | localhost |
 | -secret               | The secret used to sign JWTs             | YES      |                |
 | -createadminwithemail | Bootstrap the installation with an admin user with this email address |          |                |
 | -siteslug             | The URL slug for the public facing website |          | "site"         |
