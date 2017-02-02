@@ -35,8 +35,8 @@ $ ecosystem-server -pgname=testdatabase -pgdisablessl -secret=mysecret -pguser=e
 *Optional* To get started quickly with your EcoSystem installation, copy our default web and email templates, css and starter Javascript into your new server folder.  Presuming you are still in the folder:
 
 ```
-$ cp -r $GOPATH/src/github.com/ecosystemsoftware/ecosystem-server/public/* ./public
-$ cp -r $GOPATH/src/github.com/ecosystemsoftware/ecosystem-server/templates/* ./templates
+$ cp -r $GOPATH/src/github.com/ecosystemsoftware/ecosystem-server/public/ ./public
+$ cp -r $GOPATH/src/github.com/ecosystemsoftware/ecosystem-server/templates/ ./templates
 ```
 
 ## Command Line Flags
@@ -59,6 +59,8 @@ The following is a list of available command line flags when starting the server
 | -smtppw               | SMTP authentication password             |          |                |
 | -smtpfrom             | 'From' address for outgoing emails       |          |                |
 | -emailFrom            | 'From' name for outgoing emails          |          | =-smtpfrom     |
+| -demomode           | Run server in demo mode or not. Demo mode basically bypasses login. See below.      |          | FALSE  |
+| -demorole           | Role to use when running in demo mode     |          | "admin"    |
 
 ## SMTP Configuration
 
@@ -66,5 +68,10 @@ SMTP settings for outgoing email are not strictly required, but the login system
 
 If complete credentials are provided, the system will ping the server to test the connection.  If the ping fails, startup will exit.
 
-###Licence
-**Build freely with EcoSystem**.  The EcoSystem Server and The EcoSystem Admin Panel App are licensed under Apache 2.0.  The content on the [EcoSystem website] (http://www.ecosystem.software) is licensed under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/).  Neither licence grants permission to use the trade names, trademarks, service marks, or product names of EcoSystem Software LLP, including the EcoSystem logo and symbol, except as required for reasonable and customary use.
+### Demo mode
+
+As a convenience, the server can be run in *demo mode*.  In this mode, any requests to log in will bypass email and magic code checking (i.e. anything can be entered) and return a JWT encoded with a random UUID.  Subsequent calls to the API with this JWT will be authorised with the role specified with the flag `-demorole` which defaults to "admin".
+
+### Licence
+
+**Build freely with EcoSystem**.  The EcoSystem Server and The EcoSystem Admin Panel App are licensed under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).  The content on the [EcoSystem website] (http://www.ecosystem.software) is licensed under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/).  Neither licence grants permission to use the trade names, trademarks, service marks, or product names of EcoSystem Software LLP, including the EcoSystem logo and symbol, except as required for reasonable and customary use.

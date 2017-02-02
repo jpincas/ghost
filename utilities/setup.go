@@ -33,6 +33,8 @@ var CreateWebsite = flag.Bool("web", true, "Create website or not")
 var PublicSiteSlug = flag.String("siteslug", "site", "The initial URL slug for the public site")
 var PrivateSiteSlug = flag.String("privateslug", "private", "The initial URL slug for the private site")
 var secret = flag.String("secret", "", "The secret used to sign JWTs")
+var demoMode = flag.Bool("demomode", false, "Run the server in demo mode, allowing easy login")
+var demoRole = flag.String("demorole", "admin", "The default role for demo mode")
 
 //email
 var smtpHost = flag.String("smtphost", "", "SMTP server address for outgoing email")
