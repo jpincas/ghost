@@ -53,12 +53,6 @@ var AuthMiddleware = &jwt.GinJWTMiddleware{
 			return fmt.Sprint(uuid.NewV4()), true
 		}
 
-		//For Demo Mode ONLY
-		if *demoMode {
-			//Return a random ID
-			return fmt.Sprint(uuid.NewV4()), true
-		}
-
 		//Otherwise attempt to login with the given email address
 		//Lookup the email in the users table
 		var id string
@@ -66,6 +60,14 @@ var AuthMiddleware = &jwt.GinJWTMiddleware{
 		//If the user exists in the database, the email is in the magic cache and the password supplied matches the magic code, then
 		//return the JWT with the id encoded
 		magicCode, emailIsInCache := magicCodeCache.Get(username)
+
+		//For Demo Mode ONLY - bypass the magic code
+		//checking and just send back the id
+		//To use: just create a user with the role you want (e.g. admin)
+		//and tell demo users to log in with that email and password 123456
+		if *demoMode && err == nil && password == "123456" {
+			return id, true
+		}
 
 		if emailIsInCache && err == nil && password == magicCode {
 			//delete the email/magic code combo in the cache so it can't be used again
@@ -83,14 +85,6 @@ var AuthMiddleware = &jwt.GinJWTMiddleware{
 		//attach the specified role.  If nothing is found, we default to anon
 		//Beyond this, we do not know anything about database privelages - this is handled
 		//further down the line
-
-		//For Demo Mode ONLY
-		if *demoMode {
-			//Return a random ID
-			c.Set("role", *demoRole)
-			c.Set("userID", userID)
-			return true
-		}
 
 		var role string
 		//Search the user table for the user's role

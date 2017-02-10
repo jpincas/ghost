@@ -49,10 +49,10 @@ var db *sql.DB
 
 func init() {
 
-	flag.Parse()
-	dbSetup()
-	folderSetup()
-	emailSetup()
+	// flag.Parse()
+	// dbSetup()
+	// folderSetup()
+	// emailSetup()
 
 }
 

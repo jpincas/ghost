@@ -2,6 +2,7 @@
 // EcoSystem Javascript //
 //////////////////////////
 
+
 //As soon as jq is registered, log in anonymously if not already
 $(function () {
     //Check to see if we are already anonymously logged in
@@ -21,7 +22,7 @@ jQuery.extend({
             dataType: "json", //expect json back
             contentType: "application/json", //send as json
             processData: false, //don't encode as form
-            url: "http://localhost:3000/api" + params.endpoint,
+            url: EcoSystem.apiRoot + "/api" + params.endpoint,
             headers: {
                 "Authorization": "Bearer " + localStorage.getItem("token")
             }
@@ -34,7 +35,7 @@ jQuery.extend({
         return jQuery.ajax(jQuery.extend(params, {
             type: "DELETE",
             dataType: "json", //expect json back
-            url: "http://localhost:3000/api" + params.endpoint,
+            url: EcoSystem.apiRoot + "/api" + params.endpoint,
             headers: {
                 "Authorization": "Bearer " + localStorage.getItem("token")
             }
@@ -68,7 +69,7 @@ jQuery.extend({
             dataType: "json", //expect json back
             contentType: "application/json", //send as json
             processData: false, //don't encode as form
-            url: "http://localhost:3000/login",
+            url: EcoSystem.apiRoot + "/login",
             success: function (json) {
                 if (json.token) {
                     localStorage.setItem("token", json.token)
