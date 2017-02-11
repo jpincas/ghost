@@ -27,7 +27,6 @@ import (
 	eco "github.com/ecosystemsoftware/eco/utilities"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var isAdmin bool
@@ -80,12 +79,23 @@ func createDefaultConfigFile(cmd *cobra.Command, args []string) error {
 	c := eco.AskForConfirmation("This will overwrite any existing config.json. Do you with to proceed?")
 	if c {
 		config := eco.Config{
-			PgSuperUser:    "postgres",
-			PgDisableSSL:   false,
-			PgDBName:       "ecosystem",
-			ApiPort:        "1000",
-			WebsitePort:    "1001",
-			AdminPanelPort: "1002",
+			PgSuperUser:         "postgres",
+			PgDBName:            "ecosystem",
+			PgPort:              "5432",
+			PgServer:            "localhost",
+			PgDisableSSL:        false,
+			ApiPort:             "3000",
+			WebsitePort:         "3001",
+			AdminPanelPort:      "3002",
+			AdminPanelServeType: "unbundled",
+			PublicSiteSlug:      "site",
+			PrivateSiteSlug:     "private",
+			SmtpHost:            "smtp",
+			SmtpPort:            "25",
+			SmtpUserName:        "info@yourdomain.com",
+			SmtpFrom:            "info@yourdomain.com",
+			EmailFrom:           "Your Name",
+			JWTRealm:            "Your App Name",
 		}
 
 		configJSON, _ := json.MarshalIndent(config, "", "\t")
@@ -112,8 +122,7 @@ func createNewUser(cmd *cobra.Command, args []string) error {
 	// }
 
 	//Establish a temporary connection as the super user
-	db := eco.ConnectToDB(eco.GetDBConnectionString(viper.GetString("pgSuperUser"), pgPW, viper.GetString("pgServer"), viper.GetString("pgPort"), viper.GetString("pgDBName"), viper.GetBool("pgDisableSSL")))
-
+	db := eco.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
 	//Set to the default role
@@ -152,6 +161,7 @@ func createNewBundle(cmd *cobra.Command, args []string) error {
 	//Create the folder structure
 	err := os.MkdirAll("./"+args[0]+"/templates", os.ModePerm)
 	err = os.MkdirAll("./"+args[0]+"/images", os.ModePerm)
+	err = os.MkdirAll("./"+args[0]+"/public", os.ModePerm)
 
 	if err != nil {
 		log.Fatal("Could not complete folder setup: ", err.Error())

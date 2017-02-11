@@ -18,16 +18,18 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/lib/pq"
 )
 
-//dbErrorCodeToHTTPErrorCode is a helper to translate error codes from the database into meaningful HTTP codes
-func dbErrorCodeToHTTPErrorCode(dbCode pq.ErrorCode) (httpCode int) {
+//DBErrorCodeToHTTPErrorCode is a helper to translate error codes from the database into meaningful HTTP codes
+func DBErrorCodeToHTTPErrorCode(dbCode pq.ErrorCode) (httpCode int) {
 	switch {
 	case dbCode == "42501":
 		httpCode = http.StatusForbidden
@@ -40,9 +42,20 @@ func dbErrorCodeToHTTPErrorCode(dbCode pq.ErrorCode) (httpCode int) {
 	return httpCode
 }
 
-//checkTemplate looks for a specific template, if not, falls back to the default
+//RandomString generates a random string of int length
+func RandomString(strlen int) string {
+	rand.Seed(time.Now().UTC().UnixNano())
+	const chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+	result := make([]byte, strlen)
+	for i := 0; i < strlen; i++ {
+		result[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(result)
+}
+
+//CheckTemplate looks for a specific template, if not, falls back to the default
 //and if there is not defaul, returns false
-func checkTemplate(table string, listOrSingle string) (bool, string) {
+func CheckTemplate(table string, listOrSingle string) (bool, string) {
 
 	defaultName := listOrSingle + ".html"
 	templateName := table + "-" + defaultName
@@ -64,17 +77,17 @@ func checkTemplate(table string, listOrSingle string) (bool, string) {
 	return true, templateName
 }
 
-//hyphenToUnderscore replaces all hyphens in the string with underscores.
+//HyphensToUnderscores replaces all hyphens in the string with underscores.
 //This is so you can use pretty URLs with hyphens (as recommended by Google)
 //whilst still using underscores in DB table names - which means they don't have to be quoted all the time
 //https://support.google.com/webmasters/answer/76329?hl=en
-func hyphensToUnderscores(table string) string {
+func HyphensToUnderscores(table string) string {
 	return strings.Replace(table, "-", "_", -1)
 }
 
-//mapToValsAndCols iterates over the map resulting from binding a JSON request body
+//MapToValsAndCols iterates over the map resulting from binding a JSON request body
 //and creates cols and vals strings to be used in SQL query
-func mapToValsAndCols(r map[string]interface{}) (cols, vals string) {
+func MapToValsAndCols(r map[string]interface{}) (cols, vals string) {
 	//Iterate over the map and set the keys and values on the context
 	for k, v := range r {
 		cols = cols + k + ", "

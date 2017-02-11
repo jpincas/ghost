@@ -21,10 +21,10 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/ecosystemsoftware/eco/ecosql"
 	eco "github.com/ecosystemsoftware/eco/utilities"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var isInstallDemoData, isReinstall bool
@@ -70,12 +70,12 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 
 	if c {
 		//Establish a temporary connection as the super user
-		db := eco.ConnectToDB(eco.GetDBConnectionString(viper.GetString("pgSuperUser"), pgPW, viper.GetString("pgServer"), viper.GetString("pgPort"), viper.GetString("pgDBName"), viper.GetBool("pgDisableSSL")))
+		db := eco.SuperUserDBConfig.ReturnDBConnection("")
 		defer db.Close()
 
 		//Drop the schema
 		//If it doesn't exist, it won't be dropped - no big deal
-		db.Exec(fmt.Sprintf("DROP SCHEMA %s CASCADE;", args[0]))
+		db.Exec(fmt.Sprintf(ecosql.ToDropSchema, args[0]))
 
 		//Clean up the files
 		AppFs.RemoveAll("./templates/" + args[0])
@@ -110,7 +110,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	}
 
 	//Establish a temporary connection as the super user
-	db := eco.ConnectToDB(eco.GetDBConnectionString(viper.GetString("pgSuperUser"), pgPW, viper.GetString("pgServer"), viper.GetString("pgPort"), viper.GetString("pgDBName"), viper.GetBool("pgDisableSSL")))
+	db := eco.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
 	//Check for the presence of install.sql and attempt to read it
@@ -122,7 +122,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 
 		//Install the DB setup and logic
 		//Attempt to create a schema matching the bundle's name,
-		_, err := db.Exec(fmt.Sprintf("CREATE SCHEMA %s;", args[0]))
+		_, err := db.Exec(fmt.Sprintf(ecosql.ToCreateSchema, args[0]))
 
 		if err != nil {
 
@@ -134,12 +134,12 @@ func installBundle(cmd *cobra.Command, args []string) error {
 
 			//Set the search path to the bundle schema so that all SQL commands take
 			//place within the schema
-			_, err = db.Exec(fmt.Sprintf("SET search_path TO %s, public;", args[0]))
+			_, err = db.Exec(fmt.Sprintf(ecosql.ToSetSearchPathForBundle, args[0]))
 			if err != nil {
 
 				//If there is any problem with the search path, give up the db part of the bundle
 				log.Println("search_path failed to set, aborting sql installation and cleaning up", err.Error())
-				db.Exec(fmt.Sprintf("DROP SCHEMA %s;", args[0]))
+				db.Exec(fmt.Sprintf(ecosql.ToDropSchema, args[0]))
 
 			} else {
 
@@ -147,7 +147,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 				_, err = db.Exec(sqlString)
 				if err != nil {
 					log.Println("Problem with install.sql, aborting sql installation and cleaning up", err.Error())
-					db.Exec(fmt.Sprintf("DROP SCHEMA %s CASCADE;", args[0]))
+					db.Exec(fmt.Sprintf(ecosql.ToDropSchema, args[0]))
 				} else {
 
 					//If all is good so far and the user has specified it, install the demo data (if it exists)
@@ -178,6 +178,20 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	err = AppFs.MkdirAll(destFolder, os.ModePerm)
 	if err != nil {
 		log.Println("Error creating template directory for bundle: ", err.Error())
+	} else {
+		cpCmd := exec.Command("cp", "-rf", srcFolder, destFolder)
+		err = cpCmd.Run()
+		if err != nil {
+			log.Println("Error copying templates: ", err.Error())
+		}
+	}
+
+	//Copy over public files
+	srcFolder = basePath + "/public/"
+	destFolder = "./public/" + args[0]
+	err = AppFs.MkdirAll(destFolder, os.ModePerm)
+	if err != nil {
+		log.Println("Error creating public directory for bundle: ", err.Error())
 	} else {
 		cpCmd := exec.Command("cp", "-rf", srcFolder, destFolder)
 		err = cpCmd.Run()

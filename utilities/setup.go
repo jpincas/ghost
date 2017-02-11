@@ -1,3 +1,5 @@
+// +build ignore
+
 // Copyright 2017 EcoSystem Software LLP
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,7 +61,7 @@ func init() {
 func dbSetup() {
 
 	//First, check to make sure a Postgres database has been specified.
-	//There is no sensible defaul prodivded for this setting, server will exit of nothing provided
+	//There is no sensible defaut prodivded for this setting, server will exit of nothing provided
 	if *pgName == "" {
 		log.Fatal("No Postgres database name specified")
 	}

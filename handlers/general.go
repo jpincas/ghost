@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utilities
+package handlers
 
 import (
 	"net/http"
 
+	eco "github.com/ecosystemsoftware/eco/utilities"
 	"github.com/gin-gonic/gin"
 )
 
 //Image Display Handler
 func ShowImage(c *gin.Context) {
-	imageToServe, err := getImage(c.Param("image"), c.DefaultQuery("width", "500"))
+	imageToServe, err := eco.GetImage(c.Param("image"), c.DefaultQuery("width", "500"))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": err.Error(),

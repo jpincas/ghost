@@ -22,8 +22,10 @@ import (
 
 	"net/http"
 
+	"github.com/ecosystemsoftware/eco/ecosql"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
+	"github.com/spf13/viper"
 	jwt "gopkg.in/appleboy/gin-jwt.v2"
 )
 
@@ -41,8 +43,8 @@ func MakeJSON(c *gin.Context) {
 
 //the jwt middleware
 var AuthMiddleware = &jwt.GinJWTMiddleware{
-	Realm:      "ecosystem",
-	Key:        []byte(*secret),
+	Realm:      viper.GetString("jwtRealm"),
+	Key:        []byte(viper.GetString("secret")),
 	Timeout:    time.Hour * 24 * 365,
 	MaxRefresh: time.Hour * 365,
 	Authenticator: func(username string, password string, c *gin.Context) (string, bool) {
@@ -56,22 +58,22 @@ var AuthMiddleware = &jwt.GinJWTMiddleware{
 		//Otherwise attempt to login with the given email address
 		//Lookup the email in the users table
 		var id string
-		err := db.QueryRow(fmt.Sprintf("SELECT id from users WHERE email = '%s'", username)).Scan(&id)
+		err := DB.QueryRow(fmt.Sprintf(ecosql.ToFindUserByEmail, username)).Scan(&id)
 		//If the user exists in the database, the email is in the magic cache and the password supplied matches the magic code, then
 		//return the JWT with the id encoded
-		magicCode, emailIsInCache := magicCodeCache.Get(username)
+		magicCode, emailIsInCache := MagicCodeCache.Get(username)
 
 		//For Demo Mode ONLY - bypass the magic code
 		//checking and just send back the id
 		//To use: just create a user with the role you want (e.g. admin)
 		//and tell demo users to log in with that email and password 123456
-		if *demoMode && err == nil && password == "123456" {
+		if viper.GetBool("demomode") && err == nil && password == "123456" {
 			return id, true
 		}
 
 		if emailIsInCache && err == nil && password == magicCode {
 			//delete the email/magic code combo in the cache so it can't be used again
-			magicCodeCache.Remove(username)
+			MagicCodeCache.Remove(username)
 			return id, true
 		}
 
@@ -88,7 +90,7 @@ var AuthMiddleware = &jwt.GinJWTMiddleware{
 
 		var role string
 		//Search the user table for the user's role
-		err := db.QueryRow(fmt.Sprintf("SELECT role from users WHERE id = '%s'", userID)).Scan(&role)
+		err := DB.QueryRow(fmt.Sprintf(ecosql.ToGetUsersRole, userID)).Scan(&role)
 
 		//If an error comes back
 		if err != nil {

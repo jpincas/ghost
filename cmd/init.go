@@ -21,7 +21,6 @@ import (
 	"github.com/ecosystemsoftware/eco/ecosql"
 	eco "github.com/ecosystemsoftware/eco/utilities"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func init() {
@@ -84,7 +83,7 @@ func initDB(cmd *cobra.Command, args []string) error {
 	// }
 
 	//Establish a temporary connection as the super user
-	db := eco.ConnectToDB(eco.GetDBConnectionString(viper.GetString("pgSuperUser"), pgPW, viper.GetString("pgServer"), viper.GetString("pgPort"), viper.GetString("pgDBName"), viper.GetBool("pgDisableSSL")))
+	db := eco.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
 	//Run initialisation SQL
@@ -127,6 +126,3 @@ func initFolders(cmd *cobra.Command, args []string) error {
 	log.Println("Successfully completed EcoSystem folder setup")
 	return nil
 }
-
-// db.Exec(ecosql.ToSetServerRolePassword)
-// db.Exec(ecosql.ToSetServerPasswordToLastForever)

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utilities
+package handlers
 
 import (
 	"encoding/json"
@@ -20,6 +20,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ecosystemsoftware/eco/ecosql"
+	eco "github.com/ecosystemsoftware/eco/utilities"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 )
@@ -30,11 +32,11 @@ import (
 //For PROTECTED routes, the role and userID will be set according to the auth middleware
 func WebShowSingle(c *gin.Context) {
 
-	table := hyphensToUnderscores(c.Param("table"))
+	table := eco.HyphensToUnderscores(c.Param("table"))
 	slug := c.Param("slug")
 
 	//Check templates
-	if ok, template := checkTemplate(table, "single"); !ok {
+	if ok, template := eco.CheckTemplate(table, "single"); !ok {
 
 		//If the template doesn't exist, return a 404
 		c.String(http.StatusNotFound, "No template found for this record type and no default template.")
@@ -54,20 +56,20 @@ func WebShowSingle(c *gin.Context) {
 		//If a specific or default template does exist
 		//Build the basic SQL query and convert to JSON request
 		//Note the use of 'slug' in the query.  Not slug = not visible on the website
-		sql := sqlQuery(fmt.Sprintf(`SELECT * FROM %s WHERE slug = '%s'`, table, slug)).requestSingleResultAsJSONObject().setQueryRole(role)
+		sql := eco.SqlQuery(fmt.Sprintf(ecosql.ToSelectRecordBySlug, table, slug)).RequestSingleResultAsJSONObject().SetQueryRole(role)
 
 		//In order to avoid having to have seperate handlers for protected and unprotected routes
 		//If this request has passed through the auth middleware, then set the userId on the sqlquery
 		if u, ok := c.Get("userID"); ok {
-			sql = sql.setUserID(u.(string))
+			sql = sql.SetUserID(u.(string))
 		}
 
 		//Turn the SQL query into a string
-		sqlString := sql.toSQLString()
+		sqlString := sql.ToSQLString()
 
 		//Run the DB query
 		var dbResponse string
-		if err := db.QueryRow(sqlString).Scan(&dbResponse); err != nil {
+		if err := eco.DB.QueryRow(sqlString).Scan(&dbResponse); err != nil {
 
 			//Check for an sql scan error indicating the json has come back empty
 			if strings.Contains(err.Error(), "sql") {
@@ -80,7 +82,7 @@ func WebShowSingle(c *gin.Context) {
 			} else {
 				//Else report a DB error as usual
 				dbError := err.(*pq.Error)
-				httpCode := dbErrorCodeToHTTPErrorCode(dbError.Code)
+				httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
 				c.HTML(httpCode, "error.html", gin.H{
 					"httpCode": httpCode,
 					"message":  dbError.Message,
@@ -100,7 +102,7 @@ func WebShowSingle(c *gin.Context) {
 					"message":  err.Error(),
 				})
 			} else {
-				var s siteBuilder
+				var s eco.SiteBuilder
 				c.HTML(http.StatusOK, template, gin.H{
 					"record": record,
 					"table":  table,
@@ -118,10 +120,10 @@ func WebShowSingle(c *gin.Context) {
 //For PROTECTED routes, the role and userID will be set according to the auth middleware
 func WebShowList(c *gin.Context) {
 
-	table := hyphensToUnderscores(c.Param("table"))
+	table := eco.HyphensToUnderscores(c.Param("table"))
 
 	//Check templates
-	if ok, template := checkTemplate(table, "list"); !ok {
+	if ok, template := eco.CheckTemplate(table, "list"); !ok {
 
 		//If the template doesn't exist
 		c.String(http.StatusNotFound, "No template found for this record type and no default template.")
@@ -140,26 +142,26 @@ func WebShowList(c *gin.Context) {
 
 		//Build out the SQL from the URL Query parameters
 		queries := c.Request.URL.Query()
-		sql := queryBuilder(table, queries).requestMultipleResultsAsJSONArray().setQueryRole(role)
+		sql := eco.QueryBuilder(table, queries).RequestMultipleResultsAsJSONArray().SetQueryRole(role)
 
 		//In order to avoid having to have seperate handlers for protected and unprotected routes
 		//If this request has passed through the auth middleware, then set the userId on the sqlquery
 		if u, ok := c.Get("userID"); ok {
-			sql = sql.setUserID(u.(string))
+			sql = sql.SetUserID(u.(string))
 		}
 
 		//Turn the SQL query into a string
-		sqlString := sql.toSQLString()
+		sqlString := sql.ToSQLString()
 
 		//Run the DB query
 		var dbResponse string
-		if err := db.QueryRow(sqlString).Scan(&dbResponse); err != nil {
+		if err := eco.DB.QueryRow(sqlString).Scan(&dbResponse); err != nil {
 
 			//Check for an sql scan error indicating the json has come back empty
 			if strings.Contains(err.Error(), "sql") {
 
 				//Send back the tempalte without records
-				var s siteBuilder
+				var s eco.SiteBuilder
 				var records []map[string]interface{}
 				c.HTML(http.StatusOK, template, gin.H{
 					"records": records,
@@ -170,7 +172,7 @@ func WebShowList(c *gin.Context) {
 			} else {
 				//Else report a DB error as usual
 				dbError := err.(*pq.Error)
-				httpCode := dbErrorCodeToHTTPErrorCode(dbError.Code)
+				httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
 				c.HTML(httpCode, "error.html", gin.H{
 					"httpCode": httpCode,
 					"message":  dbError.Message,
@@ -191,7 +193,7 @@ func WebShowList(c *gin.Context) {
 				})
 			} else {
 				//Site Context
-				var s siteBuilder
+				var s eco.SiteBuilder
 				c.HTML(http.StatusOK, template, gin.H{
 					"records": records,
 					"table":   table,
@@ -206,7 +208,7 @@ func WebShowList(c *gin.Context) {
 
 //WebShowHomepage shows the homepage
 func WebShowHomepage(c *gin.Context) {
-	var s siteBuilder
+	var s eco.SiteBuilder
 	c.HTML(http.StatusOK, "index.html", gin.H{
 		"site": s,
 	})
@@ -214,14 +216,14 @@ func WebShowHomepage(c *gin.Context) {
 
 func WebShowCategory(c *gin.Context) {
 
-	table := hyphensToUnderscores(c.Param("table"))
+	table := eco.HyphensToUnderscores(c.Param("table"))
 	cat := c.Param("cat")
 
 	var catJs string
-	sql := sqlQuery(fmt.Sprintf(`SELECT * FROM web_categories WHERE id = '%s'`, cat)).requestSingleResultAsJSONObject().setQueryRole("web").toSQLString()
+	sql := eco.SqlQuery(fmt.Sprintf(ecosql.ToSelectWebCategoryWhere, cat)).RequestSingleResultAsJSONObject().SetQueryRole("web").ToSQLString()
 
 	//Attempt to find the category
-	if err := db.QueryRow(sql).Scan(&catJs); err != nil {
+	if err := eco.DB.QueryRow(sql).Scan(&catJs); err != nil {
 		c.HTML(http.StatusNotFound, "error.html", gin.H{
 			"message":  err.Error(),
 			"httpCode": http.StatusNotFound,
@@ -238,12 +240,12 @@ func WebShowCategory(c *gin.Context) {
 		} else {
 			//In the case that the category is found AND the JSON is unmarshalled correctly
 			var itemsJs string
-			itemsSQL := sqlQuery(fmt.Sprintf(`SELECT * FROM %s WHERE keywords @> '{%s}'`, table, cat)).requestMultipleResultsAsJSONArray().setQueryRole("web").toSQLString()
-			db.QueryRow(itemsSQL).Scan(&itemsJs)
+			itemsSQL := eco.SqlQuery(fmt.Sprintf(ecosql.ToSelectKeywordedRecords, table, cat)).RequestMultipleResultsAsJSONArray().SetQueryRole("web").ToSQLString()
+			eco.DB.QueryRow(itemsSQL).Scan(&itemsJs)
 			var itemsData []map[string]interface{}
 			json.Unmarshal([]byte(itemsJs), &itemsData)
 			//Site Context
-			var s siteBuilder
+			var s eco.SiteBuilder
 			c.HTML(http.StatusOK, "web_categories.html", gin.H{
 				"category": catData,
 				"table":    table,
@@ -261,7 +263,7 @@ func WebShowCategory(c *gin.Context) {
 // func WebInsertRecord(c *gin.Context) {
 
 // 	//To reference the base table from the view (if necessary), only use the portion of the table name before the first hyphen/underscore
-// 	table := strings.Split(hyphensToUnderscores(c.Param("table")), "_")[0]
+// 	table := strings.Split(eco.HyphensToUnderscores(c.Param("table")), "_")[0]
 
 // 	role, _ := c.Get("role")
 // 	userID, _ := c.Get("userID")
@@ -286,13 +288,13 @@ func WebShowCategory(c *gin.Context) {
 // 			cols, vals := mapToValsAndCols(r)
 
 // 			//Build the SQL
-// 			sqlString := sqlQuery(fmt.Sprintf(`INSERT INTO %s(%s) VALUES (%s) returning row_to_json(%s)`, table, cols, vals, table)).requestSingleResultAsJSONObject().setQueryRole(role.(string)).setUserID(userID.(string)).toSQLString()
+// 			sqlString := eco.SqlQuery(fmt.Sprintf(`INSERT INTO %s(%s) VALUES (%s) returning row_to_json(%s)`, table, cols, vals, table)).RequestSingleResultAsJSONObject().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
 // 			//Run the DB query
 // 			var dbResponse string
-// 			if err := db.QueryRow(sqlString).Scan(&dbResponse); err != nil {
+// 			if err := eco.DB.QueryRow(sqlString).Scan(&dbResponse); err != nil {
 // 				dbError := err.(*pq.Error)
-// 				httpCode := dbErrorCodeToHTTPErrorCode(dbError.Code)
+// 				httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
 // 				c.HTML(httpCode, "error.html", gin.H{
 // 					"httpCode": httpCode,
 // 					"message":  dbError.Message,

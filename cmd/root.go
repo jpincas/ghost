@@ -20,23 +20,19 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	eco "github.com/ecosystemsoftware/eco/utilities"
 )
 
+//pgPW is the Postgres connection password, needed across most subcommands
 var pgPW string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "eco",
-	Short: "The EcoSystem API/Web server",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+	Short: "EcoSystem command line tool",
+	Long: `Use to initialise or launch the EcoSystem server or create new users, bundles
+	or a config file`,
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -51,8 +47,7 @@ func Execute() {
 func init() {
 
 	cobra.OnInitialize(initConfig)
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	installCmd.PersistentFlags().StringVarP(&pgPW, "pgpw", "p", "", "Postgres superuser password")
+	RootCmd.PersistentFlags().StringVarP(&pgPW, "pgpw", "p", "", "Postgres superuser password")
 
 }
 
@@ -62,15 +57,24 @@ func initConfig() {
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	viper.SetDefault("pgSuperUser", "postgres")
-	viper.SetDefault("pgName", "ecosystem")
+	viper.SetDefault("pgDBName", "ecosystem")
 	viper.SetDefault("pgPort", "5432")
 	viper.SetDefault("pgServer", "localhost")
 	viper.SetDefault("pgDisableSSL", false)
+	viper.SetDefault("apiPort", "3000")
+	viper.SetDefault("websitePort", "3001")
+	viper.SetDefault("adminPanelPort", "3002")
+	viper.SetDefault("adminPanelServeType", "unbundled")
+	viper.SetDefault("publicSiteSlug", "site")
+	viper.SetDefault("privateSiteSlug", "private")
+	viper.SetDefault("jwtRealm", "yourappname")
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		//Initialise the db config structs for later use
+		eco.InitDBConnectionConfigs()
+		fmt.Println("Config file detected and correctly applied:", viper.ConfigFileUsed())
 	} else {
-		fmt.Println("Not using config file")
+		fmt.Println("Not using config file: ", err.Error())
 	}
 }

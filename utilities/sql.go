@@ -22,33 +22,43 @@ import (
 	sq "gopkg.in/Masterminds/squirrel.v1"
 )
 
-type sqlQuery string
+//SqlQuery is an SQL query string with various methods available for transformation
+type SqlQuery string
 
-func (s sqlQuery) requestMultipleResultsAsJSONArray() sqlQuery {
-	newQuery := sqlQuery(fmt.Sprintf(`WITH results AS (%s) SELECT array_to_json(array_agg(row_to_json(results))) from results`, s))
+//RequestMultipleResultsAsJSONArray transforms the SQL query to return a JSON array of results
+//Use when multiple lines are going to be returned
+func (s SqlQuery) RequestMultipleResultsAsJSONArray() SqlQuery {
+	newQuery := SqlQuery(fmt.Sprintf(`WITH results AS (%s) SELECT array_to_json(array_agg(row_to_json(results))) from results`, s))
 	return newQuery
 }
 
-func (s sqlQuery) requestSingleResultAsJSONObject() sqlQuery {
-	newQuery := sqlQuery(fmt.Sprintf(`WITH results AS (%s) SELECT row_to_json(results) from results`, s))
+//RequestSingleResultAsJSONObject transforms the SQL query to return a JSON object of the result
+//Used when a single line is going to be returned
+func (s SqlQuery) RequestSingleResultAsJSONObject() SqlQuery {
+	newQuery := SqlQuery(fmt.Sprintf(`WITH results AS (%s) SELECT row_to_json(results) from results`, s))
 	return newQuery
 }
 
-func (s sqlQuery) setQueryRole(role string) sqlQuery {
-	newQuery := sqlQuery(fmt.Sprintf(`SET LOCAL ROLE %s; %s `, role, s))
+//SetQueryRole prepends the database role with which to execute the query
+func (s SqlQuery) SetQueryRole(role string) SqlQuery {
+	newQuery := SqlQuery(fmt.Sprintf(`SET LOCAL ROLE %s; %s `, role, s))
 	return newQuery
 }
 
-func (s sqlQuery) setUserID(userID string) sqlQuery {
-	newQuery := sqlQuery(fmt.Sprintf(`SET my.user_id = '%s'; %s `, userID, s))
+//SetUserID prepends the user id variable with which to execute the query
+func (s SqlQuery) SetUserID(userID string) SqlQuery {
+	newQuery := SqlQuery(fmt.Sprintf(`SET my.user_id = '%s'; %s `, userID, s))
 	return newQuery
 }
 
-func (s sqlQuery) toSQLString() string {
+//ToSQLString transforms an SqlQuery to a plain string
+//Generally the last step before execution
+func (s SqlQuery) ToSQLString() string {
 	return fmt.Sprint(s)
 }
 
-func queryBuilder(table string, queries url.Values) sqlQuery {
+//QueryBuilder builds an SqlQuery from multiple URL query paramaters
+func QueryBuilder(table string, queries url.Values) SqlQuery {
 
 	//Start with all the products from the table
 	p := sq.Select("*").From(table)
@@ -70,5 +80,5 @@ func queryBuilder(table string, queries url.Values) sqlQuery {
 	//Build the basic SQL
 	sql, _, _ := p.ToSql()
 	//Return as JSON array request
-	return sqlQuery(sql)
+	return SqlQuery(sql)
 }

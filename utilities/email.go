@@ -20,32 +20,47 @@ import (
 	"html/template"
 	"net/smtp"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
+//SMTPServer holds all the necessary connection configuration for an SMTP server
 type smtpServer struct {
 	host, port, userName, password, from, fromName string
 	working                                        bool
 }
 
-var mySMTPServer smtpServer
+//MailServer is the shared SMTP server for the application
+var MailServer smtpServer
 
-func testSMTPConnection(s smtpServer) error {
-	//First try connecting
-	c, err := smtp.Dial(fmt.Sprintf("%s:%s", s.host, s.port))
-	if err != nil {
+//EmailSetup sets up the shared SMTP connection, tests it and marks whether it is working or not
+func EmailSetup() error {
+
+	//Setup the smtp config struct, and mark as not working
+	//Read in the configuration parameters from Viper
+	MailServer = smtpServer{
+		host:     viper.GetString("smtpHost"),
+		port:     viper.GetString("smtpPort"),
+		password: viper.GetString("smtpPW"),
+		userName: viper.GetString("smtpUserName"),
+		from:     viper.GetString("smtpFrom"),
+		fromName: viper.GetString("emailFrom"),
+		working:  false,
+	}
+
+	//Test the SMTP connection
+	if err := MailServer.TestConnection(); err != nil {
 		return err
 	}
-	//If that works, try authenticating
-	auth := smtp.PlainAuth("", s.userName, s.password, s.host)
-	if err := c.Auth(auth); err != nil {
-		return err
-	}
-	//If that all worked, return no error
+
+	//If it passes, setup the config
+	MailServer.working = true
 	return nil
+
 }
 
-//sendEmail is used internally by ECOSystem modules to send transactional emails
-func sendEmail(s smtpServer, to []string, subject string, data map[string]string, templateToUse string) (err error) {
+//SendEmail is used internally by ECOSystem modules to send transactional emails
+func (s smtpServer) SendEmail(to []string, subject string, data map[string]string, templateToUse string) (err error) {
 
 	//Prepare the date for the email template
 	parameters := struct {
@@ -69,7 +84,7 @@ func sendEmail(s smtpServer, to []string, subject string, data map[string]string
 	// Content-Type: text/html; charset="UTF-8"
 
 	buffer := new(bytes.Buffer)
-	t, err := template.New(templateToUse).ParseGlob("templates/email/*")
+	t, err := template.New(templateToUse).ParseGlob("templates/**/email/*")
 	err = t.Execute(buffer, &parameters)
 
 	auth := smtp.PlainAuth("", s.userName, s.password, s.host)
@@ -82,4 +97,20 @@ func sendEmail(s smtpServer, to []string, subject string, data map[string]string
 		buffer.Bytes())
 
 	return err
+}
+
+//testConnection tests an SMTP connection
+func (s smtpServer) TestConnection() error {
+	//First try connecting
+	c, err := smtp.Dial(fmt.Sprintf("%s:%s", s.host, s.port))
+	if err != nil {
+		return err
+	}
+	//If that works, try authenticating
+	auth := smtp.PlainAuth("", s.userName, s.password, s.host)
+	if err := c.Auth(auth); err != nil {
+		return err
+	}
+	//If that all worked, return no error
+	return nil
 }

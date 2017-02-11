@@ -17,12 +17,9 @@ package utilities
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-)
 
-//siteBuilder provides sitewide data and logic.
-//Intended use is to create an instance in handlers and pass to templates as 'site' key on the input struct
-type siteBuilder struct{}
+	"github.com/ecosystemsoftware/eco/ecosql"
+)
 
 type category struct {
 	ID, Title, Image, Subtitle, Parent string
@@ -38,18 +35,21 @@ type menuItem struct {
 //menu is a list of menuItems
 type menu []menuItem
 
+//SiteBuilder provides sitewide data and logic.
+//Intended use is to create an instance in handlers and pass to templates as 'site' key on the input struct
+type SiteBuilder struct{}
+
 //BuildMenu can be used by templates to retrieve a simple menu, listing web categories
-func (s siteBuilder) BuildMenu(startNode string) menu {
+func (s SiteBuilder) BuildMenu(startNode string) menu {
 	var js, sql string
 
 	if startNode == "" {
-		sql = sqlQuery(`SELECT * FROM web_categories ORDER BY priority`).requestMultipleResultsAsJSONArray().setQueryRole("web").toSQLString()
+		sql = SqlQuery(ecosql.ToGetAllWebCategories).RequestMultipleResultsAsJSONArray().SetQueryRole("web").ToSQLString()
 	} else {
-		sql = sqlQuery(fmt.Sprintf(`SELECT * FROM web_categories WHERE parent = '%s' ORDER BY priority`, startNode)).requestMultipleResultsAsJSONArray().setQueryRole("web").toSQLString()
-		log.Println(sql)
+		sql = SqlQuery(fmt.Sprintf(ecosql.ToGetWebCategoriesByParent, startNode)).RequestMultipleResultsAsJSONArray().SetQueryRole("web").ToSQLString()
 	}
 
-	db.QueryRow(sql).Scan(&js)
+	DB.QueryRow(sql).Scan(&js)
 	var c []category
 	json.Unmarshal([]byte(js), &c)
 

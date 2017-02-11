@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utilities
+package handlers
 
 import (
 	"encoding/json"
@@ -23,10 +23,13 @@ import (
 
 	"database/sql"
 
+	"github.com/ecosystemsoftware/eco/ecosql"
+	eco "github.com/ecosystemsoftware/eco/utilities"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 )
 
+//ApiMagicCode processes a request for a magic code
 func ApiMagicCode(c *gin.Context) {
 
 	//Set up the map into which the request body will be read
@@ -42,7 +45,7 @@ func ApiMagicCode(c *gin.Context) {
 		email, ok := r["email"]
 		if ok {
 			//If 'email' is set, request a magic code
-			err := requestMagicCode(email.(string))
+			err := eco.RequestMagicCode(email.(string), "emailMagicCode.html")
 			//If sending of the magic code fails (user doesn't exist, email fails etc)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{
@@ -67,19 +70,20 @@ func ApiMagicCode(c *gin.Context) {
 
 }
 
+//ApiShowList shows a list of records from the database
 func ApiShowList(c *gin.Context) {
 
 	var json string
-	table := hyphensToUnderscores(c.Param("table"))
+	table := eco.HyphensToUnderscores(c.Param("table"))
 
 	//Build out the SQL from the URL Query parameters
 	queries := c.Request.URL.Query()
 	role, _ := c.Get("role")
 	userID, _ := c.Get("userID")
 
-	sqlString := queryBuilder(table, queries).requestMultipleResultsAsJSONArray().setQueryRole(role.(string)).setUserID(userID.(string)).toSQLString()
+	sqlString := eco.QueryBuilder(table, queries).RequestMultipleResultsAsJSONArray().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
-	err := db.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
+	err := eco.DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
 
 	if err != nil {
 		//Check for an sql scan error indicating the json has come back empty
@@ -88,7 +92,7 @@ func ApiShowList(c *gin.Context) {
 			c.String(http.StatusOK, json)
 		} else {
 			dbError := err.(*pq.Error)
-			httpCode := dbErrorCodeToHTTPErrorCode(dbError.Code)
+			httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
 			c.JSON(httpCode, gin.H{
 				"code":    httpCode,
 				"message": dbError.Message,
@@ -102,18 +106,19 @@ func ApiShowList(c *gin.Context) {
 
 }
 
+//ApiShowSingle shows a single record from the database
 func ApiShowSingle(c *gin.Context) {
 
 	var json string
 
-	table := hyphensToUnderscores(c.Param("table"))
+	table := eco.HyphensToUnderscores(c.Param("table"))
 	id := c.Param("id")
 
 	role, _ := c.Get("role")
 	userID, _ := c.Get("userID")
-	sqlString := sqlQuery(fmt.Sprintf(`SELECT * FROM %s WHERE id = '%s'`, table, id)).requestSingleResultAsJSONObject().setQueryRole(role.(string)).setUserID(userID.(string)).toSQLString()
+	sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToSelectWhere, table, id)).RequestSingleResultAsJSONObject().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
-	err := db.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
+	err := eco.DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
 
 	if err != nil {
 		//Check for an sql scan error indicating the json has come back empty
@@ -127,7 +132,7 @@ func ApiShowSingle(c *gin.Context) {
 		} else {
 			//Else report a DB error as usual
 			dbError := err.(*pq.Error)
-			httpCode := dbErrorCodeToHTTPErrorCode(dbError.Code)
+			httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
 			c.JSON(httpCode, gin.H{
 				"code":    httpCode,
 				"message": dbError.Message,
@@ -145,7 +150,7 @@ func ApiShowSingle(c *gin.Context) {
 func ApiInsertRecord(c *gin.Context) {
 
 	//To reference the base table from the view (if necessary), only use the portion of the table name before the first hyphen/underscore
-	table := strings.Split(hyphensToUnderscores(c.Param("table")), "_")[0]
+	table := strings.Split(eco.HyphensToUnderscores(c.Param("table")), "_")[0]
 	var dbResponse string
 
 	role, _ := c.Get("role")
@@ -165,12 +170,12 @@ func ApiInsertRecord(c *gin.Context) {
 
 			//In this special case, the database will default all fields
 			//Not very common, but can happen if you are inserting a record with all defaults
-			sqlString := sqlQuery(fmt.Sprintf(`INSERT INTO %s DEFAULT VALUES returning row_to_json(%s)`, table, table)).requestSingleResultAsJSONObject().setQueryRole(role.(string)).setUserID(userID.(string)).toSQLString()
+			sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToInsertAllDefaultsReturningJSON, table, table)).RequestSingleResultAsJSONObject().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
 			//Deal with database errors
-			if err := db.QueryRow(sqlString).Scan(&dbResponse); err != nil {
+			if err := eco.DB.QueryRow(sqlString).Scan(&dbResponse); err != nil {
 				dbError := err.(*pq.Error)
-				httpCode := dbErrorCodeToHTTPErrorCode(dbError.Code)
+				httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
 				c.JSON(httpCode, gin.H{
 					"code":    httpCode,
 					"message": dbError.Message,
@@ -193,18 +198,18 @@ func ApiInsertRecord(c *gin.Context) {
 
 		//In the case that there are no decoding errors
 		//Map the JSON body to vals and cols suitable for SQL
-		cols, vals := mapToValsAndCols(r)
+		cols, vals := eco.MapToValsAndCols(r)
 
 		//Build the SQL
-		sqlString := sqlQuery(fmt.Sprintf(`INSERT INTO %s(%s) VALUES (%s) returning row_to_json(%s)`, table, cols, vals, table)).requestSingleResultAsJSONObject().setQueryRole(role.(string)).setUserID(userID.(string)).toSQLString()
+		sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToInsertReturningJSON, table, cols, vals, table)).RequestSingleResultAsJSONObject().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
 		//In order to get the return value, we use a QueryRow rather than EXEC and return the whole new row in JSON format
 		//from the DB.
-		err := db.QueryRow(sqlString).Scan(&dbResponse)
+		err := eco.DB.QueryRow(sqlString).Scan(&dbResponse)
 
 		if err != nil {
 			dbError := err.(*pq.Error)
-			httpCode := dbErrorCodeToHTTPErrorCode(dbError.Code)
+			httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
 			c.JSON(httpCode, gin.H{
 				"code":    httpCode,
 				"message": dbError.Message,
@@ -221,18 +226,18 @@ func ApiInsertRecord(c *gin.Context) {
 func ApiDeleteRecord(c *gin.Context) {
 
 	//To reference the base table from the view (if necessary), only use the portion of the table name before the first hyphen/underscore
-	table := strings.Split(hyphensToUnderscores(c.Param("table")), "_")[0]
+	table := strings.Split(eco.HyphensToUnderscores(c.Param("table")), "_")[0]
 	id := c.Param("id")
 
 	role, _ := c.Get("role")
 	userID, _ := c.Get("userID")
 
-	sqlString := sqlQuery(fmt.Sprintf(`DELETE FROM %v WHERE id = '%v'`, table, id)).setQueryRole(role.(string)).setUserID(userID.(string)).toSQLString()
+	sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToDeleteWhere, table, id)).SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
-	res, err := db.Exec(sqlString)
+	res, err := eco.DB.Exec(sqlString)
 	if err != nil {
 		dbError := err.(*pq.Error)
-		httpCode := dbErrorCodeToHTTPErrorCode(dbError.Code)
+		httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
 		c.JSON(httpCode, gin.H{
 			"code":    httpCode,
 			"message": dbError.Message,
@@ -262,7 +267,7 @@ func ApiDeleteRecord(c *gin.Context) {
 func ApiUpdateRecord(c *gin.Context) {
 
 	//To reference the base table from the view (if necessary), only use the portion of the table name before the first hyphen/underscore
-	table := strings.Split(hyphensToUnderscores(c.Param("table")), "_")[0]
+	table := strings.Split(eco.HyphensToUnderscores(c.Param("table")), "_")[0]
 	id := c.Param("id")
 
 	role, _ := c.Get("role")
@@ -280,15 +285,15 @@ func ApiUpdateRecord(c *gin.Context) {
 	} else {
 
 		//Map the JSON body to vals and cols suitable for SQL
-		cols, vals := mapToValsAndCols(r)
+		cols, vals := eco.MapToValsAndCols(r)
 
 		//Build the SQL
 		//again, surround the id with '' in case of non-numeric ids
-		sqlString := sqlQuery(fmt.Sprintf(`UPDATE %s SET (%s) = (%s) WHERE id = '%v' returning row_to_json(%s)`, table, cols, vals, id, table)).setQueryRole(role.(string)).setUserID(userID.(string)).toSQLString()
+		sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToUpdateWhereReturningJSON, table, cols, vals, id, table)).SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
 		//In order to get the return value, we use a QueryRow rather than EXEC and return the whole new row in JSON format
 		//from the DB.
-		err := db.QueryRow(sqlString).Scan(&json)
+		err := eco.DB.QueryRow(sqlString).Scan(&json)
 
 		if err != nil {
 			//In this case, if the record is not found, a db error will NOT be returned, just an empty row
@@ -302,7 +307,7 @@ func ApiUpdateRecord(c *gin.Context) {
 			} else {
 				//Else report a DB error (auth, table doesn't exist etc.) as usual
 				dbError := err.(*pq.Error)
-				httpCode := dbErrorCodeToHTTPErrorCode(dbError.Code)
+				httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
 				c.JSON(httpCode, gin.H{
 					"code":    httpCode,
 					"message": dbError.Message,
@@ -328,9 +333,9 @@ func SearchList(c *gin.Context) {
 	role, _ := c.Get("role")
 	userID, _ := c.Get("userID")
 
-	sqlString := sqlQuery(fmt.Sprintf(`with item as (select to_tsvector(%s::text) @@ to_tsquery('%s') AS found, %s.* FROM %s) select array_to_json(array_agg(row_to_json(item))) FROM item WHERE item.found = TRUE OR item.id ILIKE '%s%%'`, table, searchTerm, table, table, searchTerm)).setQueryRole(role.(string)).setUserID(userID.(string)).toSQLString()
+	sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToFullTextSearch, table, searchTerm, table, table, searchTerm)).SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
-	err := db.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
+	err := eco.DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
 
 	if err != nil {
 		//Check for an sql scan error indicating the json has come back empty
@@ -339,7 +344,7 @@ func SearchList(c *gin.Context) {
 			c.String(http.StatusOK, json)
 		} else {
 			dbError := err.(*pq.Error)
-			httpCode := dbErrorCodeToHTTPErrorCode(dbError.Code)
+			httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
 			c.JSON(httpCode, gin.H{
 				"code":    httpCode,
 				"message": dbError.Message,

@@ -19,31 +19,93 @@ import (
 	"log"
 
 	_ "github.com/lib/pq"
+	"github.com/spf13/viper"
 )
 
-//ConnectToDB connects to the database and returns a connection pool
-func ConnectToDB(dbConnectionString string) *sql.DB {
+//DB is the main shared database connection pool for the application
+var DB *sql.DB
+
+//dbConfig holds all the necessary information for a datbase connection
+type dbConfig struct {
+	user, pw, server, port, dbName string
+	disableSSL                     bool
+}
+
+//SuperUserDBConfig is the connection configuration for the super user
+var SuperUserDBConfig dbConfig
+
+//ServerUserDBConfig is the connection configuration for the 'server' role user
+var ServerUserDBConfig dbConfig
+
+//InitDBConnectionConfigs initialises the config structs once configs have come in from Viper
+func InitDBConnectionConfigs() {
+
+	//SuperUserDBConfig is the configuration struct for the connection to the DB as a super user
+	//This configuration is generally used only temporarily during setup operations
+	SuperUserDBConfig = dbConfig{
+		user:       viper.GetString("pgSuperUser"),
+		pw:         viper.GetString("pgPW"),
+		server:     viper.GetString("pgServer"),
+		port:       viper.GetString("pgPort"),
+		dbName:     viper.GetString("pgDBName"),
+		disableSSL: viper.GetBool("pgDisableSSL"),
+	}
+
+	//ServerUserDBConfig is the configuration struct for the connection to the DB as 'server' role
+	//This is configuration is used as the permanent shared DB connection pool for the application
+	ServerUserDBConfig = dbConfig{
+		user:       "server",
+		server:     viper.GetString("pgServer"),
+		port:       viper.GetString("pgPort"),
+		dbName:     viper.GetString("pgDBName"),
+		disableSSL: viper.GetBool("pgDisableSSL"),
+	}
+
+}
+
+//ReturnDBConnection returns a DB connection pool using the connection parameters in a dbConfig struct
+//and an optional server password which can be passed in
+func (d dbConfig) ReturnDBConnection(serverPW string) *sql.DB {
+
+	dbConnectionString := d.getDBConnectionString(serverPW)
+	return connectToDB(dbConnectionString)
+
+}
+
+//getDBConnectionString returns a correctly formated Postgres connection string from
+//the config struct.  If there is no pw in the struct (as is the case for )
+func (d dbConfig) getDBConnectionString(serverPW string) (dbConnectionString string) {
+
+	//If this is a connection for a server role, use the password supplied as a parameter
+	//Otherwise ignore that parameter
+	if d.user != "server" {
+		d.pw = serverPW
+	}
+
+	//Set the password string if a password has been supplied
+	//If not leave it blank - this stops any errors for blank passwords
+	pwString := ""
+	if d.pw != "" {
+		pwString = ":" + d.pw
+	}
+	dbConnectionString = "postgres://" + d.user + pwString + "@" + d.server + ":" + d.port + "/" + d.dbName
+	//If disabled SSL flag specified,
+	if d.disableSSL {
+		dbConnectionString += "?sslmode=disable"
+	}
+	return
+}
+
+//connectToDB connects to the database and returns a connection pool
+func connectToDB(dbConnectionString string) *sql.DB {
 	//Initialise database
-	db, _ := sql.Open("postgres", dbConnectionString)
+	log.Println("Attempting to connect to ", dbConnectionString)
+	dbConnection, _ := sql.Open("postgres", dbConnectionString)
 	//Ping database to check connectivity
-	if err := db.Ping(); err != nil {
+	if err := dbConnection.Ping(); err != nil {
 		log.Fatal("Error connecting to Postgres as super user during setup. ", err.Error())
 	} else {
 		log.Println("Connected successfully to ", dbConnectionString)
 	}
-	return db
-}
-
-//GetDBConnectionString returns a correctly formated Postgres connection string
-func GetDBConnectionString(user string, pwString string, server string, port string, dbName string, disableSSL bool) (dbConnectionString string) {
-	//Set the password string if a password has been supplied
-	if pwString != "" {
-		pwString = ":" + pwString
-	}
-	dbConnectionString = "postgres://" + user + pwString + "@" + server + ":" + port + "/" + dbName
-	//If disabled SSL flag specified,
-	if disableSSL {
-		dbConnectionString += "?sslmode=disable"
-	}
-	return
+	return dbConnection
 }

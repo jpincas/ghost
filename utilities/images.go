@@ -23,11 +23,11 @@ import (
 	"github.com/nfnt/resize"
 )
 
-//Deal with images without width specified and othe formats TODO
+//Deal with images without width specified and other formats TODO
 
 //CreateImage takes an image name and width parameter and creates a resized image
 //if one does not already exist on disk.  Either way, it returns the full path to the image ready to be served
-func getImage(image string, width string) (string, error) {
+func GetImage(image string, width string) (string, error) {
 
 	//Cache the public image path
 	p := "public/images_resized"
