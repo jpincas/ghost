@@ -18,8 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
-	"os/exec"
 
 	"github.com/ecosystemsoftware/eco/ecosql"
 	eco "github.com/ecosystemsoftware/eco/utilities"
@@ -77,9 +75,6 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 		//If it doesn't exist, it won't be dropped - no big deal
 		db.Exec(fmt.Sprintf(ecosql.ToDropSchema, args[0]))
 
-		//Clean up the files
-		AppFs.RemoveAll("./templates/" + args[0])
-		AppFs.RemoveAll("./public/images_source/" + args[0])
 		log.Println("Uninstallation of bundle", args[0], "completed")
 	}
 
@@ -132,6 +127,9 @@ func installBundle(cmd *cobra.Command, args []string) error {
 
 		} else {
 
+			//Set admin privileges for everything in this schema going forwards
+			_, err = db.Exec(fmt.Sprintf(ecosql.ToGrantBundleAdminPermissions, args[0], args[0]))
+
 			//Set the search path to the bundle schema so that all SQL commands take
 			//place within the schema
 			_, err = db.Exec(fmt.Sprintf(ecosql.ToSetSearchPathForBundle, args[0]))
@@ -171,48 +169,6 @@ func installBundle(cmd *cobra.Command, args []string) error {
 			}
 		}
 	} //End sql installation
-
-	//Copy over templates
-	srcFolder := basePath + "/templates/"
-	destFolder := "./templates/" + args[0]
-	err = AppFs.MkdirAll(destFolder, os.ModePerm)
-	if err != nil {
-		log.Println("Error creating template directory for bundle: ", err.Error())
-	} else {
-		cpCmd := exec.Command("cp", "-rf", srcFolder, destFolder)
-		err = cpCmd.Run()
-		if err != nil {
-			log.Println("Error copying templates: ", err.Error())
-		}
-	}
-
-	//Copy over public files
-	srcFolder = basePath + "/public/"
-	destFolder = "./public/" + args[0]
-	err = AppFs.MkdirAll(destFolder, os.ModePerm)
-	if err != nil {
-		log.Println("Error creating public directory for bundle: ", err.Error())
-	} else {
-		cpCmd := exec.Command("cp", "-rf", srcFolder, destFolder)
-		err = cpCmd.Run()
-		if err != nil {
-			log.Println("Error copying templates: ", err.Error())
-		}
-	}
-
-	//Copy over images
-	srcFolder = basePath + "/images/"
-	destFolder = "./public/images_source/" + args[0]
-	err = AppFs.MkdirAll(destFolder, os.ModePerm)
-	if err != nil {
-		log.Println("Error creating image directory for bundle: ", err.Error())
-	} else {
-		cpCmd := exec.Command("cp", "-rf", srcFolder, destFolder)
-		err = cpCmd.Run()
-		if err != nil {
-			log.Println("Error copying templates: ", err.Error())
-		}
-	}
 
 	log.Println("Installation of bundle", args[0], "completed")
 	return nil

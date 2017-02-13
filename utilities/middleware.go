@@ -22,6 +22,8 @@ import (
 
 	"net/http"
 
+	"log"
+
 	"github.com/ecosystemsoftware/eco/ecosql"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
@@ -43,7 +45,7 @@ func MakeJSON(c *gin.Context) {
 
 //the jwt middleware
 var AuthMiddleware = &jwt.GinJWTMiddleware{
-	Realm:      viper.GetString("jwtRealm"),
+	Realm:      "EcoSystem Auth",
 	Key:        []byte(viper.GetString("secret")),
 	Timeout:    time.Hour * 24 * 365,
 	MaxRefresh: time.Hour * 365,
@@ -100,6 +102,7 @@ var AuthMiddleware = &jwt.GinJWTMiddleware{
 				return true
 			}
 			//Else if there is any other error, don't authorise
+			log.Println("Error authorising user id ", userID, err.Error())
 			return false
 
 		}

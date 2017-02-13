@@ -74,6 +74,7 @@ func ApiMagicCode(c *gin.Context) {
 func ApiShowList(c *gin.Context) {
 
 	var json string
+	schema := eco.HyphensToUnderscores(c.Param("schema"))
 	table := eco.HyphensToUnderscores(c.Param("table"))
 
 	//Build out the SQL from the URL Query parameters
@@ -81,7 +82,7 @@ func ApiShowList(c *gin.Context) {
 	role, _ := c.Get("role")
 	userID, _ := c.Get("userID")
 
-	sqlString := eco.QueryBuilder(table, queries).RequestMultipleResultsAsJSONArray().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
+	sqlString := eco.QueryBuilder(schema, table, queries).RequestMultipleResultsAsJSONArray().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
 	err := eco.DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
 
@@ -111,12 +112,13 @@ func ApiShowSingle(c *gin.Context) {
 
 	var json string
 
+	schema := eco.HyphensToUnderscores(c.Param("schema"))
 	table := eco.HyphensToUnderscores(c.Param("table"))
 	id := c.Param("id")
 
 	role, _ := c.Get("role")
 	userID, _ := c.Get("userID")
-	sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToSelectWhere, table, id)).RequestSingleResultAsJSONObject().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
+	sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToSelectWhere, schema, table, id)).RequestSingleResultAsJSONObject().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
 	err := eco.DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
 
@@ -150,6 +152,7 @@ func ApiShowSingle(c *gin.Context) {
 func ApiInsertRecord(c *gin.Context) {
 
 	//To reference the base table from the view (if necessary), only use the portion of the table name before the first hyphen/underscore
+	schema := eco.HyphensToUnderscores(c.Param("schema"))
 	table := strings.Split(eco.HyphensToUnderscores(c.Param("table")), "_")[0]
 	var dbResponse string
 
@@ -170,7 +173,7 @@ func ApiInsertRecord(c *gin.Context) {
 
 			//In this special case, the database will default all fields
 			//Not very common, but can happen if you are inserting a record with all defaults
-			sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToInsertAllDefaultsReturningJSON, table, table)).RequestSingleResultAsJSONObject().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
+			sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToInsertAllDefaultsReturningJSON, schema, table, table)).RequestSingleResultAsJSONObject().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
 			//Deal with database errors
 			if err := eco.DB.QueryRow(sqlString).Scan(&dbResponse); err != nil {
@@ -201,7 +204,7 @@ func ApiInsertRecord(c *gin.Context) {
 		cols, vals := eco.MapToValsAndCols(r)
 
 		//Build the SQL
-		sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToInsertReturningJSON, table, cols, vals, table)).RequestSingleResultAsJSONObject().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
+		sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToInsertReturningJSON, schema, table, cols, vals, table)).RequestSingleResultAsJSONObject().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
 		//In order to get the return value, we use a QueryRow rather than EXEC and return the whole new row in JSON format
 		//from the DB.
@@ -226,13 +229,14 @@ func ApiInsertRecord(c *gin.Context) {
 func ApiDeleteRecord(c *gin.Context) {
 
 	//To reference the base table from the view (if necessary), only use the portion of the table name before the first hyphen/underscore
+	schema := eco.HyphensToUnderscores(c.Param("schema"))
 	table := strings.Split(eco.HyphensToUnderscores(c.Param("table")), "_")[0]
 	id := c.Param("id")
 
 	role, _ := c.Get("role")
 	userID, _ := c.Get("userID")
 
-	sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToDeleteWhere, table, id)).SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
+	sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToDeleteWhere, schema, table, id)).SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
 	res, err := eco.DB.Exec(sqlString)
 	if err != nil {
@@ -267,6 +271,7 @@ func ApiDeleteRecord(c *gin.Context) {
 func ApiUpdateRecord(c *gin.Context) {
 
 	//To reference the base table from the view (if necessary), only use the portion of the table name before the first hyphen/underscore
+	schema := eco.HyphensToUnderscores(c.Param("schema"))
 	table := strings.Split(eco.HyphensToUnderscores(c.Param("table")), "_")[0]
 	id := c.Param("id")
 
@@ -289,7 +294,7 @@ func ApiUpdateRecord(c *gin.Context) {
 
 		//Build the SQL
 		//again, surround the id with '' in case of non-numeric ids
-		sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToUpdateWhereReturningJSON, table, cols, vals, id, table)).SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
+		sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToUpdateWhereReturningJSON, schema, table, cols, vals, id, table)).SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
 		//In order to get the return value, we use a QueryRow rather than EXEC and return the whole new row in JSON format
 		//from the DB.
@@ -327,13 +332,14 @@ func ApiUpdateRecord(c *gin.Context) {
 func SearchList(c *gin.Context) {
 
 	var json string
+	schema := eco.HyphensToUnderscores(c.Param("schema"))
 	table := c.Param("table")
 	searchTerm := c.Param("searchTerm")
 
 	role, _ := c.Get("role")
 	userID, _ := c.Get("userID")
 
-	sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToFullTextSearch, table, searchTerm, table, table, searchTerm)).SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
+	sqlString := eco.SqlQuery(fmt.Sprintf(ecosql.ToFullTextSearch, table, searchTerm, table, schema, table, searchTerm)).SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
 	err := eco.DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
 

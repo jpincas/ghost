@@ -16,14 +16,18 @@ package cmd
 
 import (
 	"net/http"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"fmt"
 
 	"log"
+
+	"path"
 
 	"github.com/ecosystemsoftware/eco/ecosql"
 	"github.com/ecosystemsoftware/eco/handlers"
@@ -46,6 +50,7 @@ func init() {
 
 	serveCmd.Flags().StringP("secret", "s", "", "Secure secret for signing JWT")
 	viper.BindPFlag("secret", serveCmd.Flags().Lookup("secret"))
+
 }
 
 // serveCmd represents the serve command
@@ -112,8 +117,8 @@ func serveAPI() {
 	apiServer.OPTIONS("/*anything", handlers.OptionsHandler) //Must allow unauthorised requests
 
 	//Resized image route
-	//Note format: /img/[IMAGE NAME WITH OPTIONAL PATH]?width=[WIDTH IN PIXELS]
-	apiServer.GET("/img/*image", handlers.ShowImage) //Use star instead fo colons to allow for paths
+	//Note format: /images/[IMAGE NAME WITH OPTIONAL PATH]?width=[WIDTH IN PIXELS]
+	apiServer.GET("/images/*image", handlers.ShowImage) //Use star instead fo colons to allow for paths
 
 	//Get JWT
 	apiServer.POST("/login", eco.AuthMiddleware.LoginHandler) //for anonymous login post 'anon' for both username and password.  Must post both, otherwise fails
@@ -124,14 +129,14 @@ func serveAPI() {
 	{
 		api.Use(eco.AuthMiddleware.MiddlewareFunc())
 		api.Use(eco.MakeJSON) //Activate JSON Header middleware
-		api.GET("/:table", handlers.ApiShowList)
-		api.GET("/:table/:id", handlers.ApiShowSingle)
-		api.POST("/:table", handlers.ApiInsertRecord)
-		api.DELETE("/:table/:id", handlers.ApiDeleteRecord)
-		api.PATCH("/:table/:id", handlers.ApiUpdateRecord)
+		api.GET("/:schema/:table", handlers.ApiShowList)
+		api.GET("/:schema/:table/:id", handlers.ApiShowSingle)
+		api.POST("/:schema/:table", handlers.ApiInsertRecord)
+		api.DELETE("/:schema/:table/:id", handlers.ApiDeleteRecord)
+		api.PATCH("/:schema/:table/:id", handlers.ApiUpdateRecord)
 		//Experimental: Full Text Search
-		api.Handle("SEARCH", "/:table/", handlers.ReturnBlank) //Useful for when blank searches are sent by client, to avoid errors
-		api.Handle("SEARCH", "/:table/:searchTerm", handlers.SearchList)
+		api.Handle("SEARCH", "/:schema/:table/", handlers.ReturnBlank) //Useful for when blank searches are sent by client, to avoid errors
+		api.Handle("SEARCH", "/:schema/:table/:searchTerm", handlers.SearchList)
 	}
 
 	//Start the API
@@ -143,19 +148,34 @@ func serveWebsite() {
 
 	webServer := gin.Default()
 
-	//TODO: this dies if there are no HTML files to load
-	webServer.LoadHTMLGlob("templates/**/**/*.html")
+	//Check for templates and load if any found
+	//Must check first otherwise crashes if no templates present
+	// templates/BUNDLE_NAME/PAGES or EMAIL or PARTIALS
+	if t, err := filepath.Glob("bundles/**/templates/**/*.html"); t != nil && err == nil {
+		webServer.LoadHTMLGlob("bundles/**/templates/**/*.html")
+	}
 
 	//Resized image route
-	//Note format: /img/[IMAGE NAME WITH OPTIONAL PATH]?width=[WIDTH IN PIXELS]
-	webServer.GET("/img/*image", handlers.ShowImage) //Use star instead fo colons to allow for paths
+	//Note format: /images/[IMAGE NAME WITH OPTIONAL PATH]?width=[WIDTH IN PIXELS]
+	webServer.GET("/images/*image", handlers.ShowImage) //Use star instead fo colons to allow for paths
 
-	//Static file system for 'public' directory
-	webServer.StaticFS("/public", http.Dir("public"))
+	//Bundle public directories
+	public := webServer.Group("/public")
+	{
+		//For each bundle present - add that bundle's public directory contents at TOPLEVEL/public/BUNDLENAME
+		if bundleDirectoryContents, err := afero.ReadDir(AppFs, "bundles"); err == nil {
+			for _, v := range bundleDirectoryContents {
+				if v.IsDir() {
+					public.StaticFS(v.Name(), http.Dir(path.Join("bundles", v.Name(), "public")))
+				}
+			}
+		}
+
+	}
 
 	//Homepage and web categories
 	webServer.GET("/", handlers.WebShowHomepage)
-	webServer.GET("category/:table/:cat", handlers.WebShowCategory)
+	webServer.GET("category/:schema/:table/:cat", handlers.WebShowCategory)
 
 	//Unprotected HTML routes.  Authentiaction middleware is not activated
 	//so there is no need for the browser to present a JWT
@@ -165,8 +185,8 @@ func serveWebsite() {
 	site := webServer.Group(viper.GetString("publicSiteSlug"))
 
 	{
-		site.GET(":table/:slug", handlers.WebShowSingle)
-		site.GET(":table", handlers.WebShowList)
+		site.GET(":schema/:table/:slug", handlers.WebShowSingle)
+		site.GET(":schema/:table", handlers.WebShowList)
 	}
 
 	//Protected HTML routes.
@@ -177,8 +197,8 @@ func serveWebsite() {
 
 	{
 		private.Use(eco.AuthMiddleware.MiddlewareFunc())
-		private.GET(":table", handlers.WebShowList)
-		private.GET(":table/:slug", handlers.WebShowSingle)
+		private.GET(":schema/:table", handlers.WebShowList)
+		private.GET(":schema/:table/:slug", handlers.WebShowSingle)
 	}
 
 	go webServer.Run(":" + viper.GetString("websitePort"))
@@ -189,7 +209,7 @@ func serveAdminPanel() {
 
 	// Static Server for Admin Panel
 	adminServer := gin.Default()
-	adminServer.StaticFS("/", http.Dir("ecosystem-admin/build/unbundled/"))
+	adminServer.StaticFS("/", http.Dir("ecosystem-admin/build/"+viper.GetString("adminPanelServeType")+"/"))
 	go adminServer.Run(":" + viper.GetString("adminPanelPort"))
 
 }

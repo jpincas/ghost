@@ -21,7 +21,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -53,29 +52,40 @@ func RandomString(strlen int) string {
 	return string(result)
 }
 
-//CheckTemplate looks for a specific template, if not, falls back to the default
-//and if there is not defaul, returns false
-func CheckTemplate(table string, listOrSingle string) (bool, string) {
+//CheckTemplate looks for a template corresponding to the
+// func CheckTemplate(t []string, schema string, table string, listOrSingle string) (bool, string) {
 
-	defaultName := listOrSingle + ".html"
-	templateName := table + "-" + defaultName
+// 	defaultName := listOrSingle + ".html"
+// 	templateName := table + "-" + defaultName
 
-	targetTemplateFullPath := path.Join("templates/custom", templateName)
+// 	//Check for templates following a defined order of priority.  Once one is found,
+// 	//return true and the name of the template
 
-	//First, we check for the existence of a specific template for this table
-	if _, err := os.Stat(targetTemplateFullPath); os.IsNotExist(err) {
-		//If there isn't one, revert to default
-		targetTemplateFullPath = path.Join("templates/default", defaultName)
-		if _, err := os.Stat(targetTemplateFullPath); os.IsNotExist(err) {
-			//If there is no default, return false
-			return false, ""
-		}
-		//If there is a default, return true and the default name
-		return true, defaultName
-	}
-	//If there is a specific template
-	return true, templateName
-}
+// 	//1) BUNDLE/pages/TABLE-[list]or[single].HTML	Top priority is a named template in the bundle folder
+// 	if matches, _ := filepath.Glob(path.Join("templates", schema, "pages", templateName)); matches != nil {
+// 		return true, path.Join(schema, templateName)
+// 	}
+// 	//2) */pages/TABLE-[list]or[single].HTML	Second priority is a named template in ANY folder at the bundle level
+// 	//This allows a user to define a folder say "my-templates" which would not be removed in the case
+// 	//of bundle removal
+// 	if matches, _ := filepath.Glob(path.Join("templates", "*", "pages", templateName)); matches != nil {
+// 		return true, templateName
+// 	}
+// 	//3) BUNDLE/pages/[list]or[single].HTML Third priority is a generic 'list.html' or 'single.html' in the bundle folder
+// 	if matches, _ := filepath.Glob(path.Join("templates", schema, "pages", defaultName)); matches != nil {
+// 		return true, path.Join(schema, defaultName)
+// 	}
+// 	//4) */pages/[list]or[single].HTML Fourth priority is a generic 'list.html' or 'single.html' in ANY folder at the bundle level
+// 	//This allows a user to define a folder say "my-templates" which would not be removed in the case
+// 	//of bundle removal
+// 	if matches, _ := filepath.Glob(path.Join("templates", "*", "pages", defaultName)); matches != nil {
+// 		return true, defaultName
+// 	}
+
+// 	//If there is no usable template, return false
+// 	return false, ""
+
+// }
 
 //HyphensToUnderscores replaces all hyphens in the string with underscores.
 //This is so you can use pretty URLs with hyphens (as recommended by Google)

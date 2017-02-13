@@ -77,17 +77,13 @@ func initAll(cmd *cobra.Command, args []string) error {
 //initDB initialises the built-in database tables, roles and permissions
 func initDB(cmd *cobra.Command, args []string) error {
 
-	// err := viper.ReadInConfig() // Find and read the config file
-	// if err != nil {             // Handle errors reading the config file
-	// 	log.Fatal("Could not read config.json: ", err.Error())
-	// }
-
 	//Establish a temporary connection as the super user
 	db := eco.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
 	//Run initialisation SQL
 	var err error
+	_, err = db.Exec(ecosql.ToGrantAdminPermissions) //Do this first so everything created after will have correct admin permissions by default
 	_, err = db.Exec(ecosql.ToCreateUUIDExtension)
 	_, err = db.Exec(ecosql.ToCreateUsersTable)
 	_, err = db.Exec(ecosql.ToCreateFuncToGenerateNewUserID)
@@ -98,7 +94,6 @@ func initDB(cmd *cobra.Command, args []string) error {
 	_, err = db.Exec(ecosql.ToCreateAdminRole)
 	_, err = db.Exec(ecosql.ToCreateWebRole)
 	_, err = db.Exec(ecosql.ToGrantBuiltInPermissions)
-	_, err = db.Exec(ecosql.ToGrantAdminPermissions)
 
 	if err != nil {
 		log.Fatal("Could not complete database setup: ", err.Error())
@@ -113,9 +108,7 @@ func initDB(cmd *cobra.Command, args []string) error {
 func initFolders(cmd *cobra.Command, args []string) error {
 
 	var err error
-	err = os.MkdirAll("./public/images_resized", os.ModePerm)
-	err = os.Mkdir("./public/images_source", os.ModePerm)
-	err = os.Mkdir("./templates", os.ModePerm)
+	err = os.Mkdir("./img", os.ModePerm)
 	err = os.Mkdir("./bundles", os.ModePerm)
 	err = os.Mkdir("./ecosystem-admin", os.ModePerm)
 

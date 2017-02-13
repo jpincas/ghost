@@ -38,30 +38,44 @@ const (
 	ToCreateAnonRole                 = `CREATE ROLE anon;`
 	ToCreateAdminRole                = `CREATE ROLE admin BYPASSRLS;`
 	ToCreateWebRole                  = `CREATE ROLE web;`
-	ToGrantAdminPermissions          = `GRANT admin To server; GRANT ALL ON ALL TABLES IN SCHEMA public TO admin;GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO admin; `
-	ToGrantBuiltInPermissions        = `GRANT anon, web TO server; GRANT SELECT ON TABLE users TO server;GRANT SELECT ON TABLE web_categories TO web;`
+	ToGrantBuiltInPermissions        = `GRANT anon, web, admin TO server; GRANT SELECT ON TABLE users TO server;GRANT SELECT ON TABLE web_categories TO web;`
+
+	//Admin permissions
+	ToGrantAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ALL TABLES; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON ALL SEQUENCES IN public;`
 
 	//Schema manipulation for bundles
-	ToCreateSchema           = `CREATE SCHEMA %s;`
-	ToDropSchema             = `DROP SCHEMA %s CASCADE;`
-	ToSetSearchPathForBundle = `SET search_path TO %s, public;`
+	ToCreateSchema                = `CREATE SCHEMA %s;`
+	ToGrantBundleAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT ALL ON ALL TABLES; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT USAGE ON ALL SEQUENCES IN public;`
+	ToDropSchema                  = `DROP SCHEMA %s CASCADE;`
+	ToSetSearchPathForBundle      = `SET search_path TO %s, public;`
 
 	//Web category retrieval and info
-	ToSelectWebCategoryWhere   = `SELECT * FROM web_categories WHERE id = '%s';`
-	ToGetAllWebCategories      = `SELECT * FROM web_categories ORDER BY priority;`
-	ToGetWebCategoriesByParent = `SELECT * FROM web_categories WHERE parent = '%s' ORDER BY priority;`
-	ToSelectKeywordedRecords   = `SELECT * FROM %s WHERE keywords @> '{%s}';`
+	//NO SEMI COLONS AT THE END
+	ToSelectWebCategoryWhere   = `SELECT * FROM web_categories WHERE id = '%s'`
+	ToGetAllWebCategories      = `SELECT * FROM web_categories ORDER BY priority`
+	ToGetWebCategoriesByParent = `SELECT * FROM web_categories WHERE parent = '%s' ORDER BY priority`
+	ToSelectKeywordedRecords   = `SELECT * FROM %s.%s WHERE keywords @> '{%s}'`
 
 	//Web requests
-	ToSelectRecordBySlug = `SELECT * FROM %s WHERE slug = '%s';`
+	//NO SEMI COLONS AT THE END
+	ToSelectRecordBySlug = `SELECT * FROM %s.%s WHERE slug = '%s'`
 
 	//General
-	ToSelectWhere                    = `SELECT * FROM %s WHERE id = '%s';`
-	ToInsertReturningJSON            = `INSERT INTO %s(%s) VALUES (%s) returning row_to_json(%s);`
-	ToInsertAllDefaultsReturningJSON = `INSERT INTO %s DEFAULT VALUES returning row_to_json(%s);`
-	ToDeleteWhere                    = `DELETE FROM %v WHERE id = '%v';`
-	ToUpdateWhereReturningJSON       = `UPDATE %s SET (%s) = (%s) WHERE id = '%v' returning row_to_json(%s);`
+	//NO SEMI COLONS AT THE END
+	ToSelectWhere                    = `SELECT * FROM %s.%s WHERE id = '%v'`
+	ToInsertReturningJSON            = `INSERT INTO %s.%s(%s) VALUES (%s) returning row_to_json(%s)`
+	ToInsertAllDefaultsReturningJSON = `INSERT INTO %s.%s DEFAULT VALUES returning row_to_json(%s)`
+	ToDeleteWhere                    = `DELETE FROM %s.%s WHERE id = '%v'`
+	ToUpdateWhereReturningJSON       = `UPDATE %s.%s SET (%s) = (%s) WHERE id = '%v' returning row_to_json(%s)`
+
+	//JSON Conversion
+	ToRequestMultipleResultsAsJSONArray = `WITH results AS (%s) SELECT array_to_json(array_agg(row_to_json(results))) from results;`
+	ToRequestSingleResultAsJSONObject   = `WITH results AS (%s) SELECT row_to_json(results) from results;`
+
+	//Setting local role and user id
+	ToSetLocalRole = `SET LOCAL ROLE %s; %s `
+	ToSetUserID    = `SET my.user_id = '%s'; %s `
 
 	//Full text search_path
-	ToFullTextSearch = `with item as (select to_tsvector(%s::text) @@ to_tsquery('%s') AS found, %s.* FROM %s) select array_to_json(array_agg(row_to_json(item))) FROM item WHERE item.found = TRUE OR item.id ILIKE '%s%%'`
+	ToFullTextSearch = `with item as (select to_tsvector(%s::text) @@ to_tsquery('%s') AS found, %s.* FROM %s.%s) select array_to_json(array_agg(row_to_json(item))) FROM item WHERE item.found = TRUE`
 )

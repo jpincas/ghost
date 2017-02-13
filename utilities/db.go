@@ -63,15 +63,6 @@ func InitDBConnectionConfigs() {
 
 }
 
-//ReturnDBConnection returns a DB connection pool using the connection parameters in a dbConfig struct
-//and an optional server password which can be passed in
-func (d dbConfig) ReturnDBConnection(serverPW string) *sql.DB {
-
-	dbConnectionString := d.getDBConnectionString(serverPW)
-	return connectToDB(dbConnectionString)
-
-}
-
 //getDBConnectionString returns a correctly formated Postgres connection string from
 //the config struct.  If there is no pw in the struct (as is the case for )
 func (d dbConfig) getDBConnectionString(serverPW string) (dbConnectionString string) {
@@ -94,6 +85,15 @@ func (d dbConfig) getDBConnectionString(serverPW string) (dbConnectionString str
 		dbConnectionString += "?sslmode=disable"
 	}
 	return
+}
+
+//ReturnDBConnection returns a DB connection pool using the connection parameters in a dbConfig struct
+//and an optional server password which can be passed in
+func (d dbConfig) ReturnDBConnection(serverPW string) *sql.DB {
+
+	dbConnectionString := d.getDBConnectionString(serverPW)
+	return connectToDB(dbConnectionString)
+
 }
 
 //connectToDB connects to the database and returns a connection pool

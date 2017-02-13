@@ -14,7 +14,7 @@
 
 package utilities
 
-//Config is the basic sructure of the config.json file
+//Config is the basic structure of the config.json file
 type Config struct {
 	PgSuperUser         string `json:"pgSuperUser"`
 	PgDBName            string `json:"pgDBName"`

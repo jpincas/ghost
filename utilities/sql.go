@@ -19,6 +19,11 @@ import (
 	"net/url"
 	"strconv"
 
+	"strings"
+
+	"log"
+
+	"github.com/ecosystemsoftware/eco/ecosql"
 	sq "gopkg.in/Masterminds/squirrel.v1"
 )
 
@@ -28,47 +33,52 @@ type SqlQuery string
 //RequestMultipleResultsAsJSONArray transforms the SQL query to return a JSON array of results
 //Use when multiple lines are going to be returned
 func (s SqlQuery) RequestMultipleResultsAsJSONArray() SqlQuery {
-	newQuery := SqlQuery(fmt.Sprintf(`WITH results AS (%s) SELECT array_to_json(array_agg(row_to_json(results))) from results`, s))
+	newQuery := SqlQuery(fmt.Sprintf(ecosql.ToRequestMultipleResultsAsJSONArray, s))
 	return newQuery
 }
 
 //RequestSingleResultAsJSONObject transforms the SQL query to return a JSON object of the result
 //Used when a single line is going to be returned
 func (s SqlQuery) RequestSingleResultAsJSONObject() SqlQuery {
-	newQuery := SqlQuery(fmt.Sprintf(`WITH results AS (%s) SELECT row_to_json(results) from results`, s))
+	newQuery := SqlQuery(fmt.Sprintf(ecosql.ToRequestSingleResultAsJSONObject, s))
 	return newQuery
 }
 
 //SetQueryRole prepends the database role with which to execute the query
 func (s SqlQuery) SetQueryRole(role string) SqlQuery {
-	newQuery := SqlQuery(fmt.Sprintf(`SET LOCAL ROLE %s; %s `, role, s))
+	newQuery := SqlQuery(fmt.Sprintf(ecosql.ToSetLocalRole, role, s))
 	return newQuery
 }
 
 //SetUserID prepends the user id variable with which to execute the query
 func (s SqlQuery) SetUserID(userID string) SqlQuery {
-	newQuery := SqlQuery(fmt.Sprintf(`SET my.user_id = '%s'; %s `, userID, s))
+	newQuery := SqlQuery(fmt.Sprintf(ecosql.ToSetUserID, userID, s))
 	return newQuery
 }
 
 //ToSQLString transforms an SqlQuery to a plain string
 //Generally the last step before execution
 func (s SqlQuery) ToSQLString() string {
+	//Uncomment to turn on SQL loggingfor debugging
+	log.Println(fmt.Sprint(s))
 	return fmt.Sprint(s)
 }
 
 //QueryBuilder builds an SqlQuery from multiple URL query paramaters
-func QueryBuilder(table string, queries url.Values) SqlQuery {
+func QueryBuilder(schema string, table string, queries url.Values) SqlQuery {
+
+	//Concat - schema.table
+	tn := fmt.Sprintf("%s.%s", schema, table)
 
 	//Start with all the products from the table
-	p := sq.Select("*").From(table)
+	p := sq.Select("*").From(tn)
 
 	//Loop through all the URL qeueries
 	for key, value := range queries {
 
-		if key == "orderBy" {
+		if strings.ToLower(key) == "orderby" {
 			p = p.OrderBy(value[0])
-		} else if key == "limit" {
+		} else if strings.ToLower(key) == "limit" {
 			l, _ := strconv.ParseUint(value[0], 10, 64)
 			p = p.Limit(l)
 		} else {

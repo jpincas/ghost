@@ -30,33 +30,24 @@ import (
 func GetImage(image string, width string) (string, error) {
 
 	//Cache the public image path
-	p := "public/images_resized"
+	p := "img"
 
-	//Create the composite target filename
+	//Create the target full path and filename
 	targetImageFileName := path.Join(p, width+"w", path.Base(image)) //Even if a path to the image is specified, this is dropped for caching
+	//Create the source full path and filename
+	sourceImageFileName := path.Join("bundles", path.Dir(image), "images", path.Base(image))
 
 	//Check to see if there is a cached version of the image
 	if _, err := os.Stat(targetImageFileName); os.IsNotExist(err) {
 
 		//If there is no cached version of the image, then check to see if there is a source image
-		if _, err := os.Stat(path.Join("public/images_source/", path.Base(image))); os.IsNotExist(err) {
-
-			//If there is no source image with that name, use the placeholder image
-			//Check to see if there is a cached resized placeholder image
-			targetImageFileName = path.Join(p, width+"w", "image-not-found.jpg")
-			if _, err := os.Stat(targetImageFileName); os.IsNotExist(err) {
-				//If there isn't a cached placeholder at that size then make one
-				err := makeImage(targetImageFileName, width)
-				if err != nil {
-					return "", err
-				}
-			}
-		} else {
-			//If there is a source image, then proceed to make a resized image and cache it
-			err := makeImage(targetImageFileName, width)
-			if err != nil {
-				return "", err
-			}
+		if _, err := os.Stat(sourceImageFileName); os.IsNotExist(err) {
+			return "", err
+		}
+		//If there is a source image, then proceed to make a resized image and cache it
+		err := makeImage(sourceImageFileName, targetImageFileName, width)
+		if err != nil {
+			return "", err
 		}
 
 	}
@@ -65,12 +56,12 @@ func GetImage(image string, width string) (string, error) {
 
 }
 
-func makeImage(targetImageFileName string, width string) error {
+func makeImage(source, target string, width string) error {
 
 	//Cache the public image path
-	p := "public/images_resized"
+	p := "img"
 
-	reader, err := os.Open(path.Join("public/images_source/", path.Base(targetImageFileName)))
+	reader, err := os.Open(source)
 	defer reader.Close()
 	if err != nil {
 		//If reading the image fails,
@@ -88,7 +79,7 @@ func makeImage(targetImageFileName string, width string) error {
 
 	// save
 	os.Mkdir(path.Join(p, width+"w"), 0777)
-	out, err := os.Create(targetImageFileName)
+	out, err := os.Create(target)
 	if err != nil {
 		return err
 	}

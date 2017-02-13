@@ -159,7 +159,9 @@ func createNewBundle(cmd *cobra.Command, args []string) error {
 	}
 
 	//Create the folder structure
-	err := os.MkdirAll("./"+args[0]+"/templates", os.ModePerm)
+	err := os.MkdirAll("./"+args[0]+"/templates/pages", os.ModePerm)
+	err = os.MkdirAll("./"+args[0]+"/templates/email", os.ModePerm)
+	err = os.MkdirAll("./"+args[0]+"/templates/partials", os.ModePerm)
 	err = os.MkdirAll("./"+args[0]+"/images", os.ModePerm)
 	err = os.MkdirAll("./"+args[0]+"/public", os.ModePerm)
 
