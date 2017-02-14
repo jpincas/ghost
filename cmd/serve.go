@@ -207,9 +207,23 @@ func serveWebsite() {
 
 func serveAdminPanel() {
 
-	// Static Server for Admin Panel
 	adminServer := gin.Default()
-	adminServer.StaticFS("/", http.Dir("ecosystem-admin/build/"+viper.GetString("adminPanelServeType")+"/"))
+
+	//Serve the Polymer app at /admin
+	adminServer.StaticFS("/admin", http.Dir("ecosystem-admin/build/"+viper.GetString("adminPanelServeType")+"/"))
+
+	//Serve bundle customisation files at /custom/[BUNDLENAME]
+	custom := adminServer.Group("/custom")
+
+	//For each bundle present - add that bundle's admin directory contents at TOPLEVEL/custom/BUNDLENAME
+	if bundleDirectoryContents, err := afero.ReadDir(AppFs, "bundles"); err == nil {
+		for _, v := range bundleDirectoryContents {
+			if v.IsDir() {
+				custom.StaticFS(v.Name(), http.Dir(path.Join("bundles", v.Name(), "admin-panel")))
+			}
+		}
+	}
+
 	go adminServer.Run(":" + viper.GetString("adminPanelPort"))
 
 }
