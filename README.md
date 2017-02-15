@@ -84,7 +84,7 @@ The easiest way to get started with EcoSystem is by installing an existing bundl
 $ cd bundles
 $ git clone git@github.com:ecosystemsoftware/eco_bundle_dogshelter.git
 $ cd ..
-$ eco install eco_bundle_dogshelter --demodata
+$ ecosystem install eco_bundle_dogshelter --demodata
 ```
 
 There's nothing magic going on under the hood here, we simply created a new folder in bundles called 'eco_bundle_dogshelter' which will be the name of the bundle, and copied in some files.  We then ran the database code in `install.sql` to set up the bundle's data and logic.  Finally we ran `demodata.sql` to install the bundle's demo data.  Everything else, like website template code and admin panel config code, lives in the bundle folder and the EcoSystem server knows to find it there.
