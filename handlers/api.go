@@ -23,8 +23,8 @@ import (
 
 	"database/sql"
 
-	"github.com/ecosystemsoftware/eco/ecosql"
-	eco "github.com/ecosystemsoftware/eco/utilities"
+	"github.com/ecosystemsoftware/ecosystem/ecosql"
+	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 )

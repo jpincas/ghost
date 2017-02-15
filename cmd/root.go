@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	eco "github.com/ecosystemsoftware/eco/utilities"
+	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 )
 
 //pgPW is the Postgres connection password, needed across most subcommands
@@ -29,7 +29,7 @@ var pgPW string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "eco",
+	Use:   "ecosystem",
 	Short: "EcoSystem command line tool",
 	Long: `Use to initialise or launch the EcoSystem server or create new users, bundles
 	or a config file`,
@@ -64,7 +64,7 @@ func initConfig() {
 	viper.SetDefault("apiPort", "3000")
 	viper.SetDefault("websitePort", "3001")
 	viper.SetDefault("adminPanelPort", "3002")
-	viper.SetDefault("adminPanelServeType", "unbundled")
+	viper.SetDefault("adminPanelServeDirectory", "ecosystem-admin")
 	viper.SetDefault("publicSiteSlug", "site")
 	viper.SetDefault("privateSiteSlug", "private")
 	viper.SetDefault("jwtRealm", "yourappname")

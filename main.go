@@ -17,7 +17,7 @@ package main
 import (
 	_ "github.com/lib/pq"
 
-	"github.com/ecosystemsoftware/eco/cmd"
+	"github.com/ecosystemsoftware/ecosystem/cmd"
 )
 
 func main() {

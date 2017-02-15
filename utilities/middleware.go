@@ -24,7 +24,7 @@ import (
 
 	"log"
 
-	"github.com/ecosystemsoftware/eco/ecosql"
+	"github.com/ecosystemsoftware/ecosystem/ecosql"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/viper"
@@ -69,6 +69,8 @@ var AuthMiddleware = &jwt.GinJWTMiddleware{
 		//checking and just send back the id
 		//To use: just create a user with the role you want (e.g. admin)
 		//and tell demo users to log in with that email and password 123456
+		log.Println("Demo Mode")
+		log.Println("Demo Mode: ", viper.GetBool("demomode"))
 		if viper.GetBool("demomode") && err == nil && password == "123456" {
 			return id, true
 		}

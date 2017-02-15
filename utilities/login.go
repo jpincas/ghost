@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/diegobernardes/ttlcache"
-	"github.com/ecosystemsoftware/eco/ecosql"
+	"github.com/ecosystemsoftware/ecosystem/ecosql"
 )
 
 //MagicCodeCache is the cache for storing email/temp pw combinations for passwordless authorisation

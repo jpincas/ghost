@@ -18,8 +18,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/ecosystemsoftware/eco/ecosql"
-	eco "github.com/ecosystemsoftware/eco/utilities"
+	"github.com/ecosystemsoftware/ecosystem/ecosql"
+	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 	"github.com/spf13/cobra"
 )
 

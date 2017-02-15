@@ -16,21 +16,21 @@ package utilities
 
 //Config is the basic structure of the config.json file
 type Config struct {
-	PgSuperUser         string `json:"pgSuperUser"`
-	PgDBName            string `json:"pgDBName"`
-	PgPort              string `json:"pgPort"`
-	PgServer            string `json:"pgServer"`
-	PgDisableSSL        bool   `json:"pgDisableSSL"`
-	ApiPort             string `json:"apiPort"`
-	WebsitePort         string `json:"websitePort"`
-	AdminPanelPort      string `json:"adminPanelPort"`
-	AdminPanelServeType string `json:"adminPanelServeType"`
-	PublicSiteSlug      string `json:"publicSiteSlug"`
-	PrivateSiteSlug     string `json:"privateSiteSlug"`
-	SmtpHost            string `json:"smtpHost"`
-	SmtpPort            string `json:"smtpPort"`
-	SmtpUserName        string `json:"smtpUserName"`
-	SmtpFrom            string `json:"smtpFrom"`
-	EmailFrom           string `json:"emailFrom"`
-	JWTRealm            string `json:"jwtRealm"`
+	PgSuperUser              string `json:"pgSuperUser"`
+	PgDBName                 string `json:"pgDBName"`
+	PgPort                   string `json:"pgPort"`
+	PgServer                 string `json:"pgServer"`
+	PgDisableSSL             bool   `json:"pgDisableSSL"`
+	ApiPort                  string `json:"apiPort"`
+	WebsitePort              string `json:"websitePort"`
+	AdminPanelPort           string `json:"adminPanelPort"`
+	AdminPanelServeDirectory string `json:"adminPanelServeDirectory"`
+	PublicSiteSlug           string `json:"publicSiteSlug"`
+	PrivateSiteSlug          string `json:"privateSiteSlug"`
+	SmtpHost                 string `json:"smtpHost"`
+	SmtpPort                 string `json:"smtpPort"`
+	SmtpUserName             string `json:"smtpUserName"`
+	SmtpFrom                 string `json:"smtpFrom"`
+	EmailFrom                string `json:"emailFrom"`
+	JWTRealm                 string `json:"jwtRealm"`
 }

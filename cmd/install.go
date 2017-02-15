@@ -19,14 +19,13 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ecosystemsoftware/eco/ecosql"
-	eco "github.com/ecosystemsoftware/eco/utilities"
+	"github.com/ecosystemsoftware/ecosystem/ecosql"
+	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
 
 var isInstallDemoData, isReinstall bool
-var AppFs = afero.NewOsFs()
 
 func init() {
 	RootCmd.AddCommand(installCmd)
@@ -92,7 +91,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 
 	//Check that bundle exists
 	basePath := "./bundles/" + args[0]
-	exists, _ := afero.IsDir(AppFs, basePath)
+	exists, _ := afero.IsDir(eco.AppFs, basePath)
 	if !exists {
 		//Exit if doesn't exist
 		log.Fatal("Bundle ", args[0], " not found.  Please download or clone.")
@@ -109,7 +108,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	defer db.Close()
 
 	//Check for the presence of install.sql and attempt to read it
-	sqlBytes, err := afero.ReadFile(AppFs, basePath+"/install.sql")
+	sqlBytes, err := afero.ReadFile(eco.AppFs, basePath+"/install.sql")
 	if err != nil {
 		log.Println("install.sql not present for this bundle, or could not be read: ", err.Error())
 	} else {
@@ -152,7 +151,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 					if isInstallDemoData {
 
 						//Check for the presence of demodata.sql and attempt to read it
-						sqlBytes, err := afero.ReadFile(AppFs, basePath+"/demodata.sql")
+						sqlBytes, err := afero.ReadFile(eco.AppFs, basePath+"/demodata.sql")
 						if err != nil {
 							//If there is no demodata.sql
 							log.Println("demodata.sql not present for this bundle, or could not be read: ", err.Error())

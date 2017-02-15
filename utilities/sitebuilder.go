@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ecosystemsoftware/eco/ecosql"
+	"github.com/ecosystemsoftware/ecosystem/ecosql"
 )
 
 type category struct {

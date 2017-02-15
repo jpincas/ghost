@@ -23,7 +23,7 @@ import (
 
 	"log"
 
-	"github.com/ecosystemsoftware/eco/ecosql"
+	"github.com/ecosystemsoftware/ecosystem/ecosql"
 	sq "gopkg.in/Masterminds/squirrel.v1"
 )
 

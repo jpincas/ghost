@@ -15,10 +15,13 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"path"
 
-	eco "github.com/ecosystemsoftware/eco/utilities"
+	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/afero"
 )
 
 //Image Display Handler
@@ -50,4 +53,43 @@ func ReturnHelloWorld(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"hello": "world",
 	})
+}
+
+//AdminShowViews concatenates the contents of the views.json file in each bundle and returns the combined JSON
+func AdminShowViews(c *gin.Context) {
+	//For each bundle present
+	if bundleDirectoryContents, err := afero.ReadDir(eco.AppFs, "bundles"); err == nil {
+
+		var compositeFileContents string
+
+		for _, v := range bundleDirectoryContents {
+			if v.IsDir() {
+				//Work out the name of the views file
+				viewsFile := path.Join("bundles", v.Name(), "admin-panel", "views.json")
+				//Check it exists
+				ok, err := afero.Exists(eco.AppFs, viewsFile)
+				//If it exists, try to read it
+				if ok && err == nil {
+					viewsFileContents, err := afero.ReadFile(eco.AppFs, viewsFile)
+					//If it was read correctly
+					if err == nil {
+
+						//Remove surrounding brackets
+						//viewsFileString := strings.TrimSuffix(strings.TrimPrefix(string(viewsFileContents), "{"), "}")
+						//Prefix with the bundle name
+						viewsFileString := fmt.Sprintf(`"%s":%s`, v.Name(), string(viewsFileContents))
+
+						//If this is the first one, don't insert comma, otherwise do
+						if compositeFileContents != "" {
+							compositeFileContents += ","
+						}
+						compositeFileContents = fmt.Sprintf(`%s%s`, compositeFileContents, viewsFileString)
+					}
+				}
+			}
+		}
+
+		c.String(http.StatusOK, fmt.Sprintf(`{%s}`, compositeFileContents))
+
+	}
 }

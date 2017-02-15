@@ -23,8 +23,8 @@ import (
 
 	"errors"
 
-	"github.com/ecosystemsoftware/eco/ecosql"
-	eco "github.com/ecosystemsoftware/eco/utilities"
+	"github.com/ecosystemsoftware/ecosystem/ecosql"
+	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
@@ -79,23 +79,23 @@ func createDefaultConfigFile(cmd *cobra.Command, args []string) error {
 	c := eco.AskForConfirmation("This will overwrite any existing config.json. Do you with to proceed?")
 	if c {
 		config := eco.Config{
-			PgSuperUser:         "postgres",
-			PgDBName:            "ecosystem",
-			PgPort:              "5432",
-			PgServer:            "localhost",
-			PgDisableSSL:        false,
-			ApiPort:             "3000",
-			WebsitePort:         "3001",
-			AdminPanelPort:      "3002",
-			AdminPanelServeType: "unbundled",
-			PublicSiteSlug:      "site",
-			PrivateSiteSlug:     "private",
-			SmtpHost:            "smtp",
-			SmtpPort:            "25",
-			SmtpUserName:        "info@yourdomain.com",
-			SmtpFrom:            "info@yourdomain.com",
-			EmailFrom:           "Your Name",
-			JWTRealm:            "Your App Name",
+			PgSuperUser:              "postgres",
+			PgDBName:                 "ecosystem",
+			PgPort:                   "5432",
+			PgServer:                 "localhost",
+			PgDisableSSL:             false,
+			ApiPort:                  "3000",
+			WebsitePort:              "3001",
+			AdminPanelPort:           "3002",
+			AdminPanelServeDirectory: "ecosystem-admin",
+			PublicSiteSlug:           "site",
+			PrivateSiteSlug:          "private",
+			SmtpHost:                 "smtp",
+			SmtpPort:                 "25",
+			SmtpUserName:             "info@yourdomain.com",
+			SmtpFrom:                 "info@yourdomain.com",
+			EmailFrom:                "Your Name",
+			JWTRealm:                 "Your App Name",
 		}
 
 		configJSON, _ := json.MarshalIndent(config, "", "\t")
@@ -164,6 +164,7 @@ func createNewBundle(cmd *cobra.Command, args []string) error {
 	err = os.MkdirAll("./"+args[0]+"/templates/partials", os.ModePerm)
 	err = os.MkdirAll("./"+args[0]+"/images", os.ModePerm)
 	err = os.MkdirAll("./"+args[0]+"/public", os.ModePerm)
+	err = os.MkdirAll("./"+args[0]+"/admin-panel", os.ModePerm)
 
 	if err != nil {
 		log.Fatal("Could not complete folder setup: ", err.Error())

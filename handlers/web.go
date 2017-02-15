@@ -21,8 +21,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/ecosystemsoftware/eco/ecosql"
-	eco "github.com/ecosystemsoftware/eco/utilities"
+	"github.com/ecosystemsoftware/ecosystem/ecosql"
+	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 )
@@ -101,6 +101,7 @@ func WebShowSingle(c *gin.Context) {
 			template := path.Join(schema, table+"-single.html") //not the directoy location but the defined template name
 			c.HTML(http.StatusOK, template, gin.H{
 				"record": record,
+				"schema": schema,
 				"table":  table,
 				"site":   s,
 			})
@@ -155,6 +156,7 @@ func WebShowList(c *gin.Context) {
 			var records []map[string]interface{}
 			c.HTML(http.StatusOK, template, gin.H{
 				"records": records,
+				"schema":  schema,
 				"table":   table,
 				"site":    s,
 			})
@@ -186,6 +188,7 @@ func WebShowList(c *gin.Context) {
 			var s eco.SiteBuilder
 			c.HTML(http.StatusOK, template, gin.H{
 				"records": records,
+				"schema":  schema,
 				"table":   table,
 				"site":    s,
 			})

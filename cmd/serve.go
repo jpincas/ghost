@@ -29,9 +29,9 @@ import (
 
 	"path"
 
-	"github.com/ecosystemsoftware/eco/ecosql"
-	"github.com/ecosystemsoftware/eco/handlers"
-	eco "github.com/ecosystemsoftware/eco/utilities"
+	"github.com/ecosystemsoftware/ecosystem/ecosql"
+	"github.com/ecosystemsoftware/ecosystem/handlers"
+	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 )
 
 var nowebsite, noadminpanel bool
@@ -39,6 +39,7 @@ var smtpPW string
 
 func init() {
 	RootCmd.AddCommand(serveCmd)
+
 	serveCmd.Flags().BoolVarP(&nowebsite, "nowebsite", "w", false, "Disable website/HTML server")
 	serveCmd.Flags().BoolVarP(&noadminpanel, "noadminpanel", "a", false, "Disable admin panel server")
 
@@ -46,7 +47,7 @@ func init() {
 	viper.BindPFlag("smtppw", serveCmd.Flags().Lookup("smtppw"))
 
 	serveCmd.Flags().BoolP("demomode", "d", false, "Run server in demo mode")
-	viper.BindPFlag("demomode", serveCmd.Flags().Lookup("demmode"))
+	viper.BindPFlag("demomode", serveCmd.Flags().Lookup("demomode"))
 
 	serveCmd.Flags().StringP("secret", "s", "", "Secure secret for signing JWT")
 	viper.BindPFlag("secret", serveCmd.Flags().Lookup("secret"))
@@ -163,7 +164,7 @@ func serveWebsite() {
 	public := webServer.Group("/public")
 	{
 		//For each bundle present - add that bundle's public directory contents at TOPLEVEL/public/BUNDLENAME
-		if bundleDirectoryContents, err := afero.ReadDir(AppFs, "bundles"); err == nil {
+		if bundleDirectoryContents, err := afero.ReadDir(eco.AppFs, "bundles"); err == nil {
 			for _, v := range bundleDirectoryContents {
 				if v.IsDir() {
 					public.StaticFS(v.Name(), http.Dir(path.Join("bundles", v.Name(), "public")))
@@ -209,14 +210,44 @@ func serveAdminPanel() {
 
 	adminServer := gin.Default()
 
-	//Serve the Polymer app at /admin
-	adminServer.StaticFS("/admin", http.Dir("ecosystem-admin/build/"+viper.GetString("adminPanelServeType")+"/"))
+	views := adminServer.Group("/views")
+	{
+		views.Use(eco.MakeJSON)                //Activate JSON Header middleware
+		views.GET("", handlers.AdminShowViews) //Concatenates view.json from each bundle
+	}
 
-	//Serve bundle customisation files at /custom/[BUNDLENAME]
-	custom := adminServer.Group("/custom")
+	//Serve the Polymer app at /admin
+	// Simple way - just map the /admin to the serving directory
+	// Downside is that you can only enter the app at one place
+	//adminServer.StaticFS("/admin", http.Dir(viper.GetString("adminPanelServeDirectory")+"/"))
+
+	//Hard way:
+	//Router seems to have a hard time with widlcard conflicts, so this is the only way
+	//Ive found to do it
+	//(at the moment) all valid views are /admin/view - so in all those cases serve the index.html
+	adminServer.GET("/admin/view/*anything", func(c *gin.Context) {
+		c.File("./" + viper.GetString("adminPanelServeDirectory") + "/index.html")
+	})
+
+	// //Otherwise
+	// //Serve these static files
+	adminServer.StaticFile("admin", viper.GetString("adminPanelServeDirectory")+"/index.html")
+	adminServer.StaticFile("admin/", viper.GetString("adminPanelServeDirectory")+"/index.html")
+	adminServer.StaticFile("admin/index.html", viper.GetString("adminPanelServeDirectory")+"/index.html")
+	adminServer.StaticFile("admin/manifest.json", viper.GetString("adminPanelServeDirectory")+"/manifest.json")
+	adminServer.StaticFile("admin/service-worker.js", viper.GetString("adminPanelServeDirectory")+"/service-worker.js")
+	adminServer.StaticFile("admin/sw-precache-config.js", viper.GetString("adminPanelServeDirectory")+"/sw-precache-config.js")
+
+	// //And serve these subdirectories as file systems
+	adminServer.StaticFS("/admin/bower_components", http.Dir(viper.GetString("adminPanelServeDirectory")+"/bower_components"))
+	adminServer.StaticFS("/admin/src", http.Dir(viper.GetString("adminPanelServeDirectory")+"/src"))
+	adminServer.StaticFS("/admin/images", http.Dir(viper.GetString("adminPanelServeDirectory")+"/images"))
+
+	//Serve bundle customisation files at /bundles/[BUNDLENAME]
+	custom := adminServer.Group("/bundles")
 
 	//For each bundle present - add that bundle's admin directory contents at TOPLEVEL/custom/BUNDLENAME
-	if bundleDirectoryContents, err := afero.ReadDir(AppFs, "bundles"); err == nil {
+	if bundleDirectoryContents, err := afero.ReadDir(eco.AppFs, "bundles"); err == nil {
 		for _, v := range bundleDirectoryContents {
 			if v.IsDir() {
 				custom.StaticFS(v.Name(), http.Dir(path.Join("bundles", v.Name(), "admin-panel")))

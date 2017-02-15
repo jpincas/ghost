@@ -41,11 +41,11 @@ const (
 	ToGrantBuiltInPermissions        = `GRANT anon, web, admin TO server; GRANT SELECT ON TABLE users TO server;GRANT SELECT ON TABLE web_categories TO web;`
 
 	//Admin permissions
-	ToGrantAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON ALL TABLES; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON ALL SEQUENCES IN public;`
+	ToGrantAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO admin;`
 
 	//Schema manipulation for bundles
 	ToCreateSchema                = `CREATE SCHEMA %s;`
-	ToGrantBundleAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT ALL ON ALL TABLES; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT USAGE ON ALL SEQUENCES IN public;`
+	ToGrantBundleAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT ALL ON TABLES TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT USAGE ON SEQUENCES TO admin;`
 	ToDropSchema                  = `DROP SCHEMA %s CASCADE;`
 	ToSetSearchPathForBundle      = `SET search_path TO %s, public;`
 
