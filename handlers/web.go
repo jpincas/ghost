@@ -242,6 +242,7 @@ func WebShowCategory(c *gin.Context) {
 			c.HTML(http.StatusOK, template, gin.H{
 				"category": catData,
 				"table":    table,
+				"schema":   schema,
 				"records":  itemsData,
 				"site":     s,
 			})
