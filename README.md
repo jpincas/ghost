@@ -23,6 +23,7 @@ If you have Go installed and access to a Postgres server, it should take you les
 
 - Go installed and environment variables correctly configured
 - A Postgres database server (local or remote) to which you can connect
+- Bower installed and correctly configured (to install admin panel dependencies)
 
 ### Step 1: Install EcoSystem
 
@@ -91,10 +92,13 @@ There's nothing magic going on under the hood here, we simply created a new fold
 
 ### Step 9: Download the EcoSystem admin panel app
 
-From your main project folder, clone the EcoSystem admin panel:
+From your main project folder, clone the EcoSystem admin panel and install Polymer dependencies:
 
 ```
 $ git clone git@github.com:ecosystemsoftware/ecosystem-admin.git
+$ cd ecosystem-admin
+$ bower install
+$ cd..
 ```
 
 ### Step 10: Set up the bundle imports
@@ -110,7 +114,7 @@ The bundle contains various setting files for the admin panel, for them to take 
 
 ### Step 10: Run the server
 
-Run the server in 'demo' mode (disabling authorisation).  You need to supply a 'secret' which is used by the server for encryption.  Here I use 'secret', but you can use anything.
+Run the server in 'demo' mode (disabling authorisation).  You need to supply a 'secret' which is used by the server for encryption.  Here I use 'secret', but you can use anything.  Do this from the main project directory.
 
 ```
 $ ecosystem serve -s=secret -d
