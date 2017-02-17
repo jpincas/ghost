@@ -23,8 +23,8 @@ import (
 
 	"github.com/ecosystemsoftware/ecosystem/ecosql"
 	eco "github.com/ecosystemsoftware/ecosystem/utilities"
-	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
+	gin "gopkg.in/gin-gonic/gin.v1"
 )
 
 //WebShowSingle returns HTML for single record from the database table specified in the URL

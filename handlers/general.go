@@ -20,8 +20,8 @@ import (
 	"path"
 
 	eco "github.com/ecosystemsoftware/ecosystem/utilities"
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/afero"
+	gin "gopkg.in/gin-gonic/gin.v1"
 )
 
 //Image Display Handler

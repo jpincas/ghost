@@ -18,10 +18,10 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/gin-gonic/gin"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	gin "gopkg.in/gin-gonic/gin.v1"
 
 	"fmt"
 

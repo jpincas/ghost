@@ -25,10 +25,10 @@ import (
 	"log"
 
 	"github.com/ecosystemsoftware/ecosystem/ecosql"
-	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/viper"
 	jwt "gopkg.in/appleboy/gin-jwt.v2"
+	gin "gopkg.in/gin-gonic/gin.v1"
 )
 
 //CORS
