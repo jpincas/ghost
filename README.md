@@ -155,42 +155,59 @@ Head over to *localhost:3002/admin*, log in with your email address and the pass
 
 ***Hey there! I'm fully aware that the above is real whistlestop tour of EcoSystem and you probably have a hundred questions.  We're working like crazy to release better documentation, videos, tutorials etc, but in the meantime, please check out [the developer section of the EcoSystem website](www.ecosystem.software/developers)***
 
-<!--## Commands
+## Configuration
 
-## Command Line Flags
+### config.json
 
-The following is a list of available command line flags when starting the server.
+| Attribute                | Function                                 | Default         |
+| ------------------------ | ---------------------------------------- | --------------- |
+| PgSuperUser              | Username of database superuser with which to connect for initial setup | Postgres        |
+| PgDBName                 | Name of the Postgres DB to connect to    | ecosystem       |
+| PgPort                   | Server port for the Postgres connection  | 5432            |
+| PgServer                 | Database server to connect to            | localhost       |
+| PgDisableSSL             | Disable SSL mode on DB connection        | FALSE           |
+| ApiPort                  | Port to serve the EcoSystem API on       | 3000            |
+| WebsitePort              | Port to serve the generated website on   | 3001            |
+| AdminPanelPort           | Port to serve the EcoSystem admin panel on | 3002            |
+| AdminPanelServeDirectory | Local folder from which to serve the admin panel. For development, use the base directory 'ecosystem-admin'. For production use 'build/bundled' or 'build/unbundled' | ecosystem-admin |
+| PublicSiteSlug           | The URL base slug for the public website | site            |
+| PrivateSiteSlug          | The URL base slug for the private HTML api (authenticated) | private         |
+| SmtpHost                 | SMTP server for outgoing emails          |                 |
+| SmtpPort                 | SMTP port for outgoing emails            |                 |
+| SmtpUserName             | SMTP authentication username             |                 |
+| SmtpFrom                 | 'From' address for outgoing emails       |                 |
+| EmailFrom                | 'From' name for outgoing emails          |                 |
+| JWTRealm                 | Realm parameter for JWT authentication tokens | yourappname     |
 
-| Flag                  | Function                                 | Required | Default        |
-| --------------------- | ---------------------------------------- | -------- | -------------- |
-| -pgname               | The name of the Postgres database to connect to | YES      |                |
-| -pgserver             | The server address for the Postgres connection |          | localhost |
-| -pgport               | The server port for the Postgres connection |          | 5432 |
-| -pgdisablessl         | Disbles SSL mode in the Postgres connection (for development) |          | FALSE          |
-| -pguser               | Username of database superuser with which to connect to the database for initial setup |       | postgres               |
-| -pgpw                 | Postgres connection password |          | localhost |
-| -secret               | The secret used to sign JWTs             | YES      |                |
-| -createadminwithemail | Bootstrap the installation with an admin user with this email address |          |                |
-| -siteslug             | The URL slug for the public facing website |          | "site"         |
-| -privateslug          | The URL slug for the authenticated HTML api |          | "private"      |
-| -smtphost             | SMTP server for outgoing emails          |          |                |
-| -smtpuser             | SMTP authentication username             |          |                |
-| -smtppw               | SMTP authentication password             |          |                |
-| -smtpfrom             | 'From' address for outgoing emails       |          |                |
-| -emailFrom            | 'From' name for outgoing emails          |          | =-smtpfrom     |
-| -demomode           | Run server in demo mode or not. Demo mode basically bypasses login. See below.      |          | FALSE  |
-| -demorole           | Role to use when running in demo mode     |          | "admin"    |
+### Command-Line
 
-## SMTP Configuration
+For convenience and security, some configurations are specified on the command line when using `ecosystem` commands. In general, type `ecosystem --help` for a list of commands and available flags.
 
-SMTP settings for outgoing email are not strictly required, but the login system will not work without them.  If incomplete credentials are provided, a warning will be displayed, but startup will not fail.
+|             |              | Flags                                    |                                          |
+| ----------- | ------------ | ---------------------------------------- | ---------------------------------------- |
+| All         |              | -p, —pgpw                                | **Optional:** Postgres super user password, if required |
+| `init`      | `db`         |                                          | Performs the DB initialisation for built-in tables, roles and permissions |
+| `init`      | `folders`    |                                          | Creates the EcoSystem folder structure   |
+| `install`   | `[bundle]`   | —demodata; -r, —reinstall                | Install named EcoSystem bundle.  Bundle folder must be downloaded/cloned into /bundles first. **Optional:** Include demo data with the bundle install. **Optional:** Uninstall the bundle before installing |
+| `uninstall` | `[bundle]`   |                                          | Uninstall named EcoSystem bundle.  Will not delete the bundle folder from /bundles |
+| `new`       | `bundle`     |                                          | Creates the folder structure for a new EcoSystem bundle |
+| `new`       | `configfile` |                                          | Creates a config.json with all default attributes |
+| `new`       | `user`       | —admin                                   | Creates a new user. **Optional:** make user with admin permissions |
+| `serve`     |              | -d, —demomode; -a, —noadminpanel; -w, —nowebsite; -s, —secret; —smtppw | Starts the EcoSystem server. **Optional:** Run the server in demo mode, allowing users to log in with magic code '123456', rather than having to request a code. **Optional:** Use flags to disable the admin panel and/or website. **Required:** Encryption secret for JWT signing.  Remember to use the same secret every time you start the server, or JWTs previously issued will not be valid. |
 
-If complete credentials are provided, the system will ping the server to test the connection.  If the ping fails, startup will exit.
+### SMTP Configuration
+
+SMTP settings for outgoing email are not strictly required, but the login system will not work without them, since it uses a passwordless process via email.  You can disable passwordless authentication for testing by running the server in demo mode.
+
+If email credentials are provided, the connection will be tested, but startup will not fail if the test fails - the email system will simply be disabled and a warning displayed.
 
 ### Demo mode
 
-As a convenience, the server can be run in *demo mode*.  In this mode, any requests to log in will bypass email and magic code checking (i.e. anything can be entered) and return a JWT encoded with a random UUID.  Subsequent calls to the API with this JWT will be authorised with the role specified with the flag `-demorole` which defaults to "admin".
+As a convenience, the server can be run in *demo mode* with the flag `--demomode`.  In this mode, passwordless authentication is disabled, and users can log on with the code '123456'.  Note that the user must still be created in the database and a role assigned.
 
-### Licence
+For example, if you wanted to demo admin panel functionality, you might create a user with the role 'admin' and the email 'test@test.com' - you'd then tell users to log in with that email and password '123456'.
 
-**Build freely with EcoSystem**.  The EcoSystem Server and The EcoSystem Admin Panel App are licensed under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).  The content on the [EcoSystem website] (http://www.ecosystem.software) is licensed under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/).  Neither licence grants permission to use the trade names, trademarks, service marks, or product names of EcoSystem Software LLP, including the EcoSystem logo and symbol, except as required for reasonable and customary use.-->
+## Licence
+
+**Build freely with EcoSystem**.  The EcoSystem Server and The EcoSystem Admin Panel App are licensed under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).  The content on the [EcoSystem website] (http://www.ecosystem.software) is licensed under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/).  Neither licence grants permission to use the trade names, trademarks, service marks, or product names of EcoSystem Software LLP, including the EcoSystem logo and symbol, except as required for reasonable and customary use.
+
