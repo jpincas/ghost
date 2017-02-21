@@ -79,7 +79,7 @@ func (d dbConfig) getDBConnectionString(serverPW string) (dbConnectionString str
 	//If this is a connection for a server role, use the password supplied as a parameter
 	//Otherwise ignore that parameter
 	if d.user == "server" {
-		d.pw = "serverPW"
+		d.pw = serverPW
 	}
 
 	//Set the password string if a password has been supplied
