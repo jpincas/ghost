@@ -44,7 +44,7 @@ func InitDBConnectionConfigs() {
 	//This configuration is generally used only temporarily during setup operations
 	SuperUserDBConfig = dbConfig{
 		user:       viper.GetString("pgSuperUser"),
-		pw:         viper.GetString("pgPW"),
+		pw:         viper.GetString("pgpw"),
 		server:     viper.GetString("pgServer"),
 		port:       viper.GetString("pgPort"),
 		dbName:     viper.GetString("pgDBName"),
@@ -63,14 +63,23 @@ func InitDBConnectionConfigs() {
 
 }
 
+//ReturnDBConnection returns a DB connection pool using the connection parameters in a dbConfig struct
+//and an optional server password which can be passed in
+func (d dbConfig) ReturnDBConnection(serverPW string) *sql.DB {
+
+	dbConnectionString := d.getDBConnectionString(serverPW)
+	return connectToDB(dbConnectionString)
+
+}
+
 //getDBConnectionString returns a correctly formated Postgres connection string from
 //the config struct.  If there is no pw in the struct (as is the case for )
 func (d dbConfig) getDBConnectionString(serverPW string) (dbConnectionString string) {
 
 	//If this is a connection for a server role, use the password supplied as a parameter
 	//Otherwise ignore that parameter
-	if d.user != "server" {
-		d.pw = serverPW
+	if d.user == "server" {
+		d.pw = "serverPW"
 	}
 
 	//Set the password string if a password has been supplied
@@ -85,15 +94,6 @@ func (d dbConfig) getDBConnectionString(serverPW string) (dbConnectionString str
 		dbConnectionString += "?sslmode=disable"
 	}
 	return
-}
-
-//ReturnDBConnection returns a DB connection pool using the connection parameters in a dbConfig struct
-//and an optional server password which can be passed in
-func (d dbConfig) ReturnDBConnection(serverPW string) *sql.DB {
-
-	dbConnectionString := d.getDBConnectionString(serverPW)
-	return connectToDB(dbConnectionString)
-
 }
 
 //connectToDB connects to the database and returns a connection pool

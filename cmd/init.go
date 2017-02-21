@@ -83,6 +83,7 @@ func initDB(cmd *cobra.Command, args []string) error {
 
 	//Run initialisation SQL
 	var err error
+	_, err = db.Exec(ecosql.ToCreateAdminRole)
 	_, err = db.Exec(ecosql.ToGrantAdminPermissions) //Do this first so everything created after will have correct admin permissions by default
 	_, err = db.Exec(ecosql.ToCreateUUIDExtension)
 	_, err = db.Exec(ecosql.ToCreateUsersTable)
@@ -91,7 +92,6 @@ func initDB(cmd *cobra.Command, args []string) error {
 	_, err = db.Exec(ecosql.ToCreateWebCategoriesTable)
 	_, err = db.Exec(ecosql.ToCreateServerRole)
 	_, err = db.Exec(ecosql.ToCreateAnonRole)
-	_, err = db.Exec(ecosql.ToCreateAdminRole)
 	_, err = db.Exec(ecosql.ToCreateWebRole)
 	_, err = db.Exec(ecosql.ToGrantBuiltInPermissions)
 

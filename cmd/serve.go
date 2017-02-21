@@ -99,7 +99,6 @@ func preServe() {
 	//Generate a random server password, set it and get out
 	serverPW := eco.RandomString(16)
 	_, err = dbTemp.Exec(fmt.Sprintf(ecosql.ToSetServerRolePassword, serverPW))
-	_, err = dbTemp.Exec(ecosql.ToSetServerPasswordToLastForever)
 	if err != nil {
 		log.Fatal("Error setting server role password: ", err.Error())
 	}

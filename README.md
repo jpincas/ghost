@@ -12,9 +12,6 @@ EcoSystem is a platform that allows you to quickly develop completely custom dat
 
 **For extra points:** the EcoSystem server also serves the admin panel application for you, but you need to clone/download into your project directory first (see Step 9 below).
 
--bundles
--cli
-
 ## Getting Started
 
 If you have Go installed and access to a Postgres server, it should take you less than 60 seconds to get up and running.

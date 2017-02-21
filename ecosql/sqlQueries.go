@@ -32,13 +32,12 @@ const (
 	ToGetUsersRole                  = `SELECT role from users WHERE id = '%s';`
 
 	//Built in roles
-	ToCreateServerRole               = `CREATE ROLE server NOINHERIT LOGIN;`
-	ToSetServerRolePassword          = `ALTER ROLE server WITH PASSWORD '%s';`
-	ToSetServerPasswordToLastForever = `ALTER ROLE server VALID UNTIL 'infinity';`
-	ToCreateAnonRole                 = `CREATE ROLE anon;`
-	ToCreateAdminRole                = `CREATE ROLE admin BYPASSRLS;`
-	ToCreateWebRole                  = `CREATE ROLE web;`
-	ToGrantBuiltInPermissions        = `GRANT anon, web, admin TO server; GRANT SELECT ON TABLE users TO server;GRANT SELECT ON TABLE web_categories TO web;`
+	ToCreateServerRole        = `CREATE ROLE server NOINHERIT LOGIN PASSWORD NULL;`
+	ToSetServerRolePassword   = `ALTER ROLE server NOINHERIT LOGIN PASSWORD '%s' VALID UNTIL 'infinity';`
+	ToCreateAnonRole          = `CREATE ROLE anon;`
+	ToCreateAdminRole         = `CREATE ROLE admin BYPASSRLS;`
+	ToCreateWebRole           = `CREATE ROLE web;`
+	ToGrantBuiltInPermissions = `GRANT anon, web, admin TO server; GRANT SELECT ON TABLE users TO server;GRANT SELECT ON TABLE web_categories TO web;`
 
 	//Admin permissions
 	ToGrantAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO admin;`

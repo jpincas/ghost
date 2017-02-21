@@ -25,7 +25,7 @@ import (
 )
 
 //pgPW is the Postgres connection password, needed across most subcommands
-var pgPW string
+// var pgPW string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -47,7 +47,8 @@ func Execute() {
 func init() {
 
 	cobra.OnInitialize(initConfig)
-	RootCmd.PersistentFlags().StringVarP(&pgPW, "pgpw", "p", "", "Postgres superuser password")
+	RootCmd.PersistentFlags().StringP("pgpw", "p", "", "Postgres superuser password")
+	viper.BindPFlag("pgpw", RootCmd.PersistentFlags().Lookup("pgpw"))
 
 }
 
