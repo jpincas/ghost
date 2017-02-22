@@ -197,10 +197,18 @@ func WebShowList(c *gin.Context) {
 
 }
 
-//WebShowHomepage shows the homepage
-func WebShowHomepage(c *gin.Context) {
+//WebShowEntryPage shows either the schema homepage or the site-level homepage
+func WebShowEntryPage(c *gin.Context) {
+	schema := eco.HyphensToUnderscores(c.Param("schema"))
+	var template string
+	if schema != "" {
+		template = schema + "/index.html"
+	} else {
+		template = "index.html"
+	}
 	var s eco.SiteBuilder
-	c.HTML(http.StatusOK, "index.html", gin.H{
+
+	c.HTML(http.StatusOK, template, gin.H{
 		"site": s,
 	})
 }

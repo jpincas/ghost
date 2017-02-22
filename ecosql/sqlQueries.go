@@ -22,7 +22,7 @@ const (
 
 	//Create built-in tables
 	ToCreateUsersTable         = `CREATE TABLE users (id uuid PRIMARY KEY, email varchar(256) UNIQUE, role varchar(16) NOT NULL default 'anon');`
-	ToCreateWebCategoriesTable = `CREATE TABLE web_categories (id text NOT NULL PRIMARY KEY, title text,image text,description text,subtitle text,parent text,priority integer);`
+	ToCreateWebCategoriesTable = `CREATE TABLE web_categories (id text NOT NULL PRIMARY KEY, title text,image text,description text,subtitle text,parent text,priority integer, bundle text);`
 
 	//Built in user logic and cmd line user creation
 	ToCreateFuncToGenerateNewUserID = `CREATE FUNCTION generate_new_user() RETURNS trigger AS $$ BEGIN NEW.id := uuid_generate_v4(); RETURN NEW; END; $$ LANGUAGE plpgsql;`
@@ -45,14 +45,15 @@ const (
 	//Schema manipulation for bundles
 	ToCreateSchema                = `CREATE SCHEMA %s;`
 	ToGrantBundleAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT ALL ON TABLES TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT USAGE ON SEQUENCES TO admin;`
+	ToDeleteBundleCategories      = `DELETE FROM public.web_categories WHERE bundle = '%s';`
 	ToDropSchema                  = `DROP SCHEMA %s CASCADE;`
 	ToSetSearchPathForBundle      = `SET search_path TO %s, public;`
 
 	//Web category retrieval and info
 	//NO SEMI COLONS AT THE END
 	ToSelectWebCategoryWhere   = `SELECT * FROM web_categories WHERE id = '%s'`
-	ToGetAllWebCategories      = `SELECT * FROM web_categories ORDER BY priority`
-	ToGetWebCategoriesByParent = `SELECT * FROM web_categories WHERE parent = '%s' ORDER BY priority`
+	ToGetAllWebCategories      = `SELECT * FROM web_categories WHERE bundle = '%s' ORDER BY priority`
+	ToGetWebCategoriesByParent = `SELECT * FROM web_categories WHERE bundle = '%s' AND parent = '%s' ORDER BY priority`
 	ToSelectKeywordedRecords   = `SELECT * FROM %s.%s WHERE keywords @> '{%s}'`
 
 	//Web requests

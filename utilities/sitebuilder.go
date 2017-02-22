@@ -40,13 +40,13 @@ type menu []menuItem
 type SiteBuilder struct{}
 
 //BuildMenu can be used by templates to retrieve a simple menu, listing web categories
-func (s SiteBuilder) BuildMenu(startNode string) menu {
+func (s SiteBuilder) BuildMenu(startNode string, schema string) menu {
 	var js, sql string
 
 	if startNode == "" {
-		sql = SqlQuery(ecosql.ToGetAllWebCategories).RequestMultipleResultsAsJSONArray().SetQueryRole("web").ToSQLString()
+		sql = SqlQuery(fmt.Sprintf(ecosql.ToGetAllWebCategories, schema)).RequestMultipleResultsAsJSONArray().SetQueryRole("web").ToSQLString()
 	} else {
-		sql = SqlQuery(fmt.Sprintf(ecosql.ToGetWebCategoriesByParent, startNode)).RequestMultipleResultsAsJSONArray().SetQueryRole("web").ToSQLString()
+		sql = SqlQuery(fmt.Sprintf(ecosql.ToGetWebCategoriesByParent, startNode, schema)).RequestMultipleResultsAsJSONArray().SetQueryRole("web").ToSQLString()
 	}
 
 	DB.QueryRow(sql).Scan(&js)

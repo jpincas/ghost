@@ -174,7 +174,8 @@ func serveWebsite() {
 	}
 
 	//Homepage and web categories
-	webServer.GET("/", handlers.WebShowHomepage)
+	webServer.GET("/", handlers.WebShowEntryPage)
+	webServer.GET("/"+viper.GetString("publicSiteSlug"), handlers.WebShowEntryPage)
 	webServer.GET("category/:schema/:table/:cat", handlers.WebShowCategory)
 
 	//Unprotected HTML routes.  Authentiaction middleware is not activated
@@ -185,8 +186,9 @@ func serveWebsite() {
 	site := webServer.Group(viper.GetString("publicSiteSlug"))
 
 	{
-		site.GET(":schema/:table/:slug", handlers.WebShowSingle)
+		site.GET(":schema", handlers.WebShowEntryPage)
 		site.GET(":schema/:table", handlers.WebShowList)
+		site.GET(":schema/:table/:slug", handlers.WebShowSingle)
 	}
 
 	//Protected HTML routes.
@@ -197,6 +199,7 @@ func serveWebsite() {
 
 	{
 		private.Use(eco.AuthMiddleware.MiddlewareFunc())
+		private.GET(":schema", handlers.WebShowEntryPage)
 		private.GET(":schema/:table", handlers.WebShowList)
 		private.GET(":schema/:table/:slug", handlers.WebShowSingle)
 	}

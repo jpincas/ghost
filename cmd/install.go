@@ -70,6 +70,9 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 		db := eco.SuperUserDBConfig.ReturnDBConnection("")
 		defer db.Close()
 
+		//Delete the web categories installed by this bundle
+		db.Exec(fmt.Sprintf(ecosql.ToDeleteBundleCategories, args[0]))
+
 		//Drop the schema
 		//If it doesn't exist, it won't be dropped - no big deal
 		db.Exec(fmt.Sprintf(ecosql.ToDropSchema, args[0]))

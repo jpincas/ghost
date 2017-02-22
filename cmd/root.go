@@ -21,11 +21,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"log"
+
 	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 )
 
-//pgPW is the Postgres connection password, needed across most subcommands
-// var pgPW string
+var configFileName string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -50,13 +51,13 @@ func init() {
 	RootCmd.PersistentFlags().StringP("pgpw", "p", "", "Postgres superuser password")
 	viper.BindPFlag("pgpw", RootCmd.PersistentFlags().Lookup("pgpw"))
 
+	RootCmd.PersistentFlags().StringVarP(&configFileName, "configfile", "c", "config", "Name of config file (without extension)")
+
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 
-	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
 	viper.SetDefault("pgSuperUser", "postgres")
 	viper.SetDefault("pgDBName", "ecosystem")
 	viper.SetDefault("pgPort", "5432")
@@ -70,12 +71,15 @@ func initConfig() {
 	viper.SetDefault("privateSiteSlug", "private")
 	viper.SetDefault("jwtRealm", "yourappname")
 
+	viper.SetConfigName(configFileName)
+	viper.AddConfigPath(".")
+
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		//Initialise the db config structs for later use
 		eco.InitDBConnectionConfigs()
 		fmt.Println("Config file detected and correctly applied:", viper.ConfigFileUsed())
 	} else {
-		fmt.Println("Not using config file: ", err.Error())
+		log.Fatal(err.Error())
 	}
 }
