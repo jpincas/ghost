@@ -1,8 +1,0 @@
-{
-    "pgSuperUser" : "jon",
-    "pgDisableSSL": true,
-    "pgDBName": "pickmister",
-    "adminPanelPort": "1000",
-    "apiPort": "2000",
-    "websitePort": "3000"
-}

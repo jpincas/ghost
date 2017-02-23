@@ -21,8 +21,6 @@ import (
 
 	"strings"
 
-	"log"
-
 	"github.com/ecosystemsoftware/ecosystem/ecosql"
 	sq "gopkg.in/Masterminds/squirrel.v1"
 )
@@ -60,7 +58,7 @@ func (s SqlQuery) SetUserID(userID string) SqlQuery {
 //Generally the last step before execution
 func (s SqlQuery) ToSQLString() string {
 	//Uncomment to turn on SQL loggingfor debugging
-	log.Println(fmt.Sprint(s))
+	//log.Println(fmt.Sprint(s))
 	return fmt.Sprint(s)
 }
 

@@ -24,6 +24,7 @@ import (
 	"github.com/ecosystemsoftware/ecosystem/ecosql"
 	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 	"github.com/lib/pq"
+	"github.com/spf13/viper"
 	gin "gopkg.in/gin-gonic/gin.v1"
 )
 
@@ -258,6 +259,15 @@ func WebShowCategory(c *gin.Context) {
 
 	}
 
+}
+
+func WebGetEcoSystemJS(c *gin.Context) {
+	var cf map[string]string
+	viper.Unmarshal(&cf)
+
+	c.HTML(http.StatusOK, "ecosystem.js", gin.H{
+		"config": cf,
+	})
 }
 
 // Possible code for a more complate HTML api with all HTTP verbs

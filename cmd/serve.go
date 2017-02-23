@@ -15,8 +15,8 @@
 package cmd
 
 import (
+	"html/template"
 	"net/http"
-	"path/filepath"
 
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -31,6 +31,7 @@ import (
 
 	"github.com/ecosystemsoftware/ecosystem/ecosql"
 	"github.com/ecosystemsoftware/ecosystem/handlers"
+	"github.com/ecosystemsoftware/ecosystem/templates"
 	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 )
 
@@ -118,6 +119,7 @@ func serveAPI() {
 
 	//Resized image route
 	//Note format: /images/[IMAGE NAME WITH OPTIONAL PATH]?width=[WIDTH IN PIXELS]
+	//TODO: this will serve image directories from bundles whether they are installed or not
 	apiServer.GET("/images/*image", handlers.ShowImage) //Use star instead fo colons to allow for paths
 
 	//Get JWT
@@ -148,35 +150,44 @@ func serveWebsite() {
 
 	webServer := gin.Default()
 
-	//Check for templates and load if any found
-	//Must check first otherwise crashes if no templates present
-	// templates/BUNDLE_NAME/PAGES or EMAIL or PARTIALS
-	if t, err := filepath.Glob("bundles/**/templates/**/*.html"); t != nil && err == nil {
-		webServer.LoadHTMLGlob("bundles/**/templates/**/*.html")
+	//Templates
+	//Start with the ecosystem.js templates
+	html := template.Must(template.New("ecosystem.js").Parse(templates.EcoSystemJS))
+	//Add all the bundles templates
+	html, err := html.ParseGlob("bundles/**/templates/**/*.html")
+	//TODO: this will serve templates from bundles whether they are installed or not. Need to fix
+	if err != nil {
+		log.Println("Template error:", err.Error())
+	} else {
+		//Set the templates on the server
+		webServer.SetHTMLTemplate(html)
 	}
+
+	//Ecosystem JS
+	webServer.GET("/ecosystem.js", handlers.WebGetEcoSystemJS)
 
 	//Resized image route
 	//Note format: /images/[IMAGE NAME WITH OPTIONAL PATH]?width=[WIDTH IN PIXELS]
+	//TODO: this will serve image directories from bundles whether they are installed or not
 	webServer.GET("/images/*image", handlers.ShowImage) //Use star instead fo colons to allow for paths
-
-	//Bundle public directories
-	public := webServer.Group("/public")
-	{
-		//For each bundle present - add that bundle's public directory contents at TOPLEVEL/public/BUNDLENAME
-		if bundleDirectoryContents, err := afero.ReadDir(eco.AppFs, "bundles"); err == nil {
-			for _, v := range bundleDirectoryContents {
-				if v.IsDir() {
-					public.StaticFS(v.Name(), http.Dir(path.Join("bundles", v.Name(), "public")))
-				}
-			}
-		}
-
-	}
 
 	//Homepage and web categories
 	webServer.GET("/", handlers.WebShowEntryPage)
 	webServer.GET("/"+viper.GetString("publicSiteSlug"), handlers.WebShowEntryPage)
 	webServer.GET("category/:schema/:table/:cat", handlers.WebShowCategory)
+
+	//Bundle public directories
+	public := webServer.Group("/public")
+	{
+		//For each bundle installed - add that bundle's public directory contents at TOPLEVEL/public/BUNDLENAME
+		bundles := viper.GetStringSlice("bundlesInstalled")
+
+		for _, v := range bundles {
+			public.StaticFS(v, http.Dir(path.Join("bundles", v, "public")))
+
+		}
+
+	}
 
 	//Unprotected HTML routes.  Authentiaction middleware is not activated
 	//so there is no need for the browser to present a JWT
@@ -212,10 +223,23 @@ func serveAdminPanel() {
 
 	adminServer := gin.Default()
 
+	//Serve the imports file directly
+	html := template.Must(template.New("admin-imports.html").Parse(templates.Admin))
+	adminServer.SetHTMLTemplate(html)
+	adminServer.GET("/admin-imports.html", handlers.AdminGetImports)
+
+	//Group views from bundles
 	views := adminServer.Group("/views")
 	{
-		views.Use(eco.MakeJSON)                //Activate JSON Header middleware
-		views.GET("", handlers.AdminShowViews) //Concatenates view.json from each bundle
+		views.Use(eco.MakeJSON)                           //Activate JSON Header middleware
+		views.GET("", handlers.AdminShowConcatenatedJSON) //Concatenates view.json from each bundle
+	}
+
+	//Group menus from bundles
+	menu := adminServer.Group("/menu")
+	{
+		menu.Use(eco.MakeJSON)                           //Activate JSON Header middleware
+		menu.GET("", handlers.AdminShowConcatenatedJSON) //Concatenates menu.json from each bundle
 	}
 
 	//Serve the Polymer app at /admin

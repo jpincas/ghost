@@ -15,14 +15,17 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 
 	"github.com/ecosystemsoftware/ecosystem/ecosql"
 	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var isInstallDemoData, isReinstall bool
@@ -76,6 +79,26 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 		//Drop the schema
 		//If it doesn't exist, it won't be dropped - no big deal
 		db.Exec(fmt.Sprintf(ecosql.ToDropSchema, args[0]))
+
+		//Attempt to updated the bundles installed list
+		newBundlesInstalled, err := eco.Bundles(viper.GetStringSlice("bundlesInstalled")).UnInstallBundle(args[0])
+
+		//If there is any error, return it
+		if err != nil {
+			log.Println("Error updating bundles installed list: ", err.Error())
+		}
+
+		//Otherwise set the viper configuration to the new bundles list and overwrite the config.json
+		viper.Set("bundlesInstalled", newBundlesInstalled)
+		var config eco.Config
+		viper.Unmarshal(&config)
+		configJSON, _ := json.MarshalIndent(config, "", "\t")
+		err = ioutil.WriteFile("config.json", configJSON, 0644)
+		if err != nil {
+			log.Println("Error updating config.json: ", err.Error())
+		}
+
+		log.Println("config.json updated")
 
 		log.Println("Uninstallation of bundle", args[0], "completed")
 	}
@@ -172,6 +195,27 @@ func installBundle(cmd *cobra.Command, args []string) error {
 		}
 	} //End sql installation
 
+	//Attempt to updated the bundles installed list
+	newBundlesInstalled, err := eco.Bundles(viper.GetStringSlice("bundlesInstalled")).InstallBundle(args[0])
+
+	//If there is any error, return it
+	if err != nil {
+		log.Println("Error updating bundles installed list: ", err.Error())
+	}
+
+	//Otherwise set the viper configuration to the new bundles list and overwrite the config.json
+	viper.Set("bundlesInstalled", newBundlesInstalled)
+	var config eco.Config
+	viper.Unmarshal(&config)
+	configJSON, _ := json.MarshalIndent(config, "", "\t")
+	err = ioutil.WriteFile("config.json", configJSON, 0644)
+	if err != nil {
+		log.Println("Error updating config.json: ", err.Error())
+	}
+
+	log.Println("config.json updated")
+
+	//Bundle installation complete
 	log.Println("Installation of bundle", args[0], "completed")
 	return nil
 

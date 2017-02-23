@@ -15,9 +15,7 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -33,10 +31,8 @@ var isAdmin bool
 
 func init() {
 	RootCmd.AddCommand(newCmd)
-	newCmd.AddCommand(newConfigfileCmd)
 	newCmd.AddCommand(newUserCmd)
 	newCmd.AddCommand(newBundleCmd)
-
 	newUserCmd.Flags().BoolVar(&isAdmin, "admin", false, "Create user with admin role")
 
 }
@@ -45,15 +41,6 @@ func init() {
 var newCmd = &cobra.Command{
 	Use:   "new [object]",
 	Short: "Create new files, users and bundles",
-}
-
-//newConfigfileCmd creates a template config.json with sane defaults.
-var newConfigfileCmd = &cobra.Command{
-	Use:   "configfile",
-	Short: "Create a default config.json",
-	Long: `Creates a template for config.json with all available
-	configuration parameters`,
-	RunE: createDefaultConfigFile,
 }
 
 var newUserCmd = &cobra.Command{
@@ -70,44 +57,6 @@ var newBundleCmd = &cobra.Command{
 	Short: "Create a new EcoSystem Bundle",
 	Long:  `Scaffolds a new bundle including folder structure and required files`,
 	RunE:  createNewBundle,
-}
-
-//createDafaultConfigFile creates the default config.json template with sane defaults
-//Will overwrite existing config.json, so ask for confirmation
-func createDefaultConfigFile(cmd *cobra.Command, args []string) error {
-
-	c := eco.AskForConfirmation("This will overwrite any existing config.json. Do you with to proceed?")
-	if c {
-		config := eco.Config{
-			PgSuperUser:              "postgres",
-			PgDBName:                 "ecosystem",
-			PgPort:                   "5432",
-			PgServer:                 "localhost",
-			PgDisableSSL:             false,
-			ApiPort:                  "3000",
-			WebsitePort:              "3001",
-			AdminPanelPort:           "3002",
-			AdminPanelServeDirectory: "ecosystem-admin",
-			PublicSiteSlug:           "site",
-			PrivateSiteSlug:          "private",
-			SmtpHost:                 "smtp",
-			SmtpPort:                 "25",
-			SmtpUserName:             "info@yourdomain.com",
-			SmtpFrom:                 "info@yourdomain.com",
-			EmailFrom:                "Your Name",
-			JWTRealm:                 "Your App Name",
-		}
-
-		configJSON, _ := json.MarshalIndent(config, "", "\t")
-		err := ioutil.WriteFile("config.json", configJSON, 0644)
-		if err == nil {
-			log.Println("Created default config.json")
-		}
-		return err
-	}
-
-	log.Println("Aborted by user")
-	return nil
 }
 
 func createNewUser(cmd *cobra.Command, args []string) error {

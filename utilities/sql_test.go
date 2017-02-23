@@ -28,8 +28,7 @@ func TestSqlQueryTransformers(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		str := c.RequestSingleResultAsJSONObject().RequestMultipleResultsAsJSONArray().SetQueryRole("tester").SetUserID("123456").ToSQLString()
-		t.Log(str)
+		c.RequestSingleResultAsJSONObject().RequestMultipleResultsAsJSONArray().SetQueryRole("tester").SetUserID("123456").ToSQLString()
 	}
 
 }
