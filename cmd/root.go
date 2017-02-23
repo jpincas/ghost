@@ -70,10 +70,10 @@ func justCheckForConfigFile(cmd *cobra.Command, args []string) error {
 func initConfig() {
 
 	viper.SetDefault("pgSuperUser", "postgres")
-	viper.SetDefault("pgDBName", "ecosystem")
+	viper.SetDefault("pgDBName", "testdb")
 	viper.SetDefault("pgPort", "5432")
 	viper.SetDefault("pgServer", "localhost")
-	viper.SetDefault("pgDisableSSL", false)
+	viper.SetDefault("pgDisableSSL", true)
 	viper.SetDefault("apiPort", "3000")
 	viper.SetDefault("websitePort", "3001")
 	viper.SetDefault("adminPanelPort", "3002")
@@ -117,10 +117,10 @@ func createDefaultConfigFile() error {
 
 	config := eco.Config{
 		PgSuperUser:              "postgres",
-		PgDBName:                 "ecosystem",
+		PgDBName:                 "testdb",
 		PgPort:                   "5432",
 		PgServer:                 "localhost",
-		PgDisableSSL:             false,
+		PgDisableSSL:             true,
 		ApiPort:                  "3000",
 		WebsitePort:              "3001",
 		AdminPanelPort:           "3002",
