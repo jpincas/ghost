@@ -223,11 +223,6 @@ func serveAdminPanel() {
 
 	adminServer := gin.Default()
 
-	//Serve the imports file directly
-	html := template.Must(template.New("admin-imports.html").Parse(templates.Admin))
-	adminServer.SetHTMLTemplate(html)
-	adminServer.GET("/admin-imports.html", handlers.AdminGetImports)
-
 	//Group views from bundles
 	views := adminServer.Group("/views")
 	{
@@ -254,6 +249,11 @@ func serveAdminPanel() {
 	adminServer.GET("/admin/view/*anything", func(c *gin.Context) {
 		c.File("./" + viper.GetString("adminPanelServeDirectory") + "/index.html")
 	})
+
+	//Serve the admin imports dynamically generated html
+	html := template.Must(template.New("admin-imports.html").Parse(templates.Admin))
+	adminServer.SetHTMLTemplate(html)
+	adminServer.GET("admin/imports.html", handlers.AdminGetImports)
 
 	// //Otherwise
 	// //Serve these static files
