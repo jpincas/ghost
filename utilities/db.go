@@ -31,6 +31,17 @@ type dbConfig struct {
 	disableSSL                     bool
 }
 
+//TestDBConfig is a ready to go database config for testing purposes
+//TODO: at the moment the config for testing is fixed - need to work out
+//clean way of allowing users to specify different config
+var TestDBConfig = dbConfig{
+	user:       "postgres",
+	server:     "localhost",
+	port:       "5432",
+	dbName:     "testing",
+	disableSSL: true,
+}
+
 //SuperUserDBConfig is the connection configuration for the super user
 var SuperUserDBConfig dbConfig
 

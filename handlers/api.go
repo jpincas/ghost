@@ -79,30 +79,53 @@ func ApiShowList(c *gin.Context) {
 
 	//Build out the SQL from the URL Query parameters
 	queries := c.Request.URL.Query()
-	role, _ := c.Get("role")
-	userID, _ := c.Get("userID")
 
-	sqlString := eco.QueryBuilder(schema, table, queries).RequestMultipleResultsAsJSONArray().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
+	role, roleExists := c.Get("role")
+	//If no role is set
+	if !roleExists {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"message": "No user role specified",
+			"schema":  schema,
+			"table":   table,
+		})
+	}
 
-	err := eco.DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
+	userID, idExists := c.Get("userID")
+	//If no userid is set
+	if !idExists {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"message": "No user id specified",
+			"schema":  schema,
+			"table":   table,
+		})
+	}
 
-	if err != nil {
-		//Check for an sql scan error indicating the json has come back empty
-		if strings.Contains(err.Error(), "sql") {
-			//In this case, no rows is OK - it's just an empty list
-			c.String(http.StatusOK, json)
+	//If both role and id exist, then proceed
+	if idExists && roleExists {
+		sqlString := eco.QueryBuilder(schema, table, queries).RequestMultipleResultsAsJSONArray().SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
+
+		err := eco.DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
+
+		if err != nil {
+			//Check for an sql scan error indicating the json has come back empty
+			if strings.Contains(err.Error(), "sql") {
+				//In this case, no rows is OK - it's just an empty list
+				c.String(http.StatusOK, json)
+			} else {
+				dbError := err.(*pq.Error)
+				httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
+				c.JSON(httpCode, gin.H{
+					"code":    httpCode,
+					"message": dbError.Message,
+					"dbCode":  dbError.Code,
+					"table":   table,
+				})
+			}
 		} else {
-			dbError := err.(*pq.Error)
-			httpCode := eco.DBErrorCodeToHTTPErrorCode(dbError.Code)
-			c.JSON(httpCode, gin.H{
-				"code":    httpCode,
-				"message": dbError.Message,
-				"dbCode":  dbError.Code,
-				"table":   table,
-			})
+			c.String(http.StatusOK, json)
 		}
-	} else {
-		c.String(http.StatusOK, json)
 	}
 
 }

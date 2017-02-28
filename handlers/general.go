@@ -48,7 +48,5 @@ func ReturnBlank(c *gin.Context) {
 //ReturnHelloWorld is a test handler that can be used when wiring up a custom server to
 //check that the EcoSystem utility package is being correctly imported and built
 func ReturnHelloWorld(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"hello": "world",
-	})
+	c.JSON(http.StatusOK, gin.H{"hello": "world"})
 }
