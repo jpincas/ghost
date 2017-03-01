@@ -14,6 +14,12 @@
 
 package utilities
 
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
 // func TestCheckTemplate(t *testing.T) {
 
 // 	//Use afero for test file system
@@ -44,3 +50,15 @@ package utilities
 // 	}
 
 // }
+
+func TestAllOK(t *testing.T) {
+
+	assert := assert.New(t)
+
+	assert.Equal(true, AllOK(true), "One true - should be true")
+	assert.Equal(true, AllOK(true, true), "All true - should be true")
+	assert.Equal(false, AllOK(true, true, false), "Mutliple trues, one false - should be false")
+	assert.Equal(false, AllOK(false), "One false - should be false")
+	assert.Equal(false, AllOK(false, false), "All false - should be false")
+
+}

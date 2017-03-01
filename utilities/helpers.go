@@ -27,6 +27,16 @@ import (
 	"github.com/lib/pq"
 )
 
+//AllOK Takes any number of bools and returns true if all are true, or false if ANY are false
+func AllOK(oks ...bool) bool {
+	for _, ok := range oks {
+		if !ok {
+			return false
+		}
+	}
+	return true
+}
+
 //DBErrorCodeToHTTPErrorCode is a helper to translate error codes from the database into meaningful HTTP codes
 func DBErrorCodeToHTTPErrorCode(dbCode pq.ErrorCode) (httpCode int) {
 	switch {

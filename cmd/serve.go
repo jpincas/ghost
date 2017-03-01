@@ -17,6 +17,7 @@ package cmd
 import (
 	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -31,8 +32,11 @@ import (
 
 	"github.com/ecosystemsoftware/ecosystem/ecosql"
 	"github.com/ecosystemsoftware/ecosystem/handlers"
+	"github.com/ecosystemsoftware/ecosystem/handlers/api"
 	"github.com/ecosystemsoftware/ecosystem/templates"
 	eco "github.com/ecosystemsoftware/ecosystem/utilities"
+	"github.com/pressly/chi"
+	"github.com/pressly/chi/middleware"
 )
 
 var nowebsite, noadminpanel bool
@@ -113,36 +117,70 @@ func preServe() {
 
 func serveAPI() {
 
-	apiServer := gin.Default()
-	apiServer.Use(eco.AllowCORS)                             //Activate CORS middleware
-	apiServer.OPTIONS("/*anything", handlers.OptionsHandler) //Must allow unauthorised requests
+	//apiServer := chi.NewRouter()
+
+	r := chi.NewRouter()
+
+	// A good base middleware stack
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	// When a client closes their connection midway through a request, the
+	// http.CloseNotifier will cancel the request context (ctx).
+	r.Use(middleware.CloseNotify)
+
+	// Set a timeout value on the request context (ctx), that will signal
+	// through ctx.Done() that the request has timed out and further
+	// processing should be stopped.
+	r.Use(middleware.Timeout(60 * time.Second))
+
+	r.Route("/:schema", func(r chi.Router) {
+
+		r.Route("/:table", func(r chi.Router) {
+			r.Use(eco.AddURLContextValues)
+			r.Use(eco.AddRoleAndUserID)
+			r.Get("/", api.ShowList)               // GET /schema/table
+			r.Post("/", api.InsertRecord)          // PUT /schema/table
+			r.Get("/:record", api.ShowSingle)      // GET /schema/table/record
+			r.Patch("/:record", api.UpdateRecord)  // PATCH /schema/table/record
+			r.Delete("/:record", api.DeleteRecord) // DELETE /schema/table/record
+
+		})
+	})
+
+	http.ListenAndServe(":"+viper.GetString("apiPort"), r)
+
+	//apiServer.Use(eco.AllowCORS)                             //Activate CORS middleware
+	//apiServer.OPTIONS("/*anything", handlers.OptionsHandler) //Must allow unauthorised requests
 
 	//Resized image route
 	//Note format: /images/[IMAGE NAME WITH OPTIONAL PATH]?width=[WIDTH IN PIXELS]
 	//TODO: this will serve image directories from bundles whether they are installed or not
-	apiServer.GET("/images/*image", handlers.ShowImage) //Use star instead fo colons to allow for paths
+	//apiServer.GET("/images/*image", handlers.ShowImage) //Use star instead fo colons to allow for paths
 
 	//Get JWT
-	apiServer.POST("/login", eco.AuthMiddleware.LoginHandler) //for anonymous login post 'anon' for both username and password.  Must post both, otherwise fails
-	apiServer.POST("/magiccode", handlers.ApiMagicCode)
+	//apiServer.POST("/login", eco.AuthMiddleware.LoginHandler) //for anonymous login post 'anon' for both username and password.  Must post both, otherwise fails
+	//apiServer.POST("/magiccode", handlers.ApiMagicCode)
 
-	api := apiServer.Group("/api")
+	// api := apiServer.Group("/api")
 
-	{
-		api.Use(eco.AuthMiddleware.MiddlewareFunc())
-		api.Use(eco.MakeJSON) //Activate JSON Header middleware
-		api.GET("/:schema/:table", handlers.ApiShowList)
-		api.GET("/:schema/:table/:id", handlers.ApiShowSingle)
-		api.POST("/:schema/:table", handlers.ApiInsertRecord)
-		api.DELETE("/:schema/:table/:id", handlers.ApiDeleteRecord)
-		api.PATCH("/:schema/:table/:id", handlers.ApiUpdateRecord)
-		//Experimental: Full Text Search
-		api.Handle("SEARCH", "/:schema/:table/", handlers.ReturnBlank) //Useful for when blank searches are sent by client, to avoid errors
-		api.Handle("SEARCH", "/:schema/:table/:searchTerm", handlers.SearchList)
-	}
+	// {
+	// 	api.Use(eco.AuthMiddleware.MiddlewareFunc())
+	// 	api.Use(eco.MakeJSON) //Activate JSON Header middleware
+	// 	api.GET("/:schema/:table", handlers.ApiShowList)
+	// 	api.GET("/:schema/:table/:id", handlers.ApiShowSingle)
+	// 	api.POST("/:schema/:table", handlers.ApiInsertRecord)
+	// 	api.DELETE("/:schema/:table/:id", handlers.ApiDeleteRecord)
+	// 	api.PATCH("/:schema/:table/:id", handlers.ApiUpdateRecord)
+	// 	//Experimental: Full Text Search
+	// 	api.Handle("SEARCH", "/:schema/:table/", handlers.ReturnBlank) //Useful for when blank searches are sent by client, to avoid errors
+	// 	api.Handle("SEARCH", "/:schema/:table/:searchTerm", handlers.SearchList)
+	// }
 
-	//Start the API
-	apiServer.Run(":" + viper.GetString("apiPort"))
+	// //Start the API
+	// apiServer.Run(":" + viper.GetString("apiPort"))
 
 }
 

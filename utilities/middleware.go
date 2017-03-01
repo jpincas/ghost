@@ -15,6 +15,7 @@
 package utilities
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -25,11 +26,67 @@ import (
 	"log"
 
 	"github.com/ecosystemsoftware/ecosystem/ecosql"
+	"github.com/lib/pq"
+	"github.com/pressly/chi"
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/viper"
 	jwt "gopkg.in/appleboy/gin-jwt.v2"
 	gin "gopkg.in/gin-gonic/gin.v1"
 )
+
+//ResponseError is the struct containing details of a server error
+type ResponseError struct {
+	HTTPCode     int          `json:"httpCode"`
+	DBErrorCode  pq.ErrorCode `json:"dbCode"`
+	ErrorMessage string       `json:"message"`
+	Schema       string       `json:"schema"`
+	Table        string       `json:"table"`
+	Record       string       `json:"record"`
+}
+
+// role, roleExists := c.Get("role")
+// //If no role is set
+// if !roleExists {
+// 	c.JSON(http.StatusBadRequest, gin.H{
+// 		"code":    http.StatusBadRequest,
+// 		"message": "No user role specified",
+// 		"schema":  schema,
+// 		"table":   table,
+// 	})
+// }
+
+// userID, idExists := c.Get("userID")
+// //If no userid is set
+// if !idExists {
+// 	c.JSON(http.StatusBadRequest, gin.H{
+// 		"code":    http.StatusBadRequest,
+// 		"message": "No user id specified",
+// 		"schema":  schema,
+// 		"table":   table,
+// 	})
+// }
+
+func AddURLContextValues(next http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := context.WithValue(r.Context(), "schema", HyphensToUnderscores(chi.URLParam(r, "schema")))
+		ctx = context.WithValue(ctx, "table", HyphensToUnderscores(chi.URLParam(r, "table")))
+		ctx = context.WithValue(ctx, "record", chi.URLParam(r, "record"))
+		ctx = context.WithValue(ctx, "queries", r.URL.Query())
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func AddRoleAndUserID(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), "role", "admin")
+		ctx = context.WithValue(ctx, "userID", "123456")
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 //CORS
 func AllowCORS(c *gin.Context) {
