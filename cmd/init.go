@@ -18,8 +18,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ecosystemsoftware/ecosystem/ecosql"
-	eco "github.com/ecosystemsoftware/ecosystem/utilities"
+	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/spf13/cobra"
 )
 
@@ -61,7 +60,7 @@ var initFoldersCmd = &cobra.Command{
 //initAll
 func initAll(cmd *cobra.Command, args []string) error {
 
-	c := eco.AskForConfirmation("This will perform a complete (re)initialisation and may perform overwrites. Do you with to proceed?")
+	c := core.AskForConfirmation("This will perform a complete (re)initialisation and may perform overwrites. Do you with to proceed?")
 
 	if c {
 		initDB(cmd, args)
@@ -78,22 +77,22 @@ func initAll(cmd *cobra.Command, args []string) error {
 func initDB(cmd *cobra.Command, args []string) error {
 
 	//Establish a temporary connection as the super user
-	db := eco.SuperUserDBConfig.ReturnDBConnection("")
+	db := core.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
 	//Run initialisation SQL
 	var err error
-	_, err = db.Exec(ecosql.ToCreateAdminRole)
-	_, err = db.Exec(ecosql.ToGrantAdminPermissions) //Do this first so everything created after will have correct admin permissions by default
-	_, err = db.Exec(ecosql.ToCreateUUIDExtension)
-	_, err = db.Exec(ecosql.ToCreateUsersTable)
-	_, err = db.Exec(ecosql.ToCreateFuncToGenerateNewUserID)
-	_, err = db.Exec(ecosql.ToCreateTriggerOnNewUserInsert)
-	_, err = db.Exec(ecosql.ToCreateWebCategoriesTable)
-	_, err = db.Exec(ecosql.ToCreateServerRole)
-	_, err = db.Exec(ecosql.ToCreateAnonRole)
-	_, err = db.Exec(ecosql.ToCreateWebRole)
-	_, err = db.Exec(ecosql.ToGrantBuiltInPermissions)
+	_, err = db.Exec(core.SQLToCreateAdminRole)
+	_, err = db.Exec(core.SQLToGrantAdminPermissions) //Do this first so everything created after will have correct admin permissions by default
+	_, err = db.Exec(core.SQLToCreateUUIDExtension)
+	_, err = db.Exec(core.SQLToCreateUsersTable)
+	_, err = db.Exec(core.SQLToCreateFuncToGenerateNewUserID)
+	_, err = db.Exec(core.SQLToCreateTriggerOnNewUserInsert)
+	_, err = db.Exec(core.SQLToCreateWebCategoriesTable)
+	_, err = db.Exec(core.SQLToCreateServerRole)
+	_, err = db.Exec(core.SQLToCreateAnonRole)
+	_, err = db.Exec(core.SQLToCreateWebRole)
+	_, err = db.Exec(core.SQLToGrantBuiltInPermissions)
 
 	if err != nil {
 		log.Fatal("Could not complete database setup: ", err.Error())

@@ -20,12 +20,11 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"log"
-
-	eco "github.com/ecosystemsoftware/ecosystem/utilities"
 )
 
 var configFileName string
@@ -100,7 +99,7 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		//Initialise the db config structs for later use
-		eco.InitDBConnectionConfigs()
+		core.InitDBConnectionConfigs()
 		log.Println("Config file detected and correctly applied:", viper.ConfigFileUsed())
 	} else {
 		//Otherwise create one
@@ -115,7 +114,7 @@ func initConfig() {
 //Will overwrite existing config.json, so ask for confirmation
 func createDefaultConfigFile() error {
 
-	config := eco.Config{
+	config := core.Config{
 		PgSuperUser:              "postgres",
 		PgDBName:                 "testdb",
 		PgPort:                   "5432",

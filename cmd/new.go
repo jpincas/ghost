@@ -21,8 +21,7 @@ import (
 
 	"errors"
 
-	"github.com/ecosystemsoftware/ecosystem/ecosql"
-	eco "github.com/ecosystemsoftware/ecosystem/utilities"
+	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 )
@@ -71,7 +70,7 @@ func createNewUser(cmd *cobra.Command, args []string) error {
 	// }
 
 	//Establish a temporary connection as the super user
-	db := eco.SuperUserDBConfig.ReturnDBConnection("")
+	db := core.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
 	//Set to the default role
@@ -81,7 +80,7 @@ func createNewUser(cmd *cobra.Command, args []string) error {
 		role = "admin"
 	}
 
-	_, err := db.Exec(fmt.Sprintf(ecosql.ToCreateAdministrator, args[0], role))
+	_, err := db.Exec(fmt.Sprintf(core.SQLToCreateAdministrator, args[0], role))
 	if err != nil {
 		log.Fatal("Could not create new user:", err.Error())
 		return nil

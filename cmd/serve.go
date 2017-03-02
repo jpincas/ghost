@@ -12,30 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//Use the forked version of the go-jwt-middlware, not the auth0 version
+
 package cmd
 
 import (
-	"html/template"
 	"net/http"
 	"time"
 
-	"github.com/spf13/afero"
+	"github.com/goware/cors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	gin "gopkg.in/gin-gonic/gin.v1"
 
 	"fmt"
 
 	"log"
 
-	"path"
-
-	"github.com/ecosystemsoftware/ecosystem/ecosql"
-	"github.com/ecosystemsoftware/ecosystem/handlers"
-	"github.com/ecosystemsoftware/ecosystem/handlers/api"
-	"github.com/ecosystemsoftware/ecosystem/templates"
-	eco "github.com/ecosystemsoftware/ecosystem/utilities"
-	"github.com/pressly/chi"
+	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/pressly/chi/middleware"
 )
 
@@ -44,9 +37,6 @@ var smtpPW string
 
 func init() {
 	RootCmd.AddCommand(serveCmd)
-
-	serveCmd.Flags().BoolVarP(&nowebsite, "nowebsite", "w", false, "Disable website/HTML server")
-	serveCmd.Flags().BoolVarP(&noadminpanel, "noadminpanel", "a", false, "Disable admin panel server")
 
 	serveCmd.Flags().String("smtppw", "", "SMTP server password for outgoing mail")
 	viper.BindPFlag("smtppw", serveCmd.Flags().Lookup("smtppw"))
@@ -63,23 +53,14 @@ func init() {
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Starts the EcoSystem server",
-	Long: `Start EcoSystem with all 3 servers: api, web and admin panel.
-	Use flags to disable web and admin panel serving if you plan to host them elsewhere or ony use the API server`,
-	RunE: serve,
+	Long:  `Start the EcoSystem API Server`,
+	RunE:  serve,
 }
 
 func serve(cmd *cobra.Command, args []string) error {
 
 	preServe()
-
-	if !noadminpanel {
-		serveAdminPanel()
-	}
-	if !nowebsite {
-		serveWebsite()
-	}
-	serveAPI()
-
+	startServer()
 	return nil
 }
 
@@ -92,18 +73,18 @@ func preServe() {
 	}
 
 	//Set up the email server and test
-	err := eco.EmailSetup()
+	err := core.EmailSetup()
 	if err != nil {
 		log.Println("Error setting up email system: ", err.Error())
 		log.Println("Email system will not function")
 	}
 
 	//Establish a temporary connection as the super user
-	dbTemp := eco.SuperUserDBConfig.ReturnDBConnection("")
+	dbTemp := core.SuperUserDBConfig.ReturnDBConnection("")
 
 	//Generate a random server password, set it and get out
-	serverPW := eco.RandomString(16)
-	_, err = dbTemp.Exec(fmt.Sprintf(ecosql.ToSetServerRolePassword, serverPW))
+	serverPW := core.RandomString(16)
+	_, err = dbTemp.Exec(fmt.Sprintf(core.SQLToSetServerRolePassword, serverPW))
 	if err != nil {
 		log.Fatal("Error setting server role password: ", err.Error())
 	}
@@ -111,214 +92,47 @@ func preServe() {
 	dbTemp.Close()
 
 	//Establish a permanent connection
-	eco.DB = eco.ServerUserDBConfig.ReturnDBConnection(serverPW)
+	core.DB = core.ServerUserDBConfig.ReturnDBConnection(serverPW)
 
 }
 
-func serveAPI() {
+func startServer() {
 
-	//apiServer := chi.NewRouter()
+	//////////////////////
+	// Middleware Stack //
+	//////////////////////
 
-	r := chi.NewRouter()
+	// Basic CORS
+	// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
+	cors := cors.New(cors.Options{
+		// AllowedOrigins: []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "SEARCH"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	})
 
-	// A good base middleware stack
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	core.Router.Use(middleware.RequestID)
+	core.Router.Use(middleware.RealIP)
+	core.Router.Use(middleware.Logger)
+	core.Router.Use(middleware.Recoverer)
+	core.Router.Use(cors.Handler) //Activate CORS middleware
 
 	// When a client closes their connection midway through a request, the
 	// http.CloseNotifier will cancel the request context (ctx).
-	r.Use(middleware.CloseNotify)
+	core.Router.Use(middleware.CloseNotify)
 
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
-	r.Use(middleware.Timeout(60 * time.Second))
+	core.Router.Use(middleware.Timeout(60 * time.Second))
 
-	r.Route("/:schema", func(r chi.Router) {
-
-		r.Route("/:table", func(r chi.Router) {
-			r.Use(eco.AddURLContextValues)
-			r.Use(eco.AddRoleAndUserID)
-			r.Get("/", api.ShowList)               // GET /schema/table
-			r.Post("/", api.InsertRecord)          // PUT /schema/table
-			r.Get("/:record", api.ShowSingle)      // GET /schema/table/record
-			r.Patch("/:record", api.UpdateRecord)  // PATCH /schema/table/record
-			r.Delete("/:record", api.DeleteRecord) // DELETE /schema/table/record
-
-		})
-	})
-
-	http.ListenAndServe(":"+viper.GetString("apiPort"), r)
-
-	//apiServer.Use(eco.AllowCORS)                             //Activate CORS middleware
-	//apiServer.OPTIONS("/*anything", handlers.OptionsHandler) //Must allow unauthorised requests
-
-	//Resized image route
-	//Note format: /images/[IMAGE NAME WITH OPTIONAL PATH]?width=[WIDTH IN PIXELS]
-	//TODO: this will serve image directories from bundles whether they are installed or not
-	//apiServer.GET("/images/*image", handlers.ShowImage) //Use star instead fo colons to allow for paths
-
-	//Get JWT
-	//apiServer.POST("/login", eco.AuthMiddleware.LoginHandler) //for anonymous login post 'anon' for both username and password.  Must post both, otherwise fails
-	//apiServer.POST("/magiccode", handlers.ApiMagicCode)
-
-	// api := apiServer.Group("/api")
-
-	// {
-	// 	api.Use(eco.AuthMiddleware.MiddlewareFunc())
-	// 	api.Use(eco.MakeJSON) //Activate JSON Header middleware
-	// 	api.GET("/:schema/:table", handlers.ApiShowList)
-	// 	api.GET("/:schema/:table/:id", handlers.ApiShowSingle)
-	// 	api.POST("/:schema/:table", handlers.ApiInsertRecord)
-	// 	api.DELETE("/:schema/:table/:id", handlers.ApiDeleteRecord)
-	// 	api.PATCH("/:schema/:table/:id", handlers.ApiUpdateRecord)
-	// 	//Experimental: Full Text Search
-	// 	api.Handle("SEARCH", "/:schema/:table/", handlers.ReturnBlank) //Useful for when blank searches are sent by client, to avoid errors
-	// 	api.Handle("SEARCH", "/:schema/:table/:searchTerm", handlers.SearchList)
-	// }
-
-	// //Start the API
-	// apiServer.Run(":" + viper.GetString("apiPort"))
+	http.ListenAndServe(":"+viper.GetString("apiPort"), core.Router)
 
 }
 
-func serveWebsite() {
-
-	webServer := gin.Default()
-
-	//Templates
-	//Start with the ecosystem.js templates
-	html := template.Must(template.New("ecosystem.js").Parse(templates.EcoSystemJS))
-	//Add all the bundles templates
-	html, err := html.ParseGlob("bundles/**/templates/**/*.html")
-	//TODO: this will serve templates from bundles whether they are installed or not. Need to fix
-	if err != nil {
-		log.Println("Template error:", err.Error())
-	} else {
-		//Set the templates on the server
-		webServer.SetHTMLTemplate(html)
-	}
-
-	//Ecosystem JS
-	webServer.GET("/ecosystem.js", handlers.WebGetEcoSystemJS)
-
-	//Resized image route
-	//Note format: /images/[IMAGE NAME WITH OPTIONAL PATH]?width=[WIDTH IN PIXELS]
-	//TODO: this will serve image directories from bundles whether they are installed or not
-	webServer.GET("/images/*image", handlers.ShowImage) //Use star instead fo colons to allow for paths
-
-	//Homepage and web categories
-	webServer.GET("/", handlers.WebShowEntryPage)
-	webServer.GET("/"+viper.GetString("publicSiteSlug"), handlers.WebShowEntryPage)
-	webServer.GET("category/:schema/:table/:cat", handlers.WebShowCategory)
-
-	//Bundle public directories
-	public := webServer.Group("/public")
-	{
-		//For each bundle installed - add that bundle's public directory contents at TOPLEVEL/public/BUNDLENAME
-		bundles := viper.GetStringSlice("bundlesInstalled")
-
-		for _, v := range bundles {
-			public.StaticFS(v, http.Dir(path.Join("bundles", v, "public")))
-
-		}
-
-	}
-
-	//Unprotected HTML routes.  Authentiaction middleware is not activated
-	//so there is no need for the browser to present a JWT
-	//Database will always be queried with role 'web'.  Therefore give priveleges to this role
-	//to all tables that are intended to be public
-	//This is intended for the main site pages that are public and available to crawlers
-	site := webServer.Group(viper.GetString("publicSiteSlug"))
-
-	{
-		site.GET(":schema", handlers.WebShowEntryPage)
-		site.GET(":schema/:table", handlers.WebShowList)
-		site.GET(":schema/:table/:slug", handlers.WebShowSingle)
-	}
-
-	//Protected HTML routes.
-	//Authentication middlware is actiaved so a JWT must be presented by the browser
-	// These are used as partials when you want to
-	//return formatted HTML specified to the logged in user (e.g. a cart)
-	private := webServer.Group(viper.GetString("privateSiteSlug"))
-
-	{
-		private.Use(eco.AuthMiddleware.MiddlewareFunc())
-		private.GET(":schema", handlers.WebShowEntryPage)
-		private.GET(":schema/:table", handlers.WebShowList)
-		private.GET(":schema/:table/:slug", handlers.WebShowSingle)
-	}
-
-	go webServer.Run(":" + viper.GetString("websitePort"))
-
-}
-
-func serveAdminPanel() {
-
-	adminServer := gin.Default()
-
-	//Group views from bundles
-	views := adminServer.Group("/views")
-	{
-		views.Use(eco.MakeJSON)                           //Activate JSON Header middleware
-		views.GET("", handlers.AdminShowConcatenatedJSON) //Concatenates view.json from each bundle
-	}
-
-	//Group menus from bundles
-	menu := adminServer.Group("/menu")
-	{
-		menu.Use(eco.MakeJSON)                           //Activate JSON Header middleware
-		menu.GET("", handlers.AdminShowConcatenatedJSON) //Concatenates menu.json from each bundle
-	}
-
-	//Serve the Polymer app at /admin
-	// Simple way - just map the /admin to the serving directory
-	// Downside is that you can only enter the app at one place
-	//adminServer.StaticFS("/admin", http.Dir(viper.GetString("adminPanelServeDirectory")+"/"))
-
-	//Hard way:
-	//Router seems to have a hard time with widlcard conflicts, so this is the only way
-	//Ive found to do it
-	//(at the moment) all valid views are /admin/view - so in all those cases serve the index.html
-	adminServer.GET("/admin/view/*anything", func(c *gin.Context) {
-		c.File("./" + viper.GetString("adminPanelServeDirectory") + "/index.html")
-	})
-
-	//Serve the admin imports dynamically generated html
-	html := template.Must(template.New("admin-imports.html").Parse(templates.Admin))
-	adminServer.SetHTMLTemplate(html)
-	adminServer.GET("admin/imports.html", handlers.AdminGetImports)
-
-	// //Otherwise
-	// //Serve these static files
-	adminServer.StaticFile("admin", viper.GetString("adminPanelServeDirectory")+"/index.html")
-	adminServer.StaticFile("admin/", viper.GetString("adminPanelServeDirectory")+"/index.html")
-	adminServer.StaticFile("admin/index.html", viper.GetString("adminPanelServeDirectory")+"/index.html")
-	adminServer.StaticFile("admin/manifest.json", viper.GetString("adminPanelServeDirectory")+"/manifest.json")
-	adminServer.StaticFile("admin/service-worker.js", viper.GetString("adminPanelServeDirectory")+"/service-worker.js")
-	adminServer.StaticFile("admin/sw-precache-config.js", viper.GetString("adminPanelServeDirectory")+"/sw-precache-config.js")
-
-	// //And serve these subdirectories as file systems
-	adminServer.StaticFS("/admin/bower_components", http.Dir(viper.GetString("adminPanelServeDirectory")+"/bower_components"))
-	adminServer.StaticFS("/admin/src", http.Dir(viper.GetString("adminPanelServeDirectory")+"/src"))
-	adminServer.StaticFS("/admin/images", http.Dir(viper.GetString("adminPanelServeDirectory")+"/images"))
-
-	//Serve bundle customisation files at /bundles/[BUNDLENAME]
-	custom := adminServer.Group("/bundles")
-
-	//For each bundle present - add that bundle's admin directory contents at TOPLEVEL/custom/BUNDLENAME
-	if bundleDirectoryContents, err := afero.ReadDir(eco.AppFs, "bundles"); err == nil {
-		for _, v := range bundleDirectoryContents {
-			if v.IsDir() {
-				custom.StaticFS(v.Name(), http.Dir(path.Join("bundles", v.Name(), "admin-panel")))
-			}
-		}
-	}
-
-	go adminServer.Run(":" + viper.GetString("adminPanelPort"))
-
-}
+//  Experimental search features
+// 	api.Handle("SEARCH", "/:schema/:table/", core.ReturnBlank) //Useful for when blank searches are sent by client, to avoid errors
+// 	api.Handle("SEARCH", "/:schema/:table/:searchTerm", core.SearchList)
