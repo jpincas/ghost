@@ -18,9 +18,7 @@ package cmd
 
 import (
 	"net/http"
-	"time"
 
-	"github.com/goware/cors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -29,7 +27,6 @@ import (
 	"log"
 
 	"github.com/ecosystemsoftware/ecosystem/core"
-	"github.com/pressly/chi/middleware"
 )
 
 var nowebsite, noadminpanel bool
@@ -97,37 +94,6 @@ func preServe() {
 }
 
 func startServer() {
-
-	//////////////////////
-	// Middleware Stack //
-	//////////////////////
-
-	// Basic CORS
-	// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
-	cors := cors.New(cors.Options{
-		// AllowedOrigins: []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "SEARCH"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	})
-
-	core.Router.Use(middleware.RequestID)
-	core.Router.Use(middleware.RealIP)
-	core.Router.Use(middleware.Logger)
-	core.Router.Use(middleware.Recoverer)
-	core.Router.Use(cors.Handler) //Activate CORS middleware
-
-	// When a client closes their connection midway through a request, the
-	// http.CloseNotifier will cancel the request context (ctx).
-	core.Router.Use(middleware.CloseNotify)
-
-	// Set a timeout value on the request context (ctx), that will signal
-	// through ctx.Done() that the request has timed out and further
-	// processing should be stopped.
-	core.Router.Use(middleware.Timeout(60 * time.Second))
 
 	http.ListenAndServe(":"+viper.GetString("apiPort"), core.Router)
 

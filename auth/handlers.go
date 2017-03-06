@@ -80,7 +80,10 @@ func RequestNewUserToken(w http.ResponseWriter, r *http.Request) {
 		render.Status(r, http.StatusServiceUnavailable)
 		render.JSON(w, r, core.ResponseError{http.StatusServiceUnavailable, "", err.Error(), "", "", ""})
 	} else {
-		render.PlainText(w, r, tokenString)
+		render.JSON(w, r,
+			map[string]string{
+				"token": tokenString,
+			})
 	}
 
 }

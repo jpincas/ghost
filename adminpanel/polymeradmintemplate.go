@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package polymeradminpanel
+package adminpanel
 
 //This html import is dynamically created by substituting values from
 //the main config.json.
@@ -20,7 +20,7 @@ package polymeradminpanel
 //For some reason, Viper flattens the case of map keys when unmarshalling, so refer to key all in lower case
 
 //Admin is the main html import template for the admin panel
-const AdminImportTemplate = `
+const PolymerAdminImportTemplate = `
 <!--BUNDLE ACTION IMPORTS-->
 {{ range .bundles }}<link rel="import" href="../../bundles/{{ . }}/actions.html">
 {{ end }}

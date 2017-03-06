@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package polymeradminpanel
+package adminpanel
 
 import (
 	"fmt"
@@ -26,14 +26,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-//AdminShowViews concatenates the contents of the views.json file in each bundle and returns the combined JSON
-func AdminShowConcatenatedJSON(w http.ResponseWriter, r *http.Request) {
+//ShowConcatenatedJSON 'concatenate's the contents of the [filename].json file in each bundle's admin-panel folder and returns the combined JSON
+//where [filename] is the first slug in the URL.
+//i.e. a route /views using this handler would concatenate all views.json in bundles
+//By 'concatenation' in this context, we mean that it creates a .json file with a top-level object
+//with a key for each bundle.
+func ShowConcatenatedJSON(w http.ResponseWriter, r *http.Request) {
 
 	//Work out whether this is views or menus etc
 	url := r.URL.RequestURI()
 
 	urlParts := strings.Split(url, "/")
-	stub := urlParts[1]
+	stub := urlParts[2]
 
 	//For each bundle present
 	bundles := viper.GetStringSlice("bundlesInstalled")
@@ -42,7 +46,7 @@ func AdminShowConcatenatedJSON(w http.ResponseWriter, r *http.Request) {
 
 	for _, v := range bundles {
 
-		//Work out the name of the views file
+		//Work out the name of the file
 		viewsFile := path.Join("bundles", v, "admin-panel", stub+".json")
 
 		//Check it exists
@@ -71,15 +75,18 @@ func AdminShowConcatenatedJSON(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func AdminGetImports(w http.ResponseWriter, r *http.Request) {
+//GetPolymerImports is specific to the Polymer admin panel implementation
+//It dynamically serves an imports.html file constructed from the current config
+//and the polymeradmintemplate.go template
+func GetPolymerImports(w http.ResponseWriter, r *http.Request) {
 	var cf map[string]string
 	viper.Unmarshal(&cf)
 
 	bundles := viper.GetStringSlice("bundlesInstalled")
 
 	//TODO: template will try to import actions.html from each bundle, even if it doesn't exist
-	html := template.Must(template.New("admin-imports.html").Parse(AdminImportTemplate))
-	html.ExecuteTemplate(w, "admin-imports.html", map[string]interface{}{
+	html := template.Must(template.New("polymeradminimports.html").Parse(PolymerAdminImportTemplate))
+	html.ExecuteTemplate(w, "polymeradminimports.html", map[string]interface{}{
 		"config":  cf,
 		"bundles": bundles,
 	})

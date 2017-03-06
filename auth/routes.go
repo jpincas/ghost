@@ -19,13 +19,13 @@ import (
 	"github.com/pressly/chi"
 )
 
-func main() {
+func init() {
 
-	core.Router.Route("/admin", func(r chi.Router) {
+	core.Router.Route("/auth", func(r chi.Router) {
 
-		core.Router.Get("/newuser", RequestNewUserToken)
-		core.Router.Post("/login", RequestLogin)
-		core.Router.Post("/magiccode", MagicCode)
+		r.Get("/newuser", RequestNewUserToken)
+		r.Post("/login", RequestLogin)
+		r.Post("/magiccode", MagicCode)
 
 	})
 }

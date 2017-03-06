@@ -12,19 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//Very important: use the forked version of go-jwt-middlware
+//jwtmiddleware "github.com/jonbonazza/go-jwt-middleware"
+//The auth0 version doesn't properly support getting the claims
+
 package core
 
 import (
-	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	jwt "github.com/dgrijalva/jwt-go"
+	jwtmiddleware "github.com/jonbonazza/go-jwt-middleware"
 	"github.com/pressly/chi"
 	"github.com/spf13/viper"
 )
 
-func main() {
+func init() {
 
 	//JWT Authentication Middlware
-	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
+	var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 			return []byte(viper.GetString("secret")), nil
 		},
@@ -34,28 +38,28 @@ func main() {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
-	//The base slug is 'schema'
-	Router.Route("/:schema", func(r chi.Router) {
-		//Activate JWT middleware right at the base
-		Router.Use(jwtMiddleware.Handler)
-		//If a valid JWT is present, a user id and role will be assigned
-		Router.Use(Authorizator)
-		//Next slug is 'table'
-		Router.Route("/:table", func(r chi.Router) {
-			//Use middleware to add the schema, table and queries to the context
-			Router.Use(AddSchemaAndTableToContext)
-			Router.Get("/", ShowList)      // GET /schema/table
-			Router.Post("/", InsertRecord) // PUT /schema/table
-			//Final level is 'record'
-			Router.Route("/:record", func(r chi.Router) {
-				//Use middleware to add the record to the context
-				Router.Use(AddRecordToContext)
-				Router.Get("/", ShowSingle)      // GET /schema/table/record
-				Router.Patch("/", UpdateRecord)  // PATCH /schema/table/record
-				Router.Delete("/", DeleteRecord) // DELETE /schema/table/record
-
+	Router.Route("/api", func(r chi.Router) {
+		//The base slug is 'schema'
+		r.Route("/:schema", func(r chi.Router) {
+			//Activate JWT middleware right at the base
+			r.Use(jwtMiddleware.Handler)
+			//If a valid JWT is present, a user id and role will be assigned
+			r.Use(Authorizator)
+			//Next slug is 'table'
+			r.Route("/:table", func(r chi.Router) {
+				//Use middleware to add the schema, table and queries to the context
+				r.Use(AddSchemaAndTableToContext)
+				r.Get("/", ShowList)      // GET /schema/table
+				r.Post("/", InsertRecord) // PUT /schema/table
+				//Final level is 'record'
+				r.Route("/:record", func(r chi.Router) {
+					//Use middleware to add the record to the context
+					r.Use(AddRecordToContext)
+					r.Get("/", ShowSingle)      // GET /schema/table/record
+					r.Patch("/", UpdateRecord)  // PATCH /schema/table/record
+					r.Delete("/", DeleteRecord) // DELETE /schema/table/record
+				})
 			})
-
 		})
 	})
 

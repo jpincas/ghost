@@ -12,9 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//In order to import EcoSystem packages:
+//Specify an import with a blank namespace ("_")
+//This causes the package to register its routes in its init() function
+//EcoSystem standard packages uncluded by default: core, images, auth
+
 package main
 
-import "github.com/ecosystemsoftware/ecosystem/cmd"
+import (
+	_ "github.com/ecosystemsoftware/ecosystem/adminpanel"
+	_ "github.com/ecosystemsoftware/ecosystem/auth"
+	"github.com/ecosystemsoftware/ecosystem/cmd"
+	_ "github.com/ecosystemsoftware/ecosystem/images"
+)
 
 func main() {
 	cmd.Execute()

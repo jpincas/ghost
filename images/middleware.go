@@ -16,16 +16,16 @@ package images
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/pressly/chi"
 )
 
+//AddImageDetails is middleware that adds the name of the image (with path) and requested width
+//(defaulting to 500px) to the context of the request
 func AddImageDetails(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("Image: ", chi.URLParam(r, "*"))
 		ctx := context.WithValue(r.Context(), "image", chi.URLParam(r, "*"))
 		width := r.URL.Query().Get("width")
 		if width == "" {

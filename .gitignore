@@ -1,2 +1,10 @@
 ecosystem
+bundles
+ecosystem-admin
+img
 .DS_Store
+nohup.out
+config.json
+testing
+run-api-tests
+run-unit-tests
