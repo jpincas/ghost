@@ -27,7 +27,7 @@ import (
 //These are functions that support the generation of custom admin panel(s)
 //We do not actually serve the admin panel from here
 
-func init() {
+func setRoutes() {
 
 	core.Router.Route("/admin-panel", func(r chi.Router) {
 		r.Get("/polymer-imports.html", GetPolymerImports)
@@ -39,6 +39,7 @@ func init() {
 	//This is where each bindles .json view files will be served from
 	bundles := viper.GetStringSlice("bundlesInstalled")
 	for _, v := range bundles {
+
 		core.Router.FileServer(fmt.Sprintf("/admin-panel/%s", v), http.Dir(path.Join("bundles", v, "admin-panel")))
 	}
 

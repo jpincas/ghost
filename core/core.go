@@ -12,21 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package auth
+package core
 
-import (
-	"github.com/ecosystemsoftware/ecosystem/core"
-	"github.com/pressly/chi"
-)
-
-//SetRoutes adds the routes the router
-func setRoutes() {
-
-	core.Router.Route("/auth", func(r chi.Router) {
-
-		r.Get("/newuser", RequestNewUserToken)
-		r.Post("/login", RequestLogin)
-		r.Post("/magiccode", MagicCode)
-
-	})
+//Activate is the main package activation function
+func Activate() {
+	//Set the routes for the package
+	setRoutes()
 }

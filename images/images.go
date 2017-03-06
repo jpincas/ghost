@@ -23,6 +23,12 @@ import (
 	"github.com/nfnt/resize"
 )
 
+//Activate is the main package activation function
+func Activate() {
+	//Set the routes for the package
+	setRoutes()
+}
+
 //Deal with images without width specified and other formats TODO
 
 //CreateImage takes an image name and width parameter and creates a resized image

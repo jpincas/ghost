@@ -22,7 +22,7 @@ package adminpanel
 //Admin is the main html import template for the admin panel
 const PolymerAdminImportTemplate = `
 <!--BUNDLE ACTION IMPORTS-->
-{{ range .bundles }}<link rel="import" href="../../bundles/{{ . }}/actions.html">
+{{ range .bundles }}<link rel="import" href="/admin-panel/{{ . }}/actions.html">
 {{ end }}
 
 <!-- ADMIN PANEL STYLES -->
@@ -63,16 +63,11 @@ const PolymerAdminImportTemplate = `
         logos: {
             type: Object,
             value: {
-                "horizontal": "{{ .config.protocol }}://{{ .config.host }}:{{ .config.websiteport }}/public/{{ .config.adminlogobundle }}/images/{{ .config.adminlogofile }}",
-                "vertical": "{{ .config.protocol }}://{{ .config.host }}:{{ .config.websiteport }}/public/{{ .config.adminlogobundle }}/images/{{ .config.adminlogofile }}"
+                "horizontal": "{{ .config.protocol }}://{{ .config.host }}:{{ .config.apiport }}/admin-panel/{{ .config.adminlogobundle }}/{{ .config.adminlogofile }}",
+                "vertical": "{{ .config.protocol }}://{{ .config.host }}:{{ .config.apiport }}/admin-panel/{{ .config.adminlogobundle }}/{{ .config.adminlogofile }}"
             }
         },
         apiRoot: {
-            type: String,
-            value: "{{ .config.protocol }}://{{ .config.host }}:{{ .config.apiport }}/api"
-        },
-        publicApiRoot: {
-            //This one is for non-authed requests, i.e. images from the server and login
             type: String,
             value: "{{ .config.protocol }}://{{ .config.host }}:{{ .config.apiport }}"
         },

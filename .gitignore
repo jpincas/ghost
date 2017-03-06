@@ -7,4 +7,3 @@ nohup.out
 config.json
 testing
 run-api-tests
-run-unit-tests

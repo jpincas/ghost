@@ -55,7 +55,7 @@ func Authorizator(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		ctx := r.Context()
-		//This is a bit hairy. The jwt middleware put the whole parsed Token
+		//This is a bit hairy. The jwt middleware puts the whole parsed Token
 		//on the 'user' context value.  From there you have to reference 'Claims'
 		//and then cast that to jwt.MapClaims to be able to reference the individual claims
 		//Also: use the forked version of the go-jwt-middlware, not the auth0 version
@@ -78,7 +78,7 @@ func Authorizator(next http.Handler) http.Handler {
 				return
 			}
 		} else {
-			//If a user has been found, return their role.  The database always defaults to anon, so ther will always be a role
+			//If a user has been found, return their role.  The database always defaults to anon, so there will always be a role
 			ctx = context.WithValue(ctx, "role", role)
 		}
 

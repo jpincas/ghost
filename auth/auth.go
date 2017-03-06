@@ -25,6 +25,12 @@ import (
 	"github.com/spf13/viper"
 )
 
+//Activate is the main package activation function
+func Activate() {
+	//Set the routes for the package
+	setRoutes()
+}
+
 //MagicCodeCache is the cache for storing email/temp pw combinations for passwordless authorisation
 var MagicCodeCache = initCache(300) //5 minute expiry
 

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+#Run unit tests for standard packages
+go test github.com/ecosystemsoftware/ecosystem/... -cover
+
+

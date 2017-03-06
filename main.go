@@ -20,12 +20,26 @@
 package main
 
 import (
-	_ "github.com/ecosystemsoftware/ecosystem/adminpanel"
-	_ "github.com/ecosystemsoftware/ecosystem/auth"
+	"github.com/ecosystemsoftware/ecosystem/adminpanel"
+	"github.com/ecosystemsoftware/ecosystem/auth"
 	"github.com/ecosystemsoftware/ecosystem/cmd"
-	_ "github.com/ecosystemsoftware/ecosystem/images"
+	"github.com/ecosystemsoftware/ecosystem/core"
+	"github.com/ecosystemsoftware/ecosystem/images"
+	"github.com/ecosystemsoftware/ecosystem/website"
 )
 
 func main() {
+
+	//Core configuration
+	core.InitConfig()
+
+	//Activate packages
+	core.Activate()
+	auth.Activate()
+	adminpanel.Activate()
+	images.Activate()
+	website.Activate()
+
+	//Fire the relevant command
 	cmd.Execute()
 }

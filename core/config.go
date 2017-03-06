@@ -15,10 +15,12 @@
 package core
 
 import (
-	"errors"
-)
+	"encoding/json"
+	"io/ioutil"
+	"log"
 
-type Bundles []string
+	"github.com/spf13/viper"
+)
 
 //Config is the basic structure of the config.json file
 type Config struct {
@@ -51,48 +53,91 @@ type Config struct {
 	Protocol                 string  `json:"protocol"`
 }
 
-//installBundle adds the name of the new bundle to the slice of bundles
-func (b Bundles) InstallBundle(newBundle string) (Bundles, error) {
+// initConfig reads in config file and ENV variables if set.
+func InitConfig() {
 
-	//Check if the bundle is already installed (should only happen if user has messed with config.json)
-	//If the name of the bundle being installed coincides with any of the names already in the bundle slice,
-	//then just return the original bundle slice
-	for _, a := range b {
-		if a == newBundle {
-			return b, errors.New("Bundle is already installed")
+	viper.SetDefault("pgSuperUser", "postgres")
+	viper.SetDefault("pgDBName", "testdb")
+	viper.SetDefault("pgPort", "5432")
+	viper.SetDefault("pgServer", "localhost")
+	viper.SetDefault("pgDisableSSL", true)
+	viper.SetDefault("apiPort", "3000")
+	viper.SetDefault("websitePort", "3001")
+	viper.SetDefault("adminPanelPort", "3002")
+	viper.SetDefault("adminPanelServeDirectory", "ecosystem-admin/build/unbundled")
+	viper.SetDefault("publicSiteSlug", "site")
+	viper.SetDefault("privateSiteSlug", "private")
+	viper.SetDefault("jwtRealm", "yourappname")
+	viper.SetDefault("host", "localhost")
+	viper.SetDefault("protocol", "http")
+
+	//For the admin panel
+	viper.SetDefault("adminPrimaryColor", "#00c4a7")
+	viper.SetDefault("adminSecondaryColor", "#7EC9A2")
+	viper.SetDefault("adminTextColor", "black")
+	viper.SetDefault("adminErrorColor", "red")
+	viper.SetDefault("adminTitle", "Admin Panel")
+	viper.SetDefault("adminLogoFile", "logo.png")
+	viper.SetDefault("adminLogoBundle", "master")
+	viper.SetDefault("bundlesInstalled", make([]string, 0, 0))
+
+	viper.SetConfigName(viper.GetString("configfile"))
+	viper.AddConfigPath(".")
+
+	// If a config file is found, read it in.
+	if err := viper.ReadInConfig(); err == nil {
+		//Initialise the db config structs for later use
+		InitDBConnectionConfigs()
+		log.Println("Config file detected and correctly applied:", viper.ConfigFileUsed())
+	} else {
+		//Otherwise create one
+		log.Println("Config file does not exist. Creating now...")
+		if err := createDefaultConfigFile(); err != nil {
+			log.Println("Error creating config file: ", err.Error())
 		}
 	}
-	//Otherwise append
-	return append(b, newBundle), nil
 }
 
-func (b Bundles) UnInstallBundle(bundle string) (Bundles, error) {
+//createDafaultConfigFile creates the default config.json template with sane defaults
+//Will overwrite existing config.json, so ask for confirmation
+func createDefaultConfigFile() error {
 
-	//Search for the bundle to be uninstalled
-	for index, a := range b {
-		if a == bundle {
-			//If found, splice it out
-			return append(b[:index], b[index+1:]...), nil
-		}
+	config := Config{
+		PgSuperUser:              "postgres",
+		PgDBName:                 "testdb",
+		PgPort:                   "5432",
+		PgServer:                 "localhost",
+		PgDisableSSL:             true,
+		ApiPort:                  "3000",
+		WebsitePort:              "3001",
+		AdminPanelPort:           "3002",
+		AdminPanelServeDirectory: "ecosystem-admin/build/unbundled",
+		PublicSiteSlug:           "site",
+		PrivateSiteSlug:          "private",
+		SmtpHost:                 "smtp",
+		SmtpPort:                 "25",
+		SmtpUserName:             "info@yourdomain.com",
+		SmtpFrom:                 "info@yourdomain.com",
+		EmailFrom:                "Your Name",
+		JWTRealm:                 "Your App Name",
+		AdminPrimaryColor:        "#00c4a7",
+		AdminSecondaryColor:      "#7EC9A2",
+		AdminTextColor:           "black",
+		AdminErrorColor:          "red",
+		AdminTitle:               "Admin Panel",
+		AdminLogoFile:            "logo.png",
+		AdminLogoBundle:          "master",
+		BundlesInstalled:         make([]string, 0, 0),
+		Host:                     "localhost",
+		Protocol:                 "http",
 	}
 
-	//Otherwise just return the original
-	return b, errors.New("Bundle is not installed")
-
-}
-
-func compareBundles(b1, b2 Bundles) bool {
-	//If lengths are not equal
-	if len(b1) != len(b2) {
-		return false
+	configJSON, _ := json.MarshalIndent(config, "", "\t")
+	err := ioutil.WriteFile("config.json", configJSON, 0644)
+	if err != nil {
+		return err
 	}
 
-	//If any of the elements are not the same
-	for k := range b1 {
-		if b1[k] != b2[k] {
-			return false
-		}
-	}
+	return nil
 
-	return true
 }

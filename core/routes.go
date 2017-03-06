@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func init() {
+func setRoutes() {
 
 	//JWT Authentication Middlware
 	var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{

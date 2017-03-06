@@ -19,7 +19,7 @@ import (
 	"github.com/pressly/chi"
 )
 
-func init() {
+func setRoutes() {
 
 	//Note format: /images/[IMAGE NAME WITH OPTIONAL PATH]?width=[WIDTH IN PIXELS]
 	//TODO: this will serve image directories from bundles whether they are installed or not

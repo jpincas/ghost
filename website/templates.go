@@ -12,21 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package auth
+package website
 
-import (
-	"github.com/ecosystemsoftware/ecosystem/core"
-	"github.com/pressly/chi"
-)
-
-//SetRoutes adds the routes the router
-func setRoutes() {
-
-	core.Router.Route("/auth", func(r chi.Router) {
-
-		r.Get("/newuser", RequestNewUserToken)
-		r.Post("/login", RequestLogin)
-		r.Post("/magiccode", MagicCode)
-
-	})
-}
+const DefaultErrorPage = `
+	<div class="error-page-container">
+	<h1 class="title">{{ .HttpCode }}</h1>
+            <h2>
+                We're sorry, but that request couldn't be completed
+            </h2>
+        <hr />
+        <p>Error message: {{ .Message }}</p>
+        <p>DB Code: {{ .DBCode }}</p>
+		<p>Schema: {{ .Schema }}</p>
+        <p>Table: {{ .Table }}</p>
+    </div>
+</section>`
