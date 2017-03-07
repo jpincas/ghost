@@ -16,7 +16,9 @@ package website
 
 import (
 	"html/template"
+	"io"
 	"log"
+	"net/http"
 
 	"github.com/lib/pq"
 )
@@ -45,7 +47,20 @@ func parseTemplates() {
 	//Start with the ecosystem.js templates
 	//templates = template.Must(template.New("ecosystem.js").Parse(EcoSystemJS))
 
-	templates = template.Must(template.New("defaulterror.html").Parse(DefaultErrorPage))
-	//Add all the bundles templates
+	//Order is important!
+	//TODO: Move to lopping through bundle folders so
 	templates, _ = templates.ParseGlob("bundles/**/templates/**/*.html")
+	templates = template.Must(template.New("defaulterror.html").Parse(DefaultErrorPage))
+
+}
+
+func renderTemplateError(out io.Writer) {
+	templates.ExecuteTemplate(out, "defaulterror.html", page{
+		Records:  []map[string]interface{}{},
+		Schema:   "",
+		Table:    "",
+		Site:     *new(SiteBuilder),
+		HttpCode: http.StatusInternalServerError,
+		Message:  "Error parsing template",
+	})
 }

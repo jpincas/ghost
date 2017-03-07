@@ -32,6 +32,8 @@ import (
 //For PROTECTED routes, the role and userID will be set according to the auth middleware
 func ShowList(w http.ResponseWriter, r *http.Request) {
 
+	var out bytes.Buffer
+
 	//Retrieve all the context variables
 	//These are assigned by correct routing and middleware, so no need to check existence
 	ctx := r.Context()
@@ -44,15 +46,17 @@ func ShowList(w http.ResponseWriter, r *http.Request) {
 	//In normal operation, routing and middleware will make sure that these variables
 	//are always present.  However, to aid in testing of the handler, we include a check
 	if !core.AllOK(ok1, ok2) {
-		render.Status(r, http.StatusNotFound)
-		templates.ExecuteTemplate(w, "error.html", page{
+
+		templates.ExecuteTemplate(&out, "defaulterror.html", page{
 			Records:  []map[string]interface{}{},
-			Schema:   schema,
-			Table:    table,
+			Schema:   "",
+			Table:    "",
 			Site:     *new(SiteBuilder),
-			HttpCode: http.StatusNotFound,
+			HttpCode: http.StatusBadRequest,
 			Message:  "Schema/table not correctly set on context",
 		})
+		render.Status(r, http.StatusBadRequest)
+		render.HTML(w, r, out.String())
 		return
 	}
 
@@ -85,21 +89,20 @@ func ShowList(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(err.Error(), "sql") {
 
 			//Send back the tempalte without records
-			templates.ExecuteTemplate(w, templateName, page{
+			if err := templates.ExecuteTemplate(w, templateName, page{
 				Records: []map[string]interface{}{},
 				Schema:  schema,
 				Table:   table,
 				Site:    *new(SiteBuilder),
-			})
+			}); err != nil {
+				renderTemplateError(&out)
+			}
 
 		} else {
 			//Else report a DB error as usual
 			dbError := err.(*pq.Error)
 			httpCode := core.DBErrorCodeToHTTPErrorCode(dbError.Code)
 
-			var out bytes.Buffer
-
-			render.Status(r, httpCode)
 			templates.ExecuteTemplate(&out, "defaulterror.html", page{
 				Records:  []map[string]interface{}{},
 				Schema:   schema,
@@ -109,8 +112,6 @@ func ShowList(w http.ResponseWriter, r *http.Request) {
 				Message:  dbError.Message,
 				DBCode:   dbError.Code,
 			})
-
-			// log.Println("Template error: ", err.Error())
 
 			render.Status(r, httpCode)
 			render.HTML(w, r, out.String())

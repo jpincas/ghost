@@ -31,7 +31,6 @@ import (
 func ShowList(w http.ResponseWriter, r *http.Request) {
 
 	//Retrieve all the context variables
-	//These are assigned by correct routing and middleware, so no need to check existence
 	ctx := r.Context()
 	role, ok1 := ctx.Value("role").(string)
 	userID, ok2 := ctx.Value("userID").(string)
@@ -45,6 +44,8 @@ func ShowList(w http.ResponseWriter, r *http.Request) {
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, ResponseError{http.StatusBadRequest, pq.ErrorCode(""), "Missing required values on context", "", "", ""})
 		return
+	} else {
+
 	}
 
 	//Build the SQL string and execute query

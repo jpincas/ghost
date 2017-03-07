@@ -25,7 +25,6 @@ import (
 	"github.com/ecosystemsoftware/ecosystem/cmd"
 	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/ecosystemsoftware/ecosystem/images"
-	"github.com/ecosystemsoftware/ecosystem/website"
 )
 
 func main() {
@@ -38,7 +37,7 @@ func main() {
 	auth.Activate()
 	adminpanel.Activate()
 	images.Activate()
-	website.Activate()
+	//website.Activate()
 
 	//Fire the relevant command
 	cmd.Execute()
