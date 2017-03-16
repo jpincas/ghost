@@ -1,4 +1,4 @@
-// Copyright 2017 EcoSystem Software LLP
+// Copyright 2017 Jonathan Pincas
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 //Use the forked version of the go-jwt-middlware, not the auth0 version
 
-package cmd
+package core
 
 import (
 	"net/http"
@@ -25,8 +25,6 @@ import (
 	"fmt"
 
 	"log"
-
-	"github.com/ecosystemsoftware/ecosystem/core"
 )
 
 var nowebsite, noadminpanel bool
@@ -70,18 +68,18 @@ func preServe() {
 	}
 
 	//Set up the email server and test
-	err := core.EmailSetup()
+	err := EmailSetup()
 	if err != nil {
 		log.Println("Error setting up email system: ", err.Error())
 		log.Println("Email system will not function")
 	}
 
 	//Establish a temporary connection as the super user
-	dbTemp := core.SuperUserDBConfig.ReturnDBConnection("")
+	dbTemp := SuperUserDBConfig.ReturnDBConnection("")
 
 	//Generate a random server password, set it and get out
-	serverPW := core.RandomString(16)
-	_, err = dbTemp.Exec(fmt.Sprintf(core.SQLToSetServerRolePassword, serverPW))
+	serverPW := RandomString(16)
+	_, err = dbTemp.Exec(fmt.Sprintf(SQLToSetServerRolePassword, serverPW))
 	if err != nil {
 		log.Fatal("Error setting server role password: ", err.Error())
 	}
@@ -89,16 +87,16 @@ func preServe() {
 	dbTemp.Close()
 
 	//Establish a permanent connection
-	core.DB = core.ServerUserDBConfig.ReturnDBConnection(serverPW)
+	DB = ServerUserDBConfig.ReturnDBConnection(serverPW)
 
 }
 
 func startServer() {
 
-	http.ListenAndServe(":"+viper.GetString("apiPort"), core.Router)
+	http.ListenAndServe(":"+viper.GetString("apiPort"), Router)
 
 }
 
 //  Experimental search features
-// 	api.Handle("SEARCH", "/:schema/:table/", core.ReturnBlank) //Useful for when blank searches are sent by client, to avoid errors
-// 	api.Handle("SEARCH", "/:schema/:table/:searchTerm", core.SearchList)
+// 	api.Handle("SEARCH", "/:schema/:table/", ReturnBlank) //Useful for when blank searches are sent by client, to avoid errors
+// 	api.Handle("SEARCH", "/:schema/:table/:searchTerm", SearchList)

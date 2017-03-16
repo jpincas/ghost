@@ -1,18 +1,18 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
-//
+// Copyright 2017 Jonathan Pincas
+
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
+
+// 	http://www.apache.org/licenses/LICENSE-2.0
+
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package core
 
 import (
 	"encoding/json"
@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -65,22 +64,22 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 	}
 
 	//Ask for confirmation
-	c := core.AskForConfirmation("This will delete the bundle, causing loss of all data in the schema created by the bundle.  Are you sure you want to do this?")
+	c := AskForConfirmation("This will delete the bundle, causing loss of all data in the schema created by the bundle.  Are you sure you want to do this?")
 
 	if c {
 		//Establish a temporary connection as the super user
-		db := core.SuperUserDBConfig.ReturnDBConnection("")
+		db := SuperUserDBConfig.ReturnDBConnection("")
 		defer db.Close()
 
 		//Delete the web categories installed by this bundle
-		db.Exec(fmt.Sprintf(core.SQLToDeleteBundleCategories, args[0]))
+		db.Exec(fmt.Sprintf(SQLToDeleteBundleCategories, args[0]))
 
 		//Drop the schema
 		//If it doesn't exist, it won't be dropped - no big deal
-		db.Exec(fmt.Sprintf(core.SQLToDropSchema, args[0]))
+		db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
 
 		//Attempt to updated the bundles installed list
-		newBundlesInstalled, err := core.Bundles(viper.GetStringSlice("bundlesInstalled")).UnInstallBundle(args[0])
+		newBundlesInstalled, err := Bundles(viper.GetStringSlice("bundlesInstalled")).UnInstallBundle(args[0])
 
 		//If there is any error, return it
 		if err != nil {
@@ -89,7 +88,7 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 
 		//Otherwise set the viper configuration to the new bundles list and overwrite the config.json
 		viper.Set("bundlesInstalled", newBundlesInstalled)
-		var config core.Config
+		var config Config
 		viper.Unmarshal(&config)
 		configJSON, _ := json.MarshalIndent(config, "", "\t")
 		err = ioutil.WriteFile("config.json", configJSON, 0644)
@@ -116,7 +115,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 
 	//Check that bundle exists
 	basePath := "./bundles/" + args[0]
-	exists, _ := afero.IsDir(core.AppFs, basePath)
+	exists, _ := afero.IsDir(AppFs, basePath)
 	if !exists {
 		//Exit if doesn't exist
 		log.Fatal("Bundle ", args[0], " not found.  Please download or clone.")
@@ -129,11 +128,11 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	}
 
 	//Establish a temporary connection as the super user
-	db := core.SuperUserDBConfig.ReturnDBConnection("")
+	db := SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
 	//Check for the presence of install.sql and attempt to read it
-	sqlBytes, err := afero.ReadFile(core.AppFs, basePath+"/install.sql")
+	sqlBytes, err := afero.ReadFile(AppFs, basePath+"/install.sql")
 	if err != nil {
 		log.Println("install.sql not present for this bundle, or could not be read: ", err.Error())
 	} else {
@@ -141,7 +140,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 
 		//Install the DB setup and logic
 		//Attempt to create a schema matching the bundle's name,
-		_, err := db.Exec(fmt.Sprintf(core.SQLToCreateSchema, args[0]))
+		_, err := db.Exec(fmt.Sprintf(SQLToCreateSchema, args[0]))
 
 		if err != nil {
 
@@ -152,16 +151,16 @@ func installBundle(cmd *cobra.Command, args []string) error {
 		} else {
 
 			//Set admin privileges for everything in this schema going forwards
-			_, err = db.Exec(fmt.Sprintf(core.SQLToGrantBundleAdminPermissions, args[0], args[0]))
+			_, err = db.Exec(fmt.Sprintf(SQLToGrantBundleAdminPermissions, args[0], args[0]))
 
 			//Set the search path to the bundle schema so that all SQL commands take
 			//place within the schema
-			_, err = db.Exec(fmt.Sprintf(core.SQLToSetSearchPathForBundle, args[0]))
+			_, err = db.Exec(fmt.Sprintf(SQLToSetSearchPathForBundle, args[0]))
 			if err != nil {
 
 				//If there is any problem with the search path, give up the db part of the bundle
 				log.Println("search_path failed to set, aborting sql installation and cleaning up", err.Error())
-				db.Exec(fmt.Sprintf(core.SQLToDropSchema, args[0]))
+				db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
 
 			} else {
 
@@ -169,14 +168,14 @@ func installBundle(cmd *cobra.Command, args []string) error {
 				_, err = db.Exec(sqlString)
 				if err != nil {
 					log.Println("Problem with install.sql, aborting sql installation and cleaning up", err.Error())
-					db.Exec(fmt.Sprintf(core.SQLToDropSchema, args[0]))
+					db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
 				} else {
 
 					//If all is good so far and the user has specified it, install the demo data (if it exists)
 					if isInstallDemoData {
 
 						//Check for the presence of demodata.sql and attempt to read it
-						sqlBytes, err := afero.ReadFile(core.AppFs, basePath+"/demodata.sql")
+						sqlBytes, err := afero.ReadFile(AppFs, basePath+"/demodata.sql")
 						if err != nil {
 							//If there is no demodata.sql
 							log.Println("demodata.sql not present for this bundle, or could not be read: ", err.Error())
@@ -195,7 +194,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	} //End sql installation
 
 	//Attempt to updated the bundles installed list
-	newBundlesInstalled, err := core.Bundles(viper.GetStringSlice("bundlesInstalled")).InstallBundle(args[0])
+	newBundlesInstalled, err := Bundles(viper.GetStringSlice("bundlesInstalled")).InstallBundle(args[0])
 
 	//If there is any error, return it
 	if err != nil {
@@ -204,7 +203,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 
 	//Otherwise set the viper configuration to the new bundles list and overwrite the config.json
 	viper.Set("bundlesInstalled", newBundlesInstalled)
-	var config core.Config
+	var config Config
 	viper.Unmarshal(&config)
 	configJSON, _ := json.MarshalIndent(config, "", "\t")
 	err = ioutil.WriteFile("config.json", configJSON, 0644)

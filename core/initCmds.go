@@ -1,4 +1,4 @@
-// Copyright 2017 EcoSystem Software LLP
+// Copyright 2017 Jonathan Pincas
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package core
 
 import (
 	"log"
 	"os"
 
-	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/spf13/cobra"
 )
 
@@ -60,7 +59,7 @@ var initFoldersCmd = &cobra.Command{
 //initAll
 func initAll(cmd *cobra.Command, args []string) error {
 
-	c := core.AskForConfirmation("This will perform a complete (re)initialisation and may perform overwrites. Do you with to proceed?")
+	c := AskForConfirmation("This will perform a complete (re)initialisation and may perform overwrites. Do you with to proceed?")
 
 	if c {
 		initDB(cmd, args)
@@ -77,22 +76,22 @@ func initAll(cmd *cobra.Command, args []string) error {
 func initDB(cmd *cobra.Command, args []string) error {
 
 	//Establish a temporary connection as the super user
-	db := core.SuperUserDBConfig.ReturnDBConnection("")
+	db := SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
 	//Run initialisation SQL
 	var err error
-	_, err = db.Exec(core.SQLToCreateAdminRole)
-	_, err = db.Exec(core.SQLToGrantAdminPermissions) //Do this first so everything created after will have correct admin permissions by default
-	_, err = db.Exec(core.SQLToCreateUUIDExtension)
-	_, err = db.Exec(core.SQLToCreateUsersTable)
-	_, err = db.Exec(core.SQLToCreateFuncToGenerateNewUserID)
-	_, err = db.Exec(core.SQLToCreateTriggerOnNewUserInsert)
-	_, err = db.Exec(core.SQLToCreateWebCategoriesTable)
-	_, err = db.Exec(core.SQLToCreateServerRole)
-	_, err = db.Exec(core.SQLToCreateAnonRole)
-	_, err = db.Exec(core.SQLToCreateWebRole)
-	_, err = db.Exec(core.SQLToGrantBuiltInPermissions)
+	_, err = db.Exec(SQLToCreateAdminRole)
+	_, err = db.Exec(SQLToGrantAdminPermissions) //Do this first so everything created after will have correct admin permissions by default
+	_, err = db.Exec(SQLToCreateUUIDExtension)
+	_, err = db.Exec(SQLToCreateUsersTable)
+	_, err = db.Exec(SQLToCreateFuncToGenerateNewUserID)
+	_, err = db.Exec(SQLToCreateTriggerOnNewUserInsert)
+	_, err = db.Exec(SQLToCreateWebCategoriesTable)
+	_, err = db.Exec(SQLToCreateServerRole)
+	_, err = db.Exec(SQLToCreateAnonRole)
+	_, err = db.Exec(SQLToCreateWebRole)
+	_, err = db.Exec(SQLToGrantBuiltInPermissions)
 
 	if err != nil {
 		log.Fatal("Could not complete database setup: ", err.Error())

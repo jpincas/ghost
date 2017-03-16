@@ -1,4 +1,4 @@
-// Copyright 2017 EcoSystem Software LLP
+// Copyright 2017 Jonathan Pincas
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//In order to import EcoSystem packages:
-//Specify an import with a blank namespace ("_")
-//This causes the package to register its routes in its init() function
-//EcoSystem standard packages uncluded by default: core, images, auth
-
 package main
 
 import (
-	"github.com/ecosystemsoftware/ecosystem/adminpanel"
 	"github.com/ecosystemsoftware/ecosystem/auth"
-	"github.com/ecosystemsoftware/ecosystem/cmd"
 	"github.com/ecosystemsoftware/ecosystem/core"
-	"github.com/ecosystemsoftware/ecosystem/images"
+	"github.com/spf13/cobraTest/cmd"
 )
 
 func main() {
@@ -32,13 +25,13 @@ func main() {
 	//Core configuration
 	core.InitConfig()
 
-	//Activate packages
+	//Activate Standard Packages
 	core.Activate()
 	auth.Activate()
-	adminpanel.Activate()
-	images.Activate()
-	//website.Activate()
 
-	//Fire the relevant command
+	//Activate Custom Packages
+	//myPackage.Activate()
+
+	//Bootstrap the application
 	cmd.Execute()
 }
