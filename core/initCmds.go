@@ -15,7 +15,6 @@
 package core
 
 import (
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -64,11 +63,12 @@ func initAll(cmd *cobra.Command, args []string) error {
 	if c {
 		initDB(cmd, args)
 		initFolders(cmd, args)
-		log.Println("Successfully completed EcoSystem initialisation")
+		Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem initialisation"})
 		return nil
 	}
 
-	log.Println("Aborted by user")
+	Log(LogEntry{"CORE.INIT", false, "Aborted by user"})
+
 	return nil
 }
 
@@ -92,10 +92,10 @@ func initDB(cmd *cobra.Command, args []string) error {
 	_, err = db.Exec(SQLToGrantBuiltInPermissions)
 
 	if err != nil {
-		log.Fatal("Could not complete database setup: ", err.Error())
+		LogFatal(LogEntry{"CORE.INIT", false, "Could not complete database setup: " + err.Error()})
 	}
 
-	log.Println("Successfully completed EcoSystem database initialisation")
+	Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem database initialisation"})
 	return nil
 
 }
@@ -107,9 +107,9 @@ func initFolders(cmd *cobra.Command, args []string) error {
 	err = os.Mkdir("./bundles", os.ModePerm)
 
 	if err != nil {
-		log.Fatal("Could not complete folder setup: ", err.Error())
+		LogFatal(LogEntry{"CORE.INIT", false, "Could not complete folder setup: " + err.Error()})
 	}
 
-	log.Println("Successfully completed EcoSystem folder setup")
+	Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem folder initialisation"})
 	return nil
 }

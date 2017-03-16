@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -78,9 +77,9 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 		//Attempt to updated the bundles installed list
 		newBundlesInstalled, err := Bundles(viper.GetStringSlice("bundlesInstalled")).UnInstallBundle(args[0])
 
-		//If there is any error, return it
+		//If there is any error, log it
 		if err != nil {
-			log.Println("Error updating bundles installed list: ", err.Error())
+			Log(LogEntry{"CORE.INSTALL", false, "Error updating bundles installed list: " + err.Error()})
 		}
 
 		//Otherwise set the viper configuration to the new bundles list and overwrite the config.json
@@ -90,12 +89,12 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 		configJSON, _ := json.MarshalIndent(config, "", "\t")
 		err = ioutil.WriteFile("config.json", configJSON, 0644)
 		if err != nil {
-			log.Println("Error updating config.json: ", err.Error())
+			Log(LogEntry{"CORE.INSTALL", false, "Error updating config.json: " + err.Error()})
 		}
 
-		log.Println("config.json updated")
+		Log(LogEntry{"CORE.INSTALL", true, "config.json updated"})
+		Log(LogEntry{"CORE.INSTALL", true, "Uninstallation of bundle " + args[0] + " completed"})
 
-		log.Println("Uninstallation of bundle", args[0], "completed")
 	}
 
 	return nil
@@ -115,12 +114,12 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	exists, _ := afero.IsDir(AppFs, basePath)
 	if !exists {
 		//Exit if doesn't exist
-		log.Fatal("Bundle ", args[0], " not found.  Please download or clone.")
+		Log(LogEntry{"CORE.INSTALL", false, "Bundle " + args[0] + " not found.  Please download or clone."})
 	}
 
 	//Uninstall first if requested
 	if isReinstall {
-		log.Println("Proceeding to uninstall bundle ", args[0], " before reinstallation")
+		Log(LogEntry{"CORE.INSTALL", true, "Uninstalling bundle " + args[0] + " before reinstalling"})
 		unInstallBundle(cmd, args)
 	}
 
@@ -131,7 +130,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	//Check for the presence of install.sql and attempt to read it
 	sqlBytes, err := afero.ReadFile(AppFs, basePath+"/install.sql")
 	if err != nil {
-		log.Println("install.sql not present for this bundle, or could not be read: ", err.Error())
+		Log(LogEntry{"CORE.INSTALL", false, "install.sql not present for this bundle, or could not be read: " + err.Error()})
 	} else {
 		sqlString := string(sqlBytes)
 
@@ -143,7 +142,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 
 			//if the schema exists, the bundle is already installed
 			//don't go any further with db part of the bundle
-			log.Println("Failed to create DB schema: ", err.Error())
+			Log(LogEntry{"CORE.INSTALL", false, "Failed to create DB schema: " + err.Error()})
 
 		} else {
 
@@ -156,7 +155,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 			if err != nil {
 
 				//If there is any problem with the search path, give up the db part of the bundle
-				log.Println("search_path failed to set, aborting sql installation and cleaning up", err.Error())
+				Log(LogEntry{"CORE.INSTALL", false, "search_path failed to set, aborting sql installation and cleaning up" + err.Error()})
 				db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
 
 			} else {
@@ -164,7 +163,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 				//Run the SQL
 				_, err = db.Exec(sqlString)
 				if err != nil {
-					log.Println("Problem with install.sql, aborting sql installation and cleaning up", err.Error())
+					Log(LogEntry{"CORE.INSTALL", false, "Problem with install.sql, aborting sql installation and cleaning up" + err.Error()})
 					db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
 				} else {
 
@@ -175,13 +174,13 @@ func installBundle(cmd *cobra.Command, args []string) error {
 						sqlBytes, err := afero.ReadFile(AppFs, basePath+"/demodata.sql")
 						if err != nil {
 							//If there is no demodata.sql
-							log.Println("demodata.sql not present for this bundle, or could not be read: ", err.Error())
+							Log(LogEntry{"CORE.INSTALL", false, "demodata.sql not present for this bundle, or could not be read: " + err.Error()})
 						} else {
 							sqlString := string(sqlBytes)
 							_, err = db.Exec(sqlString)
 							if err != nil {
 								//If there is an error with demodata.sql
-								log.Println("Error installing demo data: ", err.Error())
+								Log(LogEntry{"CORE.INSTALL", false, "Error installing demo data: " + err.Error()})
 							}
 						}
 					}
@@ -195,7 +194,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 
 	//If there is any error, return it
 	if err != nil {
-		log.Println("Error updating bundles installed list: ", err.Error())
+		Log(LogEntry{"CORE.INSTALL", false, "Error updating bundles installed list: " + err.Error()})
 	}
 
 	//Otherwise set the viper configuration to the new bundles list and overwrite the config.json
@@ -205,13 +204,13 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	configJSON, _ := json.MarshalIndent(config, "", "\t")
 	err = ioutil.WriteFile("config.json", configJSON, 0644)
 	if err != nil {
-		log.Println("Error updating config.json: ", err.Error())
+		Log(LogEntry{"CORE.INSTALL", false, "Error updating config.json: " + err.Error()})
 	}
 
-	log.Println("config.json updated")
+	Log(LogEntry{"CORE.INSTALL", true, "config.json updated"})
 
 	//Bundle installation complete
-	log.Println("Installation of bundle", args[0], "completed")
+	Log(LogEntry{"CORE.INSTALL", true, "Installation of bundle " + args[0] + " completed"})
 	return nil
 
 }

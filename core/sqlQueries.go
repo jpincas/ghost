@@ -34,7 +34,7 @@ const (
 	SQLToSetServerRolePassword   = `ALTER ROLE server NOINHERIT LOGIN PASSWORD '%s' VALID UNTIL 'infinity';`
 	SQLToCreateAnonRole          = `CREATE ROLE anon;`
 	SQLToCreateAdminRole         = `CREATE ROLE admin BYPASSRLS;`
-	SQLToGrantBuiltInPermissions = `GRANT anon, web, admin TO server; GRANT SELECT ON TABLE users TO server;GRANT SELECT ON TABLE web_categories TO web;`
+	SQLToGrantBuiltInPermissions = `GRANT anon, admin TO server; GRANT SELECT ON TABLE users TO server;`
 
 	//Admin permissions
 	SQLToGrantAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO admin;`
