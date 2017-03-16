@@ -19,6 +19,7 @@ package core
 import (
 	"net/http"
 
+	"github.com/ecosystemsoftware/ecosystem/email"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -68,7 +69,7 @@ func preServe() {
 	}
 
 	//Set up the email server and test
-	err := EmailSetup()
+	err := email.Setup()
 	if err != nil {
 		log.Println("Error setting up email system: ", err.Error())
 		log.Println("Email system will not function")

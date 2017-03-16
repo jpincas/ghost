@@ -14,37 +14,60 @@
 
 package auth
 
+//go:generate hardcodetemplates -p=auth
+
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"time"
+
+	"log"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/diegobernardes/ttlcache"
 	"github.com/ecosystemsoftware/ecosystem/core"
+	ecomail "github.com/ecosystemsoftware/ecosystem/email"
 	"github.com/spf13/viper"
 )
 
+//Template holder
+var templates *template.Template
+
 //Activate is the main package activation function
 func Activate() {
+	log.Println("[auth package] Activating...")
+	parseTemplates()
 	//Set the routes for the package
 	setRoutes()
+}
+
+func parseTemplates() {
+
+	templates = template.Must(template.New("base").Parse(baseTemplate))
+	log.Println("[auth package]", templates.DefinedTemplates())
+
 }
 
 //MagicCodeCache is the cache for storing email/temp pw combinations for passwordless authorisation
 var MagicCodeCache = initCache(300) //5 minute expiry
 
 func initCache(exp time.Duration) *ttlcache.Cache {
+
+	if exp < 1 {
+		log.Fatal("Cache expiry cannot be zero or negative")
+	}
+
 	newCache := ttlcache.NewCache()
 	newCache.SetTTL(time.Duration(exp * time.Second))
 	return newCache
 }
 
 //RequestMagicCode generates a magic code, stores it in the cache against the user's email and sends it to them by email
-func RequestMagicCode(email string, templateName string) error {
+func RequestMagicCode(email string, template *template.Template) error {
 
 	//If system email is not configured, this can't be done, so exit straight away
-	if !core.MailServer.Working {
+	if !ecomail.MailServer.Working {
 		return errors.New("System email is not configured, so could not send magic code")
 	}
 
@@ -69,11 +92,11 @@ func RequestMagicCode(email string, templateName string) error {
 	}
 
 	//Send it to them by mail
-	err = core.MailServer.SendEmail(
-		[]string{email},                                  //Recipient
-		"Your Magic Code from "+core.MailServer.FromName, //Subject
-		data,         //Data to include in the email
-		templateName) //Email template to use
+	err = ecomail.MailServer.SendEmail(
+		[]string{email},                                     //Recipient
+		"Your Magic Code from "+ecomail.MailServer.FromName, //Subject
+		data,     //Data to include in the email
+		template) //Email template to use
 
 	//Return whatever the result of the mail send was, either an error or nil
 	return err
@@ -82,6 +105,11 @@ func RequestMagicCode(email string, templateName string) error {
 
 //GetUserToken returns a JWT string encoded with a user id
 func GetUserToken(userID string) (string, error) {
+
+	//Error for empty user ID
+	if userID == "" {
+		return "", errors.New("Empty user ID")
+	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"userID": userID,

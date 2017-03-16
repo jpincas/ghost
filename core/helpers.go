@@ -27,6 +27,11 @@ import (
 	"github.com/lib/pq"
 )
 
+const (
+	ContentTypeHTML = `text/html; charset=utf-8`
+	ContentTypeJSON = `application/json; charset=utf-8`
+)
+
 //ResponseError is the struct containing details of a server error
 type ResponseError struct {
 	HTTPCode     int          `json:"httpCode"`

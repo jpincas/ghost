@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package email
 
 import (
 	"bytes"
@@ -34,7 +34,7 @@ type smtpServer struct {
 var MailServer smtpServer
 
 //EmailSetup sets up the shared SMTP connection, tests it and marks whether it is working or not
-func EmailSetup() error {
+func Setup() error {
 
 	//Setup the smtp config struct, and mark as not working
 	//Read in the configuration parameters from Viper
@@ -60,7 +60,7 @@ func EmailSetup() error {
 }
 
 //SendEmail is used internally by ECOSystem modules to send transactional emails
-func (s smtpServer) SendEmail(to []string, subject string, data map[string]string, templateToUse string) (err error) {
+func (s smtpServer) SendEmail(to []string, subject string, data map[string]string, templateToUse *template.Template) (err error) {
 
 	//Prepare the date for the email template
 	parameters := struct {
@@ -84,8 +84,7 @@ func (s smtpServer) SendEmail(to []string, subject string, data map[string]strin
 	// Content-Type: text/html; charset="UTF-8"
 
 	buffer := new(bytes.Buffer)
-	t, err := template.New(templateToUse).ParseGlob("templates/**/email/*")
-	err = t.Execute(buffer, &parameters)
+	err = templateToUse.Execute(buffer, &parameters)
 
 	auth := smtp.PlainAuth("", s.userName, s.password, s.host)
 

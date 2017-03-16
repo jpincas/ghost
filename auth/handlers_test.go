@@ -46,7 +46,7 @@ func (suite *AuthHandlerTests) SetupTest() {
 
 func (suite *AuthHandlerTests) TestMagicCode_nobody() {
 
-	http.HandlerFunc(MagicCode).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(magicCode).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -55,7 +55,7 @@ func (suite *AuthHandlerTests) TestMagicCode_emptybody() {
 
 	b := []byte("")
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
-	http.HandlerFunc(MagicCode).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(magicCode).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -64,7 +64,7 @@ func (suite *AuthHandlerTests) TestMagicCode_badbody() {
 
 	b := []byte("{gdf4}")
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
-	http.HandlerFunc(MagicCode).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(magicCode).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -73,7 +73,7 @@ func (suite *AuthHandlerTests) TestMagicCode_blankemail() {
 
 	b := []byte(`{"email":""}`)
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
-	http.HandlerFunc(MagicCode).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(magicCode).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -82,7 +82,7 @@ func (suite *AuthHandlerTests) TestMagicCode_noemail() {
 
 	b := []byte(`{"gmail":""}`)
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
-	http.HandlerFunc(MagicCode).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(magicCode).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -91,14 +91,14 @@ func (suite *AuthHandlerTests) TestMagicCode_emailsystemnotactivated() {
 
 	b := []byte(`{"email":"me@me.com"}`)
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
-	http.HandlerFunc(MagicCode).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(magicCode).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusServiceUnavailable, suite.Rr.Code)
 
 }
 
 func (suite *AuthHandlerTests) TestRequestNewUserToken() {
 
-	http.HandlerFunc(RequestNewUserToken).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(requestNewUserToken).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusOK, suite.Rr.Code)
 	suite.NotEmpty(suite.Rr.Body, "Response should not be empty")
 
@@ -106,7 +106,7 @@ func (suite *AuthHandlerTests) TestRequestNewUserToken() {
 
 func (suite *AuthHandlerTests) TestRequestLogin_nobody() {
 
-	http.HandlerFunc(RequestLogin).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(requestLogin).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -115,7 +115,7 @@ func (suite *AuthHandlerTests) TestRequestLogin_emptybody() {
 
 	b := []byte("")
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
-	http.HandlerFunc(RequestLogin).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(requestLogin).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -124,7 +124,7 @@ func (suite *AuthHandlerTests) TestRequestLogin_badbody() {
 
 	b := []byte("{gdf4}")
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
-	http.HandlerFunc(RequestLogin).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(requestLogin).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -133,7 +133,7 @@ func (suite *AuthHandlerTests) TestRequestLogin_noemail() {
 
 	b := []byte(`{"email": "", "code": "123456"}`)
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
-	http.HandlerFunc(RequestLogin).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(requestLogin).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -142,7 +142,7 @@ func (suite *AuthHandlerTests) TestRequestLogin_noemail2() {
 
 	b := []byte(`{"code": "123456"}`)
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
-	http.HandlerFunc(RequestLogin).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(requestLogin).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -151,7 +151,7 @@ func (suite *AuthHandlerTests) TestRequestLogin_nocode() {
 
 	b := []byte(`{"email": "me@me.com", "code": ""}`)
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
-	http.HandlerFunc(RequestLogin).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(requestLogin).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -160,7 +160,7 @@ func (suite *AuthHandlerTests) TestRequestLogin_nocode2() {
 
 	b := []byte(`{"email": "me@me.com"}`)
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
-	http.HandlerFunc(RequestLogin).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(requestLogin).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusBadRequest, suite.Rr.Code)
 
 }
@@ -175,12 +175,13 @@ func (suite *AuthHandlerTests) TestRequestLogin_demomode() {
 	MagicCodeCache.Set("is@registered.com", "666")
 	viper.Set("demomode", true)
 
-	expectedToken, _ := GetUserToken("130e6150-7098-4f72-8842-0e16629f32de")
+	t, _ := GetUserToken("130e6150-7098-4f72-8842-0e16629f32de")
+	expectedToken := fmt.Sprintf("{%q:%q}", "token", t)
 
 	b := []byte(`{"email": "is@registered.com", "code": "123456"}`)
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
 
-	http.HandlerFunc(RequestLogin).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(requestLogin).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusOK, suite.Rr.Code, fmt.Sprint(suite.Rr.Body))
 	suite.Equal(expectedToken, fmt.Sprint(suite.Rr.Body), fmt.Sprint(suite.Rr.Body))
 
@@ -199,7 +200,7 @@ func (suite *AuthHandlerTests) TestRequestLogin_fail() {
 	b := []byte(`{"email": "is@registered.com", "code": "123456"}`)
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
 
-	http.HandlerFunc(RequestLogin).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(requestLogin).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusUnauthorized, suite.Rr.Code, fmt.Sprint(suite.Rr.Body))
 
 }
@@ -213,12 +214,13 @@ func (suite *AuthHandlerTests) TestRequestLogin_ok() {
 	MagicCodeCache.Set("is@registered.com", "666")
 	viper.Set("demomode", false)
 
-	expectedToken, _ := GetUserToken("130e6150-7098-4f72-8842-0e16629f32de")
+	t, _ := GetUserToken("130e6150-7098-4f72-8842-0e16629f32de")
+	expectedToken := fmt.Sprintf("{%q:%q}", "token", t)
 
 	b := []byte(`{"email": "is@registered.com", "code": "666"}`)
 	suite.Req, _ = http.NewRequest("POST", "", bytes.NewBuffer(b))
 
-	http.HandlerFunc(RequestLogin).ServeHTTP(suite.Rr, suite.Req)
+	http.HandlerFunc(requestLogin).ServeHTTP(suite.Rr, suite.Req)
 	suite.Equal(http.StatusOK, suite.Rr.Code, fmt.Sprint(suite.Rr.Body))
 	suite.Equal(expectedToken, fmt.Sprint(suite.Rr.Body), fmt.Sprint(suite.Rr.Body))
 

@@ -24,9 +24,9 @@ func setRoutes() {
 
 	core.Router.Route("/auth", func(r chi.Router) {
 
-		r.Get("/newuser", RequestNewUserToken)
-		r.Post("/login", RequestLogin)
-		r.Post("/magiccode", MagicCode)
+		r.Get("/newuser", requestNewUserToken)
+		r.Post("/login", requestLogin)
+		r.Post("/magiccode", magicCode)
 
 	})
 }
