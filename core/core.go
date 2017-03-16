@@ -15,7 +15,8 @@
 package core
 
 //Activate is the main package activation function
-func Activate() {
+func Activate() error {
 	//Set the routes for the package
 	setRoutes()
+	return nil
 }

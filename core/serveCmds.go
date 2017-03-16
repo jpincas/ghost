@@ -19,13 +19,10 @@ package core
 import (
 	"net/http"
 
-	"github.com/ecosystemsoftware/ecosystem/email"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"fmt"
-
-	"log"
 )
 
 var nowebsite, noadminpanel bool
@@ -60,19 +57,14 @@ func serve(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+var ActivatePackages func()
+
 func preServe() {
 
 	//Check to make sure a secret has been provided
 	//No default provided as a security measure, server will exit of nothing provided
 	if viper.GetString("secret") == "" {
-		log.Fatal("No signing secret provided")
-	}
-
-	//Set up the email server and test
-	err := email.Setup()
-	if err != nil {
-		log.Println("Error setting up email system: ", err.Error())
-		log.Println("Email system will not function")
+		LogFatal(LogEntry{"CORE.SERVE", false, "No signing secret provided"})
 	}
 
 	//Establish a temporary connection as the super user
@@ -80,9 +72,9 @@ func preServe() {
 
 	//Generate a random server password, set it and get out
 	serverPW := RandomString(16)
-	_, err = dbTemp.Exec(fmt.Sprintf(SQLToSetServerRolePassword, serverPW))
+	_, err := dbTemp.Exec(fmt.Sprintf(SQLToSetServerRolePassword, serverPW))
 	if err != nil {
-		log.Fatal("Error setting server role password: ", err.Error())
+		LogFatal(LogEntry{"CORE.SERVE", false, "Error setting server role password: " + err.Error()})
 	}
 
 	dbTemp.Close()
@@ -90,10 +82,13 @@ func preServe() {
 	//Establish a permanent connection
 	DB = ServerUserDBConfig.ReturnDBConnection(serverPW)
 
+	ActivatePackages()
+
 }
 
 func startServer() {
 
+	Log(LogEntry{"CORE.SERVE", true, "Server started on port " + viper.GetString("apiPort")})
 	http.ListenAndServe(":"+viper.GetString("apiPort"), Router)
 
 }

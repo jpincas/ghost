@@ -22,8 +22,6 @@ import (
 	"html/template"
 	"time"
 
-	"log"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/diegobernardes/ttlcache"
 	"github.com/ecosystemsoftware/ecosystem/core"
@@ -35,17 +33,18 @@ import (
 var templates *template.Template
 
 //Activate is the main package activation function
-func Activate() {
-	log.Println("[auth package] Activating...")
+func Activate() error {
+	core.Log(core.LogEntry{"AUTH", true, "Activating..."})
 	parseTemplates()
 	//Set the routes for the package
 	setRoutes()
+	return nil
 }
 
 func parseTemplates() {
 
 	templates = template.Must(template.New("base").Parse(baseTemplate))
-	log.Println("[auth package]", templates.DefinedTemplates())
+	core.Log(core.LogEntry{"AUTH", true, "Loaded templates" + templates.DefinedTemplates()})
 
 }
 
@@ -55,7 +54,7 @@ var MagicCodeCache = initCache(300) //5 minute expiry
 func initCache(exp time.Duration) *ttlcache.Cache {
 
 	if exp < 1 {
-		log.Fatal("Cache expiry cannot be zero or negative")
+		core.Log(core.LogEntry{"AUTH", false, "Cache expiry cannot be zero or negative"})
 	}
 
 	newCache := ttlcache.NewCache()
@@ -64,7 +63,7 @@ func initCache(exp time.Duration) *ttlcache.Cache {
 }
 
 //RequestMagicCode generates a magic code, stores it in the cache against the user's email and sends it to them by email
-func RequestMagicCode(email string, template *template.Template) error {
+func RequestMagicCode(email string) error {
 
 	//If system email is not configured, this can't be done, so exit straight away
 	if !ecomail.MailServer.Working {
@@ -95,8 +94,9 @@ func RequestMagicCode(email string, template *template.Template) error {
 	err = ecomail.MailServer.SendEmail(
 		[]string{email},                                     //Recipient
 		"Your Magic Code from "+ecomail.MailServer.FromName, //Subject
-		data,     //Data to include in the email
-		template) //Email template to use
+		data, //Data to include in the email
+		templates,
+		"defaultmagiccodeemail.html") //Email template to use
 
 	//Return whatever the result of the mail send was, either an error or nil
 	return err

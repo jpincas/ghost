@@ -17,21 +17,21 @@ package main
 import (
 	"github.com/ecosystemsoftware/ecosystem/auth"
 	"github.com/ecosystemsoftware/ecosystem/core"
-	"github.com/spf13/cobraTest/cmd"
+	"github.com/ecosystemsoftware/ecosystem/email"
 )
 
 func main() {
 
-	//Core configuration
-	core.InitConfig()
-
-	//Activate Standard Packages
-	core.Activate()
-	auth.Activate()
-
-	//Activate Custom Packages
-	//myPackage.Activate()
+	//Tell EcoSystem which packages to activate
+	core.ActivatePackages = activatePackages
 
 	//Bootstrap the application
-	cmd.Execute()
+	core.RootCmd.Execute()
+}
+
+func activatePackages() {
+	//Standard packages
+	core.Activate()
+	auth.Activate()
+	email.Activate()
 }

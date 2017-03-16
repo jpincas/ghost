@@ -16,7 +16,6 @@ package core
 
 import (
 	"database/sql"
-	"log"
 
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
@@ -110,13 +109,14 @@ func (d dbConfig) getDBConnectionString(serverPW string) (dbConnectionString str
 //connectToDB connects to the database and returns a connection pool
 func connectToDB(dbConnectionString string) *sql.DB {
 	//Initialise database
-	log.Println("Attempting to connect to ", dbConnectionString)
+	Log(LogEntry{"CORE.DB", true, "Connecting to " + dbConnectionString})
+
 	dbConnection, _ := sql.Open("postgres", dbConnectionString)
 	//Ping database to check connectivity
 	if err := dbConnection.Ping(); err != nil {
-		log.Fatal("Error connecting to Postgres as super user during setup. ", err.Error())
+		LogFatal(LogEntry{"CORE.DB", false, "Error connecting to Postgres as super user during setup. " + err.Error()})
 	} else {
-		log.Println("Connected successfully to ", dbConnectionString)
+		Log(LogEntry{"CORE.DB", true, "Connected to " + dbConnectionString})
 	}
 	return dbConnection
 }

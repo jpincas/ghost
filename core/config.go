@@ -17,7 +17,6 @@ package core
 import (
 	"encoding/json"
 	"io/ioutil"
-	"log"
 
 	"github.com/spf13/viper"
 )
@@ -88,12 +87,13 @@ func InitConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		//Initialise the db config structs for later use
 		InitDBConnectionConfigs()
-		log.Println("Config file detected and correctly applied:", viper.ConfigFileUsed())
+		Log(LogEntry{"CORE.CONFIG", true, "Config file detected and correctly applied:" + viper.ConfigFileUsed()})
 	} else {
 		//Otherwise create one
-		log.Println("Config file does not exist. Creating now...")
+		Log(LogEntry{"CORE.CONFIG", true, "Config file does not exist. Creating now..."})
+
 		if err := createDefaultConfigFile(); err != nil {
-			log.Println("Error creating config file: ", err.Error())
+			LogFatal(LogEntry{"CORE.CONFIG", false, "Error creating config file: " + err.Error()})
 		}
 	}
 }

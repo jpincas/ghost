@@ -64,7 +64,7 @@ func magicCode(w http.ResponseWriter, r *http.Request) {
 	if ok && email != "" {
 
 		//If 'email' is set, request a magic code
-		err := RequestMagicCode(email.(string), templates)
+		err := RequestMagicCode(email.(string))
 		//If sending of the magic code fails (user doesn't exist, email fails etc)
 		if err != nil {
 

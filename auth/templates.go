@@ -3,9 +3,7 @@
 
 package auth
 
-const baseTemplate = `
-	{{ define "defaultmagiccodeemail.html" }}
-	To: {{.To}}
+const baseTemplate = `{{ define "defaultmagiccodeemail.html" }}To: {{.To}}
 From: {{.From}}
 Subject: {{.Subject}} 
 MIME-version: 1.0 
@@ -203,7 +201,7 @@ Content-Type: text/html; charset="UTF-8"
                                  <p>Hi there {{.To}},</p>
             <p>We've received a request to log into EcoSystem</p>
             <!-- button -->
-            <table class="btn-primary" cellpadding="0" cellspacing="0" border="0">
+            <table class="" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td>
                   <p>Please make a note of your 6-character magic code:</p>
@@ -252,5 +250,4 @@ Content-Type: text/html; charset="UTF-8"
 
 </body>
 
-</html>
-	{{ end }}`
+</html>{{ end }}`

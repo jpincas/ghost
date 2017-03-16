@@ -21,6 +21,7 @@ import (
 	"net/smtp"
 	"strings"
 
+	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/spf13/viper"
 )
 
@@ -34,7 +35,9 @@ type smtpServer struct {
 var MailServer smtpServer
 
 //EmailSetup sets up the shared SMTP connection, tests it and marks whether it is working or not
-func Setup() error {
+func Activate() error {
+
+	core.Log(core.LogEntry{"EMAIL", true, "Initialising email system..."})
 
 	//Setup the smtp config struct, and mark as not working
 	//Read in the configuration parameters from Viper
@@ -50,17 +53,21 @@ func Setup() error {
 
 	//Test the SMTP connection
 	if err := MailServer.TestConnection(); err != nil {
+		core.Log(core.LogEntry{"EMAIL", false, "Error initialising email server"})
+		core.Log(core.LogEntry{"EMAIL", false, err.Error()})
+		core.Log(core.LogEntry{"EMAIL", false, "Email system will not function"})
 		return err
 	}
 
 	//If it passes, setup the config
 	MailServer.Working = true
+	core.Log(core.LogEntry{"EMAIL", true, "Email system correctly initialised"})
 	return nil
 
 }
 
 //SendEmail is used internally by ECOSystem modules to send transactional emails
-func (s smtpServer) SendEmail(to []string, subject string, data map[string]string, templateToUse *template.Template) (err error) {
+func (s smtpServer) SendEmail(to []string, subject string, data map[string]string, templates *template.Template, templateToUse string) (err error) {
 
 	//Prepare the date for the email template
 	parameters := struct {
@@ -83,8 +90,15 @@ func (s smtpServer) SendEmail(to []string, subject string, data map[string]strin
 	// MIME-version: 1.0
 	// Content-Type: text/html; charset="UTF-8"
 
+	//This is ridiculously sensitive - even a blank line at the beginning of the file will
+	//cause the email send to fail
+
 	buffer := new(bytes.Buffer)
-	err = templateToUse.Execute(buffer, &parameters)
+	err = templates.ExecuteTemplate(buffer, templateToUse, &parameters)
+
+	if err != nil {
+		return err
+	}
 
 	auth := smtp.PlainAuth("", s.userName, s.password, s.host)
 
