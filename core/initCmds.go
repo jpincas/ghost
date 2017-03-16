@@ -87,10 +87,8 @@ func initDB(cmd *cobra.Command, args []string) error {
 	_, err = db.Exec(SQLToCreateUsersTable)
 	_, err = db.Exec(SQLToCreateFuncToGenerateNewUserID)
 	_, err = db.Exec(SQLToCreateTriggerOnNewUserInsert)
-	_, err = db.Exec(SQLToCreateWebCategoriesTable)
 	_, err = db.Exec(SQLToCreateServerRole)
 	_, err = db.Exec(SQLToCreateAnonRole)
-	_, err = db.Exec(SQLToCreateWebRole)
 	_, err = db.Exec(SQLToGrantBuiltInPermissions)
 
 	if err != nil {
@@ -106,9 +104,7 @@ func initDB(cmd *cobra.Command, args []string) error {
 func initFolders(cmd *cobra.Command, args []string) error {
 
 	var err error
-	err = os.Mkdir("./img", os.ModePerm)
 	err = os.Mkdir("./bundles", os.ModePerm)
-	err = os.Mkdir("./ecosystem-admin", os.ModePerm)
 
 	if err != nil {
 		log.Fatal("Could not complete folder setup: ", err.Error())

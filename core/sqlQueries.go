@@ -20,8 +20,7 @@ const (
 	SQLToCreateUUIDExtension = `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
 
 	//Create built-in tables
-	SQLToCreateUsersTable         = `CREATE TABLE users (id uuid PRIMARY KEY, email varchar(256) UNIQUE, role varchar(16) NOT NULL default 'anon');`
-	SQLToCreateWebCategoriesTable = `CREATE TABLE web_categories (id text NOT NULL PRIMARY KEY, title text,image text,description text,subtitle text,parent text,priority integer, bundle text);`
+	SQLToCreateUsersTable = `CREATE TABLE users (id uuid PRIMARY KEY, email varchar(256) UNIQUE, role varchar(16) NOT NULL default 'anon');`
 
 	//Built in user logic and cmd line user creation
 	SQLToCreateFuncToGenerateNewUserID = `CREATE FUNCTION generate_new_user() RETURNS trigger AS $$ BEGIN NEW.id := uuid_generate_v4(); RETURN NEW; END; $$ LANGUAGE plpgsql;`
@@ -35,7 +34,6 @@ const (
 	SQLToSetServerRolePassword   = `ALTER ROLE server NOINHERIT LOGIN PASSWORD '%s' VALID UNTIL 'infinity';`
 	SQLToCreateAnonRole          = `CREATE ROLE anon;`
 	SQLToCreateAdminRole         = `CREATE ROLE admin BYPASSRLS;`
-	SQLToCreateWebRole           = `CREATE ROLE web;`
 	SQLToGrantBuiltInPermissions = `GRANT anon, web, admin TO server; GRANT SELECT ON TABLE users TO server;GRANT SELECT ON TABLE web_categories TO web;`
 
 	//Admin permissions
@@ -44,20 +42,8 @@ const (
 	//Schema manipulation for bundles
 	SQLToCreateSchema                = `CREATE SCHEMA %s;`
 	SQLToGrantBundleAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT ALL ON TABLES TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT USAGE ON SEQUENCES TO admin;`
-	SQLToDeleteBundleCategories      = `DELETE FROM public.web_categories WHERE bundle = '%s';`
 	SQLToDropSchema                  = `DROP SCHEMA %s CASCADE;`
 	SQLToSetSearchPathForBundle      = `SET search_path TO %s, public;`
-
-	//Web category retrieval and info
-	//NO SEMI COLONS AT THE END
-	SQLToSelectWebCategoryWhere   = `SELECT * FROM web_categories WHERE id = '%s'`
-	SQLToGetAllWebCategories      = `SELECT * FROM web_categories WHERE bundle = '%s' ORDER BY priority`
-	SQLToGetWebCategoriesByParent = `SELECT * FROM web_categories WHERE bundle = '%s' AND parent = '%s' ORDER BY priority`
-	SQLToSelectKeywordedRecords   = `SELECT * FROM %s.%s WHERE keywords @> '{%s}'`
-
-	//Web requests
-	//NO SEMI COLONS AT THE END
-	SQLToSelectRecordBySlug = `SELECT * FROM %s.%s WHERE slug = '%s'`
 
 	//General
 	//NO SEMI COLONS AT THE END

@@ -71,9 +71,6 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 		db := SuperUserDBConfig.ReturnDBConnection("")
 		defer db.Close()
 
-		//Delete the web categories installed by this bundle
-		db.Exec(fmt.Sprintf(SQLToDeleteBundleCategories, args[0]))
-
 		//Drop the schema
 		//If it doesn't exist, it won't be dropped - no big deal
 		db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))

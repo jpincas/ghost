@@ -34,7 +34,7 @@ func TestInitCache(t *testing.T) {
 
 func TestRequestMagicCodeEmailDisabled(t *testing.T) {
 	setup()
-	err := RequestMagicCode("user@notindb", templates)
+	err := RequestMagicCode("user@notindb")
 	if err == nil {
 		t.Error("Email system is not working.  Magic code request should fail")
 	}
@@ -45,7 +45,7 @@ func TestRequestMagicCodeUserNotInDB(t *testing.T) {
 	setup()
 	//Flag the email server as enabled
 	ecomail.MailServer.Working = true
-	err := RequestMagicCode("user@notindb", templates)
+	err := RequestMagicCode("user@notindb")
 	if err.Error() != "Email address not in user database" {
 		t.Error("User is not in DB, should return an error")
 	}
@@ -58,7 +58,7 @@ func TestRequestMagicCodeUserInDB(t *testing.T) {
 	setup()
 	//Flag the email server as enabled
 	ecomail.MailServer.Working = true
-	err := RequestMagicCode("user@isindb", templates)
+	err := RequestMagicCode("user@isindb")
 	if err.Error() == "Email address not in user database" {
 		t.Error(err.Error())
 	}
