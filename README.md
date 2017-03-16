@@ -1,8 +1,12 @@
 ![](https://raw.githubusercontent.com/ecosystemsoftware/ecosystem-website/master/themes/ecosystem/static/images/ecosystem-logo.png)
 
+### Quick Update
+**16th March 2017**: I've now completed the first large refactor and updated master.  The Gin router has been switched for Chi, which is is compatible with default Go handlers, making life a little easier. Test coverage is coming along nicely. Functionality has been reorganised into 'packages' (which are just Go packages), allowing for much easier extensibility.  *Core, Auth and Email* packages are included in the standard build - everything else (HTML server, image resizer and admin-panel server) has been stripped out and will be rewritten and uploaded as seperate packages that can be added to a [custom build](https://github.com/ecosystemsoftware/ecosystem-custom-server).  We're rethinking our strategy on the admin panel side of things, as the Polymer app was proving hard to install for newcomers and was causing some build problems when trying to reference external HTML imports.  We might go with Elm.  I'm also considering the possiblity of ditching the HTML server in favour of a static site integrator powered by Hugo.  Please get in touch if you'd like to help out!
+
+
 # EcoSystem
 
-EcoSystem is a platform that allows you to quickly develop completely custom data-driven websites, web-applications and backend systems.  EcoSystem doesn't assume anything about the data structure or logic of your business because you code it directly and freely at the database layer using the power of PostgreSQL.  EcoSystem then augments your database layer with a generic web and JSON API server written in Go, giving you a *bridge* to your data and logic with minial boilerplate.
+EcoSystem is a platform that allows you to quickly develop completely custom data-driven websites, web-applications and backend systems.  EcoSystem doesn't assume anything about the data structure or logic of your business because you code it directly and freely at the database layer using the power of PostgreSQL.  EcoSystem then augments your database layer with a generic web and JSON API server written in Go, giving you a *bridge* to your data and logic with minimal boilerplate.
 
 ## What's in the box?
 
@@ -64,7 +68,9 @@ $ ecosystem install eco_bundle_dogshelter --demodata
 Run the server in 'demo' mode (disabling authorisation) with `ecosystem serve -s=secret -d`
 
 
-## Congrats!  You now have a backend powered by EcoSystem on localhost:3000
+## Congrats!  You now have a backend powered by EcoSystem
+
+The JSON API is at `/api` (believe it or not).  Remember schema and table/view names map directly to API endpoints, so `ecosystem_bundle_dogshelter.dogs_available` is at `localhost:3000/api/eco_bundle_dogshelter/dogs_available`
 
 All requests to the API need to go through authorisation, so if you'd like to send some test requests, you'll need to start by requesting a JWT from **/login** - just include a JSON body in the request like this:
 
