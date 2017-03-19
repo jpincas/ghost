@@ -26,7 +26,7 @@ If you have Go installed and access to a Postgres server, it should take you les
 
 ### Step 1: Install EcoSystem
 
-To start with, fetch the source code and dependencies and compile into an executable which will go into your $GOPATH/bin directory.  That's just `go get github.com/ecosystemsofware/ecosystem`.  Assuming your [$GOPATH/bin is part of your PATH](https://golang.org/doc/install), you should now be able to run 'ecosystem' from anywhere on the command line.
+To start with, fetch the source code and dependencies and compile into an executable which will go into your $GOPATH/bin directory.  That's just `go get github.com/ecosystemsoftware/ecosystem`.  Assuming your [$GOPATH/bin is part of your PATH](https://golang.org/doc/install), you should now be able to run 'ecosystem' from anywhere on the command line.
 
 ### Step 2:  Create a database
 
