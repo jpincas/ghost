@@ -30,6 +30,8 @@ import (
 const (
 	ContentTypeHTML = `text/html; charset=utf-8`
 	ContentTypeJSON = `application/json; charset=utf-8`
+	ContentTypeJS   = `application/javascript`
+	ContentTypeCSS  = `text/css`
 )
 
 //ResponseError is the struct containing details of a server error
