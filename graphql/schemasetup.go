@@ -21,8 +21,8 @@ import (
 	"strings"
 
 	"github.com/ecosystemsoftware/ecosystem/core"
+	"github.com/ecosystemsoftware/ecosystem/introspect"
 	"github.com/graphql-go/graphql"
-	"github.com/jpincas/pgschema"
 )
 
 //tablesAsTypes is a dictionary keyed by table name (prefixed with schema name if not unique)
@@ -38,7 +38,7 @@ func schemaRootSetup() graphql.Fields {
 	rootFields := graphql.Fields{}
 
 	//Get the list of db schemas
-	dbSchemaList, err := getDBSchemas()
+	dbSchemaList, err := introspect.GetDBSchemas()
 	if err != nil {
 		core.LogFatal(core.LogEntry{"GRAPHQL", false, err.Error()})
 	}
@@ -47,7 +47,7 @@ func schemaRootSetup() graphql.Fields {
 	for _, thisSchema := range dbSchemaList {
 
 		//Get the tables in the schema
-		dbTableList, err := getDBTables(thisSchema)
+		dbTableList, err := introspect.GetDBTables(thisSchema)
 		if err != nil {
 			core.LogFatal(core.LogEntry{"GRAPHQL", false, err.Error()})
 		}
@@ -78,6 +78,9 @@ func schemaRootSetup() graphql.Fields {
 
 }
 
+//generateResolver outputs a 'Resolve' function dynamically, hardcoding the schema and table variables
+//This solves the problem of these values not being available to the resolves, which is what happens
+//if the resolve function is directly specified
 func generateResolver(schema, table string) func(p graphql.ResolveParams) (interface{}, error) {
 
 	f := func(p graphql.ResolveParams) (interface{}, error) {
@@ -115,10 +118,12 @@ func uniqueNamer(schema, table string) string {
 	return table
 }
 
+//tableFieldsToGraphQLObjectFields introspects a table and sets up
+//graphQL fields based on the table columns and their types
 func tableFieldsToGraphQLObjectFields(schema, table string) graphql.Fields {
 
 	fields := graphql.Fields{}
-	tableFields, err := pgschema.GetSchema(core.DB, schema, table, "admin")
+	tableFields, err := introspect.GetSchema(schema, table)
 	if err != nil {
 		core.LogFatal(core.LogEntry{"GRAPHQL", false, err.Error()})
 	}
@@ -131,6 +136,7 @@ func tableFieldsToGraphQLObjectFields(schema, table string) graphql.Fields {
 
 }
 
+//fieldBuilder decides which type of GraphQl field to assign
 func fieldBuilder(pgs pgschema.Property) *graphql.Field {
 
 	switch pgs.DataType {
@@ -149,139 +155,3 @@ func fieldBuilder(pgs pgschema.Property) *graphql.Field {
 	}
 
 }
-
-// func graphDBSchemas() graphql.Fields {
-
-// 	//Initialise the list of schemas
-// 	dbSchemas := graphql.Fields{}
-
-// 	//Get DB schemas
-// 	dbSchemaList, err := getDBSchemas()
-// 	if err != nil {
-// 		core.LogFatal(core.LogEntry{"GRAPHQL", false, err.Error()})
-// 	}
-
-// 	//Loop over db schemas
-// 	for _, thisSchema := range dbSchemaList {
-
-// 		dbSchemas[thisSchema] = &graphql.Field{
-
-// 			Type: graphql.NewObject(
-// 				graphql.ObjectConfig{
-// 					Name:   thisSchema,
-// 					Fields: graphDBTables(thisSchema),
-// 				},
-// 			),
-// 			Args: graphql.FieldConfigArgument{
-// 				"id": &graphql.ArgumentConfig{
-// 					Type: graphql.String,
-// 				},
-// 			},
-// 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-// 				return "world", nil
-// 			},
-// 		}
-
-// 	}
-
-// 	return dbSchemas
-
-// }
-
-// func graphDBTables(thisSchema string) graphql.Fields {
-
-// 	// //Initialise the list of schemas
-// 	// dbTables := graphql.Fields{}
-
-// 	// //Get DB schemas
-// 	// dbTableList, err := getDBTables(schema)
-// 	// if err != nil {
-// 	// 	core.LogFatal(core.LogEntry{"GRAPHQL", false, err.Error()})
-// 	// }
-
-// 	// //Loop over db schemas
-// 	// for _, thisTable := range dbTableList {
-
-// 	// 	dbTables[thisTable.tableName] = &graphql.Field{
-// 	// 		Type: graphql.String,
-// 	// 		Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-// 	// 			return "Hello world", nil
-// 	// 		},
-// 	// 	}
-
-// 	// }
-
-// 	// return dbTables
-
-// 	fields := graphql.Fields{
-// 		"hello": &graphql.Field{
-// 			Type: graphql.String,
-// 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-// 				return "world", nil
-// 			},
-// 		},
-// 	}
-
-// 	return fields
-
-// }
-
-// func i() error {
-
-// 	//Root query
-// 	tables := graphql.Fields{}
-
-// 	//Start by getting the db tables
-// 	dbTables, err := getDBTables("eco_bundle_dogshelter")
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	log.Println(dbTables)
-
-// 		//Now add a field on the root query
-// 		tables[v.tableName] = &graphql.Field{
-// 			Type: graphqlTypes[v.tableName],
-// 			Args: graphql.FieldConfigArgument{
-// 				"id": &graphql.ArgumentConfig{
-// 					Type: graphql.String,
-// 				},
-// 			},
-// 			Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-// 				idQuery, isOK := p.Args["id"].(string)
-// 				if isOK {
-// 					return idQuery, nil
-// 				}
-// 				return nil, nil
-// 			},
-// 		}
-
-// 		//In either case, add to query tree
-// 		// fields := graphql.Fields{}
-// 		// s, err := pgschema.GetSchema(core.DB, "eco_bundle_dogshelter", v.tableName, "admin")
-// 		// for ik, iv := range s {
-// 		// 	field := fieldBuilder(iv)
-// 		// 	fields[ik] = field
-// 		// }
-
-// 	}
-
-// 	log.Println(tables)
-
-// 	//Loop over the database tables
-
-// 	//s, err := pgschema.GetSchema(core.DB, "eco_bundle_dogshelter", "dogs", "admin")
-
-// 	rootQuery := graphql.ObjectConfig{Name: "RootQuery", Fields: tables}
-
-// 	schemaConfig := graphql.SchemaConfig{Query: graphql.NewObject(rootQuery)}
-
-// 	schema, err = graphql.NewSchema(schemaConfig)
-
-// 	if err != nil {
-// 		log.Fatalf("failed to create new schema, error: %v", err)
-// 	}
-
-// 	return nil
-
-// }

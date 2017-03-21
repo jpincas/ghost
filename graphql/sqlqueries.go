@@ -13,8 +13,3 @@
 // limitations under the License.
 
 package graphql
-
-const (
-	sqlToGetTablesInSchema = `SELECT table_name, table_type FROM information_schema.tables WHERE table_schema='%s';`
-	sqlToGetSchemasInDB    = `SELECT schema_name FROM information_schema.schemata WHERE schema_owner != 'postgres';`
-)
