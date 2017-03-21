@@ -16,6 +16,7 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -29,8 +30,17 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
+//HandlerTests is a basic suite test struct for all api handlers
+type HandlerTests struct {
+	suite.Suite
+	Req  *http.Request
+	Rr   *httptest.ResponseRecorder
+	Mock sqlmock.Sqlmock
+	Ctx  context.Context
+}
+
 type AuthHandlerTests struct {
-	core.HandlerTests
+	HandlerTests
 }
 
 //Run test suits

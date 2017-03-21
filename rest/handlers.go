@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package rest
 
 import (
 	"encoding/json"
@@ -23,6 +23,7 @@ import (
 
 	"net/url"
 
+	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/lib/pq"
 	"github.com/pressly/chi/render"
 )
@@ -40,9 +41,9 @@ func ShowList(w http.ResponseWriter, r *http.Request) {
 
 	//In normal operation, routing and middleware will make sure that these variables
 	//are always present.  However, to aid in testing of the handler, we include a check
-	if !AllOK(ok1, ok2, ok3, ok4) {
+	if !core.AllOK(ok1, ok2, ok3, ok4) {
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, ResponseError{http.StatusBadRequest, pq.ErrorCode(""), "Missing required values on context", "", "", ""})
+		render.JSON(w, r, core.ResponseError{http.StatusBadRequest, pq.ErrorCode(""), "Missing required values on context", "", "", ""})
 		return
 	} else {
 
@@ -50,8 +51,8 @@ func ShowList(w http.ResponseWriter, r *http.Request) {
 
 	//Build the SQL string and execute query
 	var json string
-	sqlString := QueryBuilder(schema, table, queries).RequestMultipleResultsAsJSONArray().SetQueryRole(role).SetUserID(userID).ToSQLString()
-	err := DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
+	sqlString := core.QueryBuilder(schema, table, queries).RequestMultipleResultsAsJSONArray().SetQueryRole(role).SetUserID(userID).ToSQLString()
+	err := core.DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
 
 	if err != nil {
 		//Check for an sql scan error indicating the json has come back empty
@@ -61,9 +62,9 @@ func ShowList(w http.ResponseWriter, r *http.Request) {
 		} else {
 			//Work out what error has ocurred, 'translate' to a relevant http error and render an error
 			dbError := err.(*pq.Error)
-			httpCode := DBErrorCodeToHTTPErrorCode(dbError.Code)
+			httpCode := core.DBErrorCodeToHTTPErrorCode(dbError.Code)
 			render.Status(r, httpCode)
-			render.JSON(w, r, ResponseError{httpCode, dbError.Code, dbError.Message, schema, table, ""})
+			render.JSON(w, r, core.ResponseError{httpCode, dbError.Code, dbError.Message, schema, table, ""})
 		}
 	} else {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -86,22 +87,22 @@ func ShowSingle(w http.ResponseWriter, r *http.Request) {
 
 	//In normal operation, routing and middleware will make sure that these variables
 	//are always present.  However, to aid in testing of the handler, we include a check
-	if !AllOK(ok1, ok2, ok3, ok4, ok5) {
+	if !core.AllOK(ok1, ok2, ok3, ok4, ok5) {
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, ResponseError{http.StatusBadRequest, pq.ErrorCode(""), "Missing required values on context", "", "", ""})
+		render.JSON(w, r, core.ResponseError{http.StatusBadRequest, pq.ErrorCode(""), "Missing required values on context", "", "", ""})
 		return
 	}
 
 	var json string
-	sqlString := SqlQuery(fmt.Sprintf(SQLToSelectWhere, schema, table, record)).RequestSingleResultAsJSONObject().SetQueryRole(role).SetUserID(userID).ToSQLString()
-	err := DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
+	sqlString := core.SqlQuery(fmt.Sprintf(core.SQLToSelectWhere, schema, table, record)).RequestSingleResultAsJSONObject().SetQueryRole(role).SetUserID(userID).ToSQLString()
+	err := core.DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
 
 	if err != nil {
 		//Work out what error has ocurred, 'translate' to a relevant http error and render an error
 		dbError := err.(*pq.Error)
-		httpCode := DBErrorCodeToHTTPErrorCode(dbError.Code)
+		httpCode := core.DBErrorCodeToHTTPErrorCode(dbError.Code)
 		render.Status(r, httpCode)
-		render.JSON(w, r, ResponseError{httpCode, dbError.Code, dbError.Message, schema, table, record})
+		render.JSON(w, r, core.ResponseError{httpCode, dbError.Code, dbError.Message, schema, table, record})
 
 	} else {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -122,9 +123,9 @@ func InsertRecord(w http.ResponseWriter, r *http.Request) {
 
 	//In normal operation, routing and middleware will make sure that these variables
 	//are always present.  However, to aid in testing of the handler, we include a check
-	if !AllOK(ok1, ok2, ok3, ok4) {
+	if !core.AllOK(ok1, ok2, ok3, ok4) {
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, ResponseError{http.StatusBadRequest, pq.ErrorCode(""), "Missing required values on context", "", "", ""})
+		render.JSON(w, r, core.ResponseError{http.StatusBadRequest, pq.ErrorCode(""), "Missing required values on context", "", "", ""})
 		return
 	}
 
@@ -148,26 +149,26 @@ func InsertRecord(w http.ResponseWriter, r *http.Request) {
 	//For any decode error other than EOF, return a bad request with the decode error
 	if bodyDecodeError != nil && bodyDecodeError != io.EOF {
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, ResponseError{http.StatusBadRequest, "", bodyDecodeError.Error(), schema, table, ""})
+		render.JSON(w, r, core.ResponseError{http.StatusBadRequest, "", bodyDecodeError.Error(), schema, table, ""})
 		return
 	}
 
 	//Filter for a nil body, blank body or empty JSON and do a DEFAULT insert
 	if r.Body == nil || bodyDecodeError == io.EOF || len(requestBody) == 0 {
 		//In this special case, the database will default all fields
-		sqlString = SqlQuery(fmt.Sprintf(SQLToInsertAllDefaultsReturningJSON, schema, table, table)).RequestSingleResultAsJSONObject().SetQueryRole(role).SetUserID(userID).ToSQLString()
+		sqlString = core.SqlQuery(fmt.Sprintf(core.SQLToInsertAllDefaultsReturningJSON, schema, table, table)).RequestSingleResultAsJSONObject().SetQueryRole(role).SetUserID(userID).ToSQLString()
 	} else {
 		//Otherwise build the insert SQL
-		cols, vals := MapToValsAndCols(requestBody)
-		sqlString = SqlQuery(fmt.Sprintf(SQLToInsertReturningJSON, schema, table, cols, vals, table)).RequestSingleResultAsJSONObject().SetQueryRole(role).SetUserID(userID).ToSQLString()
+		cols, vals := core.MapToValsAndCols(requestBody)
+		sqlString = core.SqlQuery(fmt.Sprintf(core.SQLToInsertReturningJSON, schema, table, cols, vals, table)).RequestSingleResultAsJSONObject().SetQueryRole(role).SetUserID(userID).ToSQLString()
 	}
 
 	//Hit the database and deal with errors
-	if err := DB.QueryRow(sqlString).Scan(&dbResponse); err != nil {
+	if err := core.DB.QueryRow(sqlString).Scan(&dbResponse); err != nil {
 		dbError := err.(*pq.Error)
-		httpCode := DBErrorCodeToHTTPErrorCode(dbError.Code)
+		httpCode := core.DBErrorCodeToHTTPErrorCode(dbError.Code)
 		render.Status(r, httpCode)
-		render.JSON(w, r, ResponseError{httpCode, dbError.Code, dbError.Message, schema, table, ""})
+		render.JSON(w, r, core.ResponseError{httpCode, dbError.Code, dbError.Message, schema, table, ""})
 	} else {
 		//If there are no database errors
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -189,29 +190,29 @@ func DeleteRecord(w http.ResponseWriter, r *http.Request) {
 
 	//In normal operation, routing and middleware will make sure that these variables
 	//are always present.  However, to aid in testing of the handler, we include a check
-	if !AllOK(ok1, ok2, ok3, ok4, ok5) {
+	if !core.AllOK(ok1, ok2, ok3, ok4, ok5) {
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, ResponseError{http.StatusBadRequest, pq.ErrorCode(""), "Missing required values on context", "", "", ""})
+		render.JSON(w, r, core.ResponseError{http.StatusBadRequest, pq.ErrorCode(""), "Missing required values on context", "", "", ""})
 		return
 	}
 
 	//To reference the base table from the view (if necessary), only use the portion of the table name before the first hyphen/underscore
 	table = strings.Split(table, "_")[0]
 
-	sqlString := SqlQuery(fmt.Sprintf(SQLToDeleteWhere, schema, table, record)).SetQueryRole(role).SetUserID(userID).ToSQLString()
-	res, err := DB.Exec(sqlString)
+	sqlString := core.SqlQuery(fmt.Sprintf(core.SQLToDeleteWhere, schema, table, record)).SetQueryRole(role).SetUserID(userID).ToSQLString()
+	res, err := core.DB.Exec(sqlString)
 
 	if err != nil {
 		//Work out what error has ocurred, 'translate' to a relevant http error and render an error
 		dbError := err.(*pq.Error)
-		httpCode := DBErrorCodeToHTTPErrorCode(dbError.Code)
+		httpCode := core.DBErrorCodeToHTTPErrorCode(dbError.Code)
 		render.Status(r, httpCode)
-		render.JSON(w, r, ResponseError{httpCode, dbError.Code, dbError.Message, schema, table, record})
+		render.JSON(w, r, core.ResponseError{httpCode, dbError.Code, dbError.Message, schema, table, record})
 	} else {
 		//If 0 rows are affected then nothing has been deleted
 		if n, _ := res.RowsAffected(); n == 0 {
 			render.Status(r, http.StatusNotFound)
-			render.JSON(w, r, ResponseError{http.StatusNotFound, "", "No record with that id", schema, table, record})
+			render.JSON(w, r, core.ResponseError{http.StatusNotFound, "", "No record with that id", schema, table, record})
 		} else {
 			render.NoContent(w, r)
 		}
@@ -232,9 +233,9 @@ func UpdateRecord(w http.ResponseWriter, r *http.Request) {
 
 	//In normal operation, routing and middleware will make sure that these variables
 	//are always present.  However, to aid in testing of the handler, we include a check
-	if !AllOK(ok1, ok2, ok3, ok4, ok5) {
+	if !core.AllOK(ok1, ok2, ok3, ok4, ok5) {
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, ResponseError{http.StatusBadRequest, pq.ErrorCode(""), "Missing required values on context", "", "", ""})
+		render.JSON(w, r, core.ResponseError{http.StatusBadRequest, pq.ErrorCode(""), "Missing required values on context", "", "", ""})
 		return
 	}
 
@@ -263,25 +264,25 @@ func UpdateRecord(w http.ResponseWriter, r *http.Request) {
 			message = bodyDecodeError.Error()
 		}
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, ResponseError{http.StatusBadRequest, "", message, schema, table, record})
+		render.JSON(w, r, core.ResponseError{http.StatusBadRequest, "", message, schema, table, record})
 
 	} else {
 
 		//Otherwise build the insert SQL
-		cols, vals := MapToValsAndCols(requestBody)
-		sqlString := SqlQuery(fmt.Sprintf(SQLToUpdateWhereReturningJSON, schema, table, cols, vals, record, table)).SetQueryRole(role).SetUserID(userID).ToSQLString()
+		cols, vals := core.MapToValsAndCols(requestBody)
+		sqlString := core.SqlQuery(fmt.Sprintf(core.SQLToUpdateWhereReturningJSON, schema, table, cols, vals, record, table)).SetQueryRole(role).SetUserID(userID).ToSQLString()
 		//Hit the database and deal with errors
-		err := DB.QueryRow(sqlString).Scan(&dbResponse)
+		err := core.DB.QueryRow(sqlString).Scan(&dbResponse)
 		//Check for an sql scan error indicating the json has come back empty
 		//which means that the record was not found, so 404
 		if err != nil && strings.Contains(err.Error(), "sql") {
 			render.Status(r, http.StatusNotFound)
-			render.JSON(w, r, ResponseError{http.StatusNotFound, "", "No record with that id", schema, table, record})
+			render.JSON(w, r, core.ResponseError{http.StatusNotFound, "", "No record with that id", schema, table, record})
 		} else if err != nil {
 			dbError := err.(*pq.Error)
-			httpCode := DBErrorCodeToHTTPErrorCode(dbError.Code)
+			httpCode := core.DBErrorCodeToHTTPErrorCode(dbError.Code)
 			render.Status(r, httpCode)
-			render.JSON(w, r, ResponseError{httpCode, dbError.Code, dbError.Message, schema, table, ""})
+			render.JSON(w, r, core.ResponseError{httpCode, dbError.Code, dbError.Message, schema, table, ""})
 		} else {
 			//If there are no database errors
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -303,9 +304,9 @@ func UpdateRecord(w http.ResponseWriter, r *http.Request) {
 // 	role, _ := c.Get("role")
 // 	userID, _ := c.Get("userID")
 
-// 	sqlString := SqlQuery(fmt.Sprintf(SQLToFullTextSearch, table, searchTerm, table, schema, table, searchTerm)).SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
+// 	sqlString := core.SqlQuery(fmt.Sprintf(SQLToFullTextSearch, table, searchTerm, table, schema, table, searchTerm)).SetQueryRole(role.(string)).SetUserID(userID.(string)).ToSQLString()
 
-// 	err := DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
+// 	err := core.DB.QueryRow(sqlString).Scan(&json) //Only one row is returned as JSON is returned by Postgres
 
 // 	if err != nil {
 // 		//Check for an sql scan error indicating the json has come back empty
@@ -314,7 +315,7 @@ func UpdateRecord(w http.ResponseWriter, r *http.Request) {
 // 			c.String(http.StatusOK, json)
 // 		} else {
 // 			dbError := err.(*pq.Error)
-// 			httpCode := DBErrorCodeToHTTPErrorCode(dbError.Code)
+// 			httpCode := core.DBErrorCodeToHTTPErrorCode(dbError.Code)
 // 			c.JSON(httpCode, gin.H{
 // 				"code":    httpCode,
 // 				"message": dbError.Message,

@@ -16,10 +16,12 @@
 //jwtmiddleware "github.com/jonbonazza/go-jwt-middleware"
 //The auth0 version doesn't properly support getting the claims
 
-package core
+package rest
 
 import (
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/ecosystemsoftware/ecosystem/auth"
+	"github.com/ecosystemsoftware/ecosystem/core"
 	jwtmiddleware "github.com/jonbonazza/go-jwt-middleware"
 	"github.com/pressly/chi"
 	"github.com/spf13/viper"
@@ -38,23 +40,23 @@ func setRoutes() {
 		SigningMethod: jwt.SigningMethodHS256,
 	})
 
-	Router.Route("/api", func(r chi.Router) {
+	core.Router.Route("/api", func(r chi.Router) {
 		//The base slug is 'schema'
 		r.Route("/:schema", func(r chi.Router) {
 			//Activate JWT middleware right at the base
 			r.Use(jwtMiddleware.Handler)
 			//If a valid JWT is present, a user id and role will be assigned
-			r.Use(Authorizator)
+			r.Use(auth.Authorizator)
 			//Next slug is 'table'
 			r.Route("/:table", func(r chi.Router) {
 				//Use middleware to add the schema, table and queries to the context
-				r.Use(AddSchemaAndTableToContext)
+				r.Use(core.AddSchemaAndTableToContext)
 				r.Get("/", ShowList)      // GET /schema/table
 				r.Post("/", InsertRecord) // PUT /schema/table
 				//Final level is 'record'
 				r.Route("/:record", func(r chi.Router) {
 					//Use middleware to add the record to the context
-					r.Use(AddRecordToContext)
+					r.Use(core.AddRecordToContext)
 					r.Get("/", ShowSingle)      // GET /schema/table/record
 					r.Patch("/", UpdateRecord)  // PATCH /schema/table/record
 					r.Delete("/", DeleteRecord) // DELETE /schema/table/record

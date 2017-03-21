@@ -18,6 +18,8 @@ import (
 	"github.com/ecosystemsoftware/ecosystem/auth"
 	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/ecosystemsoftware/ecosystem/email"
+	"github.com/ecosystemsoftware/ecosystem/graphql"
+	"github.com/ecosystemsoftware/ecosystem/rest"
 )
 
 func main() {
@@ -31,7 +33,8 @@ func main() {
 
 func activatePackages() {
 	//Standard packages
-	core.Activate()
+	rest.Activate()
 	auth.Activate()
 	email.Activate()
+	graphql.Activate()
 }

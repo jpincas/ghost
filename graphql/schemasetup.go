@@ -56,18 +56,18 @@ func schemaRootSetup() graphql.Fields {
 		for _, thisTable := range dbTableList {
 
 			//add it to the map of custom types, with unique name if necessary
-			schemaTable := uniqueNamer(thisSchema, thisTable.tableName)
+			schemaTable := uniqueNamer(thisSchema, thisTable.TableName)
 			tablesAsTypes[schemaTable] = graphql.NewObject(
 				graphql.ObjectConfig{
 					Name:   schemaTable,
-					Fields: tableFieldsToGraphQLObjectFields(thisSchema, thisTable.tableName),
+					Fields: tableFieldsToGraphQLObjectFields(thisSchema, thisTable.TableName),
 				},
 			)
 
 			//setup the field as the type
 			rootFields[schemaTable] = &graphql.Field{
 				Type:    graphql.NewList(tablesAsTypes[schemaTable]),
-				Resolve: generateResolver(thisSchema, thisTable.tableName),
+				Resolve: generateResolver(thisSchema, thisTable.TableName),
 			}
 
 		}
@@ -137,7 +137,7 @@ func tableFieldsToGraphQLObjectFields(schema, table string) graphql.Fields {
 }
 
 //fieldBuilder decides which type of GraphQl field to assign
-func fieldBuilder(pgs pgschema.Property) *graphql.Field {
+func fieldBuilder(pgs introspect.Property) *graphql.Field {
 
 	switch pgs.DataType {
 	case "string":
