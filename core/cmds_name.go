@@ -59,6 +59,8 @@ var newBundleCmd = &cobra.Command{
 
 func createNewUser(cmd *cobra.Command, args []string) error {
 
+	readConfig()
+
 	if len(args) < 1 {
 		return errors.New("user's email must be provided")
 	}
@@ -91,6 +93,8 @@ func createNewUser(cmd *cobra.Command, args []string) error {
 }
 
 func createNewBundle(cmd *cobra.Command, args []string) error {
+
+	readConfig()
 
 	//Check for bundle name
 	if len(args) < 1 {

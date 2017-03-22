@@ -25,7 +25,6 @@ import (
 	"fmt"
 )
 
-var nowebsite, noadminpanel bool
 var smtpPW string
 
 func init() {
@@ -55,11 +54,13 @@ var serveCmd = &cobra.Command{
 
 func serve(cmd *cobra.Command, args []string) error {
 
+	readConfig()
 	preServe()
 	startServer()
 	return nil
 }
 
+//ActivatePackages is a hook for activating packages from main
 var ActivatePackages func()
 
 func preServe() {

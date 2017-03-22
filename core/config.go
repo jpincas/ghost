@@ -40,8 +40,7 @@ type Config struct {
 	Protocol         string  `json:"protocol"`
 }
 
-// initConfig reads in config file and ENV variables if set.
-func InitConfig() {
+func init() {
 
 	viper.SetDefault("pgSuperUser", "postgres")
 	viper.SetDefault("pgDBName", "testdb")
@@ -52,28 +51,27 @@ func InitConfig() {
 	viper.SetDefault("jwtRealm", "yourappname")
 	viper.SetDefault("host", "localhost")
 	viper.SetDefault("protocol", "http")
-
-	viper.SetConfigName(viper.GetString("configfile"))
 	viper.AddConfigPath(".")
 
-	// If a config file is found, read it in.
+}
+
+func readConfig() {
+
+	viper.SetConfigName(viper.GetString("configfile"))
+
 	if err := viper.ReadInConfig(); err == nil {
 		//Initialise the db config structs for later use
 		InitDBConnectionConfigs()
 		Log(LogEntry{"CORE.CONFIG", true, "Config file detected and correctly applied:" + viper.ConfigFileUsed()})
 	} else {
-		//Otherwise create one
-		Log(LogEntry{"CORE.CONFIG", true, "Config file does not exist. Creating now..."})
-
-		if err := createDefaultConfigFile(); err != nil {
-			LogFatal(LogEntry{"CORE.CONFIG", false, "Error creating config file: " + err.Error()})
-		}
+		LogFatal(LogEntry{"CORE.CONFIG", true, "Config file not found. Aborting"})
 	}
+
 }
 
 //createDafaultConfigFile creates the default config.json template with sane defaults
 //Will overwrite existing config.json, so ask for confirmation
-func createDefaultConfigFile() error {
+func createDefaultConfigFile(configFileName string) error {
 
 	config := Config{
 		PgSuperUser:      "postgres",
@@ -94,7 +92,8 @@ func createDefaultConfigFile() error {
 	}
 
 	configJSON, _ := json.MarshalIndent(config, "", "\t")
-	err := ioutil.WriteFile("config.json", configJSON, 0644)
+	fileName := configFileName + ".json"
+	err := ioutil.WriteFile(fileName, configJSON, 0644)
 	if err != nil {
 		return err
 	}

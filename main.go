@@ -15,6 +15,9 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/ecosystemsoftware/ecosystem/auth"
 	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/ecosystemsoftware/ecosystem/email"
@@ -28,7 +31,10 @@ func main() {
 	core.ActivatePackages = activatePackages
 
 	//Bootstrap the application
-	core.RootCmd.Execute()
+	if err := core.RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
 }
 
 func activatePackages() {

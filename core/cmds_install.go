@@ -57,6 +57,8 @@ var unInstallCmd = &cobra.Command{
 //uninstallBundle is the removal function for a bundle
 func unInstallBundle(cmd *cobra.Command, args []string) error {
 
+	readConfig()
+
 	//Check for bundle name
 	if len(args) < 1 {
 		return errors.New("a bundle name must be provided")
@@ -103,6 +105,8 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 
 //installBundle is the entire installation procedure for an EcoSystem Bundle
 func installBundle(cmd *cobra.Command, args []string) error {
+
+	readConfig()
 
 	//Check for bundle name
 	if len(args) < 1 {

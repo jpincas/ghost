@@ -83,6 +83,8 @@ func generateResolver(schema, table string) func(p graphql.ResolveParams) (inter
 	f := func(p graphql.ResolveParams) (interface{}, error) {
 
 		var dbResponse string
+
+		//TODO: Hardcoded auth - need to implement auth middleware
 		sqlString := core.QueryBuilder(schema, table, nil).RequestMultipleResultsAsJSONArray().SetQueryRole("admin").SetUserID("123456").ToSQLString()
 
 		if err := core.DB.QueryRow(sqlString).Scan(&dbResponse); err != nil {

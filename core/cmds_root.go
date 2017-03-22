@@ -15,9 +15,6 @@
 package core
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,35 +25,32 @@ var RootCmd = &cobra.Command{
 	Short: "EcoSystem command line tool",
 	Long: `Use to initialise or launch the EcoSystem server or create new users or bundles.
 	Use the bare command 'ecosystem' to create a new config.json or verify an existing one.`,
-	RunE: justCheckForConfigFile,
-}
-
-// Execute adds all child commands to the root command sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-
-	if err := RootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
+	RunE: createConfigIfNotExists,
 }
 
 func init() {
 
-	//Run the config
-	InitConfig()
-
 	RootCmd.PersistentFlags().StringP("pgpw", "p", "", "Postgres superuser password")
-	viper.BindPFlag("pgpw", RootCmd.PersistentFlags().Lookup("pgpw"))
 	RootCmd.PersistentFlags().StringP("configfile", "c", "config", "Name of config file (without extension)")
-	viper.BindPFlag("configfile", RootCmd.PersistentFlags().Lookup("configfile"))
+	viper.BindPFlags(RootCmd.PersistentFlags())
 
 }
 
-func justCheckForConfigFile(cmd *cobra.Command, args []string) error {
-	//This function actually does nothing
-	//The only benefit of running it is that it sparks initConfig which checks for a config file
-	//And creates one if necessary
-	//This just means the whole process can be started by typiing 'ecosystem', which is cool!
+// initConfig reads in config file and ENV variables if set.
+func createConfigIfNotExists(cmd *cobra.Command, args []string) error {
+
+	viper.SetConfigName(viper.GetString("configfile"))
+
+	if err := viper.ReadInConfig(); err == nil {
+		LogFatal(LogEntry{"CORE.CONFIG", true, "Config file already exists:" + viper.ConfigFileUsed()})
+	} else {
+		if err := createDefaultConfigFile(viper.GetString("configfile")); err != nil {
+			LogFatal(LogEntry{"CORE.CONFIG", false, "Error creating config file: " + err.Error()})
+		} else {
+			//Otherwise create one
+			Log(LogEntry{"CORE.CONFIG", true, "Config file created"})
+		}
+	}
+
 	return nil
 }
