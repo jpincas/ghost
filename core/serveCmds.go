@@ -37,6 +37,9 @@ func init() {
 	serveCmd.Flags().BoolP("demomode", "d", false, "Run server in demo mode")
 	viper.BindPFlag("demomode", serveCmd.Flags().Lookup("demomode"))
 
+	serveCmd.Flags().BoolP("debug", "b", false, "Run server in debug mode")
+	viper.BindPFlag("debug", serveCmd.Flags().Lookup("debug"))
+
 	serveCmd.Flags().StringP("secret", "s", "", "Secure secret for signing JWT")
 	viper.BindPFlag("secret", serveCmd.Flags().Lookup("secret"))
 

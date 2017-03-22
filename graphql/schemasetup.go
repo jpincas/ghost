@@ -23,6 +23,7 @@ import (
 	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/ecosystemsoftware/ecosystem/introspect"
 	"github.com/graphql-go/graphql"
+	"github.com/spf13/viper"
 )
 
 //tablesAsTypes is a dictionary keyed by table name (prefixed with schema name if not unique)
@@ -37,11 +38,8 @@ func schemaRootSetup() graphql.Fields {
 	//Initialise the list of db schemas
 	rootFields := graphql.Fields{}
 
-	//Get the list of db schemas
-	dbSchemaList, err := introspect.GetDBSchemas()
-	if err != nil {
-		core.LogFatal(core.LogEntry{"GRAPHQL", false, err.Error()})
-	}
+	//The list of schemas = list of installed bundles
+	dbSchemaList := core.Bundles(viper.GetStringSlice("bundlesInstalled"))
 
 	//For each db schema
 	for _, thisSchema := range dbSchemaList {
