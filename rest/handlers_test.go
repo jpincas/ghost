@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package rest
 
 import (
 	"bytes"
@@ -27,6 +27,7 @@ import (
 
 	"net/url"
 
+	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/lib/pq"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -36,6 +37,15 @@ import (
 /////////////////////////////////////////////////////////////////////
 // Tests for func ShowList(w http.ResponseWriter, r *http.Request) //
 /////////////////////////////////////////////////////////////////////
+
+//HandlerTests is a basic suite test struct for all api handlers
+type HandlerTests struct {
+	suite.Suite
+	Req  *http.Request
+	Rr   *httptest.ResponseRecorder
+	Mock sqlmock.Sqlmock
+	Ctx  context.Context
+}
 
 type ShowListTests struct {
 	HandlerTests
@@ -51,7 +61,7 @@ func (suite *ShowListTests) SetupTest() {
 	suite.Req, _ = http.NewRequest("GET", "", nil)
 	suite.Rr = httptest.NewRecorder()
 	//Setup db mocks
-	DB, suite.Mock, _ = sqlmock.New()
+	core.DB, suite.Mock, _ = sqlmock.New()
 	suite.Ctx = context.WithValue(suite.Req.Context(), "role", "role")
 	suite.Ctx = context.WithValue(suite.Ctx, "userID", "123456789")
 	suite.Ctx = context.WithValue(suite.Ctx, "schema", "schema")
@@ -171,7 +181,7 @@ func (suite *ShowSingleTests) SetupTest() {
 	suite.Req, _ = http.NewRequest("GET", "", nil)
 	suite.Rr = httptest.NewRecorder()
 	//Setup db mocks
-	DB, suite.Mock, _ = sqlmock.New()
+	core.DB, suite.Mock, _ = sqlmock.New()
 	suite.Ctx = context.WithValue(suite.Req.Context(), "role", "role")
 	suite.Ctx = context.WithValue(suite.Ctx, "userID", "123456789")
 	suite.Ctx = context.WithValue(suite.Ctx, "schema", "schema")
@@ -278,7 +288,7 @@ func (suite *InsertRecordTests) SetupTest() {
 	suite.Req, _ = http.NewRequest("POST", "", nil)
 	suite.Rr = httptest.NewRecorder()
 	//Setup db mocks
-	DB, suite.Mock, _ = sqlmock.New()
+	core.DB, suite.Mock, _ = sqlmock.New()
 	suite.Ctx = context.WithValue(suite.Req.Context(), "role", "role")
 	suite.Ctx = context.WithValue(suite.Ctx, "userID", "123456789")
 	suite.Ctx = context.WithValue(suite.Ctx, "schema", "schema")
@@ -426,7 +436,7 @@ func (suite *DeleteRecordTests) SetupTest() {
 	suite.Req, _ = http.NewRequest("DELETE", "", nil)
 	suite.Rr = httptest.NewRecorder()
 	//Setup db mocks
-	DB, suite.Mock, _ = sqlmock.New()
+	core.DB, suite.Mock, _ = sqlmock.New()
 	suite.Ctx = context.WithValue(suite.Req.Context(), "role", "role")
 	suite.Ctx = context.WithValue(suite.Ctx, "userID", "123456789")
 	suite.Ctx = context.WithValue(suite.Ctx, "schema", "schema")
@@ -533,7 +543,7 @@ func (suite *UpdateRecordTests) SetupTest() {
 	suite.Req, _ = http.NewRequest("PATCH", "", nil)
 	suite.Rr = httptest.NewRecorder()
 	//Setup db mocks
-	DB, suite.Mock, _ = sqlmock.New()
+	core.DB, suite.Mock, _ = sqlmock.New()
 	suite.Ctx = context.WithValue(suite.Req.Context(), "role", "role")
 	suite.Ctx = context.WithValue(suite.Ctx, "userID", "123456789")
 	suite.Ctx = context.WithValue(suite.Ctx, "schema", "schema")

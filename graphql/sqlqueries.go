@@ -12,22 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
-
-import (
-	"context"
-	"net/http"
-	"net/http/httptest"
-
-	"github.com/stretchr/testify/suite"
-	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
-)
-
-//HandlerTests is a basic suite test struct for all api handlers
-type HandlerTests struct {
-	suite.Suite
-	Req  *http.Request
-	Rr   *httptest.ResponseRecorder
-	Mock sqlmock.Sqlmock
-	Ctx  context.Context
-}
+package graphql

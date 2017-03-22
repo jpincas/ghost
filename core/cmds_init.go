@@ -75,6 +75,8 @@ func initAll(cmd *cobra.Command, args []string) error {
 //initDB initialises the built-in database tables, roles and permissions
 func initDB(cmd *cobra.Command, args []string) error {
 
+	readConfig()
+
 	//Establish a temporary connection as the super user
 	db := SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
@@ -103,11 +105,13 @@ func initDB(cmd *cobra.Command, args []string) error {
 //initFolders initialises the filesystem used by EcoSystem
 func initFolders(cmd *cobra.Command, args []string) error {
 
+	readConfig()
+
 	var err error
 	err = os.Mkdir("./bundles", os.ModePerm)
 
 	if err != nil {
-		LogFatal(LogEntry{"CORE.INIT", false, "Could not complete folder setup: " + err.Error()})
+		Log(LogEntry{"CORE.INIT", false, "Could not complete folder setup: " + err.Error()})
 	}
 
 	Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem folder initialisation"})

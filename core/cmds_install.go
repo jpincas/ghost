@@ -57,6 +57,8 @@ var unInstallCmd = &cobra.Command{
 //uninstallBundle is the removal function for a bundle
 func unInstallBundle(cmd *cobra.Command, args []string) error {
 
+	readConfig()
+
 	//Check for bundle name
 	if len(args) < 1 {
 		return errors.New("a bundle name must be provided")
@@ -87,9 +89,9 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 		var config Config
 		viper.Unmarshal(&config)
 		configJSON, _ := json.MarshalIndent(config, "", "\t")
-		err = ioutil.WriteFile("config.json", configJSON, 0644)
+		err = ioutil.WriteFile(viper.GetString("configfile")+".json", configJSON, 0644)
 		if err != nil {
-			Log(LogEntry{"CORE.INSTALL", false, "Error updating config.json: " + err.Error()})
+			Log(LogEntry{"CORE.INSTALL", false, "Error updating config file: " + err.Error()})
 		}
 
 		Log(LogEntry{"CORE.INSTALL", true, "config.json updated"})
@@ -103,6 +105,8 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 
 //installBundle is the entire installation procedure for an EcoSystem Bundle
 func installBundle(cmd *cobra.Command, args []string) error {
+
+	readConfig()
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -147,7 +151,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 		} else {
 
 			//Set admin privileges for everything in this schema going forwards
-			_, err = db.Exec(fmt.Sprintf(SQLToGrantBundleAdminPermissions, args[0], args[0]))
+			_, err = db.Exec(fmt.Sprintf(SQLToGrantBundleAdminPermissions, args[0], args[0], args[0]))
 
 			//Set the search path to the bundle schema so that all SQL commands take
 			//place within the schema
@@ -202,12 +206,12 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	var config Config
 	viper.Unmarshal(&config)
 	configJSON, _ := json.MarshalIndent(config, "", "\t")
-	err = ioutil.WriteFile("config.json", configJSON, 0644)
+	err = ioutil.WriteFile(viper.GetString("configfile")+".json", configJSON, 0644)
 	if err != nil {
-		Log(LogEntry{"CORE.INSTALL", false, "Error updating config.json: " + err.Error()})
+		Log(LogEntry{"CORE.INSTALL", false, "Error updating config file: " + err.Error()})
 	}
 
-	Log(LogEntry{"CORE.INSTALL", true, "config.json updated"})
+	Log(LogEntry{"CORE.INSTALL", true, "config file updated"})
 
 	//Bundle installation complete
 	Log(LogEntry{"CORE.INSTALL", true, "Installation of bundle " + args[0] + " completed"})

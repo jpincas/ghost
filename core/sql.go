@@ -55,9 +55,10 @@ func (s SqlQuery) SetUserID(userID string) SqlQuery {
 //ToSQLString transforms an SqlQuery to a plain string
 //Generally the last step before execution
 func (s SqlQuery) ToSQLString() string {
-	//Uncomment to turn on SQL loggingfor debugging
-	//log.Println(fmt.Sprint(s))
+
+	LogDebug(LogEntry{"SQL", true, fmt.Sprint(s)})
 	return fmt.Sprint(s)
+
 }
 
 //QueryBuilder builds an SqlQuery from multiple URL query paramaters

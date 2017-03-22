@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/spf13/viper"
 	"github.com/wsxiaoys/terminal/color"
 )
 
@@ -45,7 +46,18 @@ func Log(l LogEntry) {
 //LogFatal outputs a custom ecosystem log entry and exits
 func LogFatal(l LogEntry) {
 
-	entryType := color.Sprint("@rFATAL")
+	entryType := color.Sprint("@{wR}FATAL")
 	logText := fmt.Sprintf("%s | %s | %s", l.PackageName, entryType, l.Message)
 	log.Fatalln(logText)
+}
+
+//LogDebug outputs a custom ecosystem log entry if debugmode is on
+func LogDebug(l LogEntry) {
+
+	if viper.GetBool("demomode") {
+		entryType := color.Sprint("@yDEBUG")
+		logText := fmt.Sprintf("%s | %s | %s", l.PackageName, entryType, l.Message)
+		log.Println(logText)
+	}
+
 }

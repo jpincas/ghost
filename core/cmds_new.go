@@ -16,7 +16,6 @@ package core
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"errors"
@@ -59,6 +58,8 @@ var newBundleCmd = &cobra.Command{
 
 func createNewUser(cmd *cobra.Command, args []string) error {
 
+	readConfig()
+
 	if len(args) < 1 {
 		return errors.New("user's email must be provided")
 	}
@@ -81,16 +82,18 @@ func createNewUser(cmd *cobra.Command, args []string) error {
 
 	_, err := db.Exec(fmt.Sprintf(SQLToCreateAdministrator, args[0], role))
 	if err != nil {
-		log.Fatal("Could not create new user:", err.Error())
+		LogFatal(LogEntry{"CORE.NEW", true, "Could not create new user:" + err.Error()})
 		return nil
 	}
 
-	log.Println("Successfully created new user", args[0], "as", role)
+	Log(LogEntry{"CORE.NEW", true, "Successfully created new user " + args[0] + " as " + role})
 	return nil
 
 }
 
 func createNewBundle(cmd *cobra.Command, args []string) error {
+
+	readConfig()
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -102,7 +105,7 @@ func createNewBundle(cmd *cobra.Command, args []string) error {
 	basePath := "./" + args[0]
 	exists, _ := afero.IsDir(AppFs, basePath)
 	if exists {
-		log.Fatal("Bundle", args[0], "already exists. Please provide a different name")
+		LogFatal(LogEntry{"CORE.NEW", true, "Bundle " + args[0] + " already exists. Please provide a different name"})
 	}
 
 	//Create the folder structure
@@ -114,19 +117,18 @@ func createNewBundle(cmd *cobra.Command, args []string) error {
 	err = os.MkdirAll("./"+args[0]+"/admin-panel", os.ModePerm)
 
 	if err != nil {
-		log.Fatal("Could not complete folder setup: ", err.Error())
+		LogFatal(LogEntry{"CORE.NEW", true, "Could not complete folder setup: " + err.Error()})
 	}
 
 	_, err = os.Create("./" + args[0] + "/install.sql")
 	_, err = os.Create("./" + args[0] + "/demodata.sql")
 
 	if err != nil {
-		log.Fatal("Could not complete file setup: ", err.Error())
+		LogFatal(LogEntry{"CORE.NEW", true, "Could not complete folder setup: " + err.Error()})
 	}
 
 	//Creates the bundles
-
-	log.Println("Successfully created bundle", args[0])
+	Log(LogEntry{"CORE.NEW", true, "Successfully created bundle " + args[0]})
 	return nil
 
 }

@@ -25,7 +25,6 @@ import (
 	"fmt"
 )
 
-var nowebsite, noadminpanel bool
 var smtpPW string
 
 func init() {
@@ -36,6 +35,9 @@ func init() {
 
 	serveCmd.Flags().BoolP("demomode", "d", false, "Run server in demo mode")
 	viper.BindPFlag("demomode", serveCmd.Flags().Lookup("demomode"))
+
+	serveCmd.Flags().BoolP("debug", "b", false, "Run server in debug mode")
+	viper.BindPFlag("debug", serveCmd.Flags().Lookup("debug"))
 
 	serveCmd.Flags().StringP("secret", "s", "", "Secure secret for signing JWT")
 	viper.BindPFlag("secret", serveCmd.Flags().Lookup("secret"))
@@ -52,11 +54,13 @@ var serveCmd = &cobra.Command{
 
 func serve(cmd *cobra.Command, args []string) error {
 
+	readConfig()
 	preServe()
 	startServer()
 	return nil
 }
 
+//ActivatePackages is a hook for activating packages from main
 var ActivatePackages func()
 
 func preServe() {
