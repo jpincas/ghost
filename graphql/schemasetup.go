@@ -17,7 +17,6 @@ package graphql
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/ecosystemsoftware/ecosystem/core"
@@ -85,7 +84,6 @@ func generateResolver(schema, table string) func(p graphql.ResolveParams) (inter
 
 		var dbResponse string
 		sqlString := core.QueryBuilder(schema, table, nil).RequestMultipleResultsAsJSONArray().SetQueryRole("admin").SetUserID("123456").ToSQLString()
-		log.Println(sqlString)
 
 		if err := core.DB.QueryRow(sqlString).Scan(&dbResponse); err != nil {
 			//Only one row is returned as JSON is returned by Postgres
@@ -93,8 +91,13 @@ func generateResolver(schema, table string) func(p graphql.ResolveParams) (inter
 			if strings.Contains(err.Error(), "sql") {
 				return nil, nil
 			}
+
+			//Else its a database error
+			return nil, err
+
 		}
 		//If found
+		core.LogDebug(core.LogEntry{"GRAPHQL", true, fmt.Sprint(dbResponse)})
 		var records []map[string]interface{}
 		if err := json.Unmarshal([]byte(dbResponse), &records); err != nil {
 			return nil, err

@@ -147,7 +147,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 		} else {
 
 			//Set admin privileges for everything in this schema going forwards
-			_, err = db.Exec(fmt.Sprintf(SQLToGrantBundleAdminPermissions, args[0], args[0]))
+			_, err = db.Exec(fmt.Sprintf(SQLToGrantBundleAdminPermissions, args[0], args[0], args[0]))
 
 			//Set the search path to the bundle schema so that all SQL commands take
 			//place within the schema

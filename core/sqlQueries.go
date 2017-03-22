@@ -41,7 +41,7 @@ const (
 
 	//Schema manipulation for bundles
 	SQLToCreateSchema                = `CREATE SCHEMA %s;`
-	SQLToGrantBundleAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT ALL ON TABLES TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT USAGE ON SEQUENCES TO admin;`
+	SQLToGrantBundleAdminPermissions = `GRANT USAGE ON SCHEMA %s TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT ALL ON TABLES TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT USAGE ON SEQUENCES TO admin;`
 	SQLToDropSchema                  = `DROP SCHEMA %s CASCADE;`
 	SQLToSetSearchPathForBundle      = `SET search_path TO %s, public;`
 
