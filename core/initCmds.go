@@ -107,7 +107,7 @@ func initFolders(cmd *cobra.Command, args []string) error {
 	err = os.Mkdir("./bundles", os.ModePerm)
 
 	if err != nil {
-		LogFatal(LogEntry{"CORE.INIT", false, "Could not complete folder setup: " + err.Error()})
+		Log(LogEntry{"CORE.INIT", false, "Could not complete folder setup: " + err.Error()})
 	}
 
 	Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem folder initialisation"})
