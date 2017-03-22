@@ -89,9 +89,9 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 		var config Config
 		viper.Unmarshal(&config)
 		configJSON, _ := json.MarshalIndent(config, "", "\t")
-		err = ioutil.WriteFile("config.json", configJSON, 0644)
+		err = ioutil.WriteFile(viper.GetString("configfile")+".json", configJSON, 0644)
 		if err != nil {
-			Log(LogEntry{"CORE.INSTALL", false, "Error updating config.json: " + err.Error()})
+			Log(LogEntry{"CORE.INSTALL", false, "Error updating config file: " + err.Error()})
 		}
 
 		Log(LogEntry{"CORE.INSTALL", true, "config.json updated"})
@@ -206,12 +206,12 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	var config Config
 	viper.Unmarshal(&config)
 	configJSON, _ := json.MarshalIndent(config, "", "\t")
-	err = ioutil.WriteFile("config.json", configJSON, 0644)
+	err = ioutil.WriteFile(viper.GetString("configfile")+".json", configJSON, 0644)
 	if err != nil {
-		Log(LogEntry{"CORE.INSTALL", false, "Error updating config.json: " + err.Error()})
+		Log(LogEntry{"CORE.INSTALL", false, "Error updating config file: " + err.Error()})
 	}
 
-	Log(LogEntry{"CORE.INSTALL", true, "config.json updated"})
+	Log(LogEntry{"CORE.INSTALL", true, "config file updated"})
 
 	//Bundle installation complete
 	Log(LogEntry{"CORE.INSTALL", true, "Installation of bundle " + args[0] + " completed"})
