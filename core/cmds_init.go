@@ -20,11 +20,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var isNoPrompt bool
+
 func init() {
 
 	RootCmd.AddCommand(initCmd)
 	initCmd.AddCommand(initDBCmd)
 	initCmd.AddCommand(initFoldersCmd)
+
+	initCmd.Flags().BoolVarP(&isNoPrompt, "noprompt", "n", false, "Don't prompt for confirmation")
 
 }
 
@@ -58,9 +62,15 @@ var initFoldersCmd = &cobra.Command{
 //initAll
 func initAll(cmd *cobra.Command, args []string) error {
 
-	c := AskForConfirmation("This will perform a complete (re)initialisation and may perform overwrites. Do you with to proceed?")
+	//If user has used -noprompt flag then we don't prompt for confirmation
+	var proceedWithInit = false
+	if isNoPrompt {
+		proceedWithInit = true
+	} else {
+		proceedWithInit = AskForConfirmation("This will perform a complete (re)initialisation and may perform overwrites. Do you with to proceed?")
+	}
 
-	if c {
+	if proceedWithInit {
 		initDB(cmd, args)
 		initFolders(cmd, args)
 		Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem initialisation"})
