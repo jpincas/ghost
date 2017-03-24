@@ -15,6 +15,8 @@
 package core
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,8 +30,17 @@ var RootCmd = &cobra.Command{
 	RunE: createConfigIfNotExists,
 }
 
+// serveCmd represents the serve command
+var pingCmd = &cobra.Command{
+	Use:   "ping",
+	Short: "Ping test",
+	Long:  `Pings the DB and returns OK if the connection is ready.`,
+	RunE:  ping,
+}
+
 func init() {
 
+	RootCmd.AddCommand(pingCmd)
 	RootCmd.PersistentFlags().StringP("pgpw", "p", "", "Postgres superuser password")
 	RootCmd.PersistentFlags().StringP("configfile", "c", "config", "Name of config file (without extension)")
 	viper.BindPFlags(RootCmd.PersistentFlags())
@@ -53,4 +64,19 @@ func createConfigIfNotExists(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func ping(cmd *cobra.Command, args []string) error {
+
+	readConfig()
+
+	//Attempt to open a db connection
+	db := SuperUserDBConfig.ReturnDBConnection("")
+	defer db.Close()
+	//IF we get this far, just exit with success
+	Log(LogEntry{"PING", true, "Ping test passed"})
+	os.Exit(0)
+
+	return nil
+
 }
