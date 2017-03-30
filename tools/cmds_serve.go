@@ -14,7 +14,7 @@
 
 //Use the forked version of the go-jwt-middlware, not the auth0 version
 
-package core
+package ghost
 
 import (
 	"net/http"
