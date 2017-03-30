@@ -19,6 +19,9 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"path"
+
+	"database/sql"
 
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
@@ -113,12 +116,14 @@ func installBundle(cmd *cobra.Command, args []string) error {
 		return errors.New("a bundle name must be provided")
 	}
 
-	//Check that bundle exists
-	basePath := "./bundles/" + args[0]
-	exists, _ := afero.IsDir(AppFs, basePath)
-	if !exists {
+	//Check that bundle installation folder exists
+	basePath := "./bundles/" + args[0] + "/install"
+
+	exists, err := afero.IsDir(AppFs, basePath)
+
+	if !exists || err != nil {
 		//Exit if doesn't exist
-		Log(LogEntry{"CORE.INSTALL", false, "Bundle " + args[0] + " not found.  Please download or clone."})
+		LogFatal(LogEntry{"CORE.INSTALL", false, "Bundle '" + args[0] + "' install folder not found or unreadable."})
 	}
 
 	//Uninstall first if requested
@@ -127,71 +132,79 @@ func installBundle(cmd *cobra.Command, args []string) error {
 		unInstallBundle(cmd, args)
 	}
 
+	//Check for error reading directory or zero files
+	filesInDirectory, err := afero.ReadDir(AppFs, basePath)
+	if err != nil || len(filesInDirectory) == 0 {
+		LogFatal(LogEntry{"CORE.INSTALL", false, "No installation files could be read for bundle"})
+		return nil
+	}
+
+	Log(LogEntry{"CORE.INSTALL", true, "Installing bundle '" + args[0] + "'"})
+
 	//Establish a temporary connection as the super user
 	db := SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
-	//Check for the presence of install.sql and attempt to read it
-	sqlBytes, err := afero.ReadFile(AppFs, basePath+"/install.sql")
+	//Set up a schema for the bundle
+	err = setupDBSchema(db, args[0])
 	if err != nil {
-		Log(LogEntry{"CORE.INSTALL", false, "install.sql not present for this bundle, or could not be read: " + err.Error()})
-	} else {
-		sqlString := string(sqlBytes)
+		//IF there is any type of error, drop the schema, log and exit
+		db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
+		LogFatal(LogEntry{"CORE.INSTALL", false, "Schema creation failed with error " + err.Error()})
+		return nil
+	}
 
-		//Install the DB setup and logic
-		//Attempt to create a schema matching the bundle's name,
-		_, err := db.Exec(fmt.Sprintf(SQLToCreateSchema, args[0]))
-
-		if err != nil {
-
-			//if the schema exists, the bundle is already installed
-			//don't go any further with db part of the bundle
-			Log(LogEntry{"CORE.INSTALL", false, "Failed to create DB schema: " + err.Error()})
-
-		} else {
-
-			//Set admin privileges for everything in this schema going forwards
-			_, err = db.Exec(fmt.Sprintf(SQLToGrantBundleAdminPermissions, args[0], args[0], args[0]))
-
-			//Set the search path to the bundle schema so that all SQL commands take
-			//place within the schema
-			_, err = db.Exec(fmt.Sprintf(SQLToSetSearchPathForBundle, args[0]))
+	//Iterate over the installation files
+	for _, file := range filesInDirectory {
+		//Ignore directories
+		if !file.IsDir() {
+			//Attempt to processes the sqlfile
+			err := processBundleFile(db, path.Join(basePath, file.Name()))
 			if err != nil {
-
-				//If there is any problem with the search path, give up the db part of the bundle
-				Log(LogEntry{"CORE.INSTALL", false, "search_path failed to set, aborting sql installation and cleaning up" + err.Error()})
+				//IF there is any type of error, drop the schema, log and exit
 				db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
+				LogFatal(LogEntry{"CORE.INSTALL", false, "Installation of '" + file.Name() + "' failed with error: " + err.Error()})
+				return nil
+			}
+			Log(LogEntry{"CORE.INSTALL", true, file.Name() + " installed OK"})
+		}
+	}
 
-			} else {
+	//If the user has asked for demo data
+	if isInstallDemoData {
 
-				//Run the SQL
-				_, err = db.Exec(sqlString)
+		Log(LogEntry{"CORE.INSTALL", true, "Installing demo data"})
+
+		basePath := "./bundles/" + args[0] + "/demodata"
+
+		//Check for error reading directory or zero files
+		filesInDirectory, err := afero.ReadDir(AppFs, basePath)
+		if err != nil || len(filesInDirectory) == 0 {
+			//IF there is any type of error, drop the schema, log and exit
+			db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
+			LogFatal(LogEntry{"CORE.INSTALL", false, "No demo data files could be read for bundle"})
+			return nil
+		}
+
+		//Iterate over the demodata files
+		for _, file := range filesInDirectory {
+			//Ignore directories
+			if !file.IsDir() {
+				//Attempt to processes the sqlfile
+				err := processBundleFile(db, path.Join(basePath, file.Name()))
 				if err != nil {
-					Log(LogEntry{"CORE.INSTALL", false, "Problem with install.sql, aborting sql installation and cleaning up" + err.Error()})
+					//IF there is any type of error, drop the schema, log and exit
 					db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
-				} else {
-
-					//If all is good so far and the user has specified it, install the demo data (if it exists)
-					if isInstallDemoData {
-
-						//Check for the presence of demodata.sql and attempt to read it
-						sqlBytes, err := afero.ReadFile(AppFs, basePath+"/demodata.sql")
-						if err != nil {
-							//If there is no demodata.sql
-							Log(LogEntry{"CORE.INSTALL", false, "demodata.sql not present for this bundle, or could not be read: " + err.Error()})
-						} else {
-							sqlString := string(sqlBytes)
-							_, err = db.Exec(sqlString)
-							if err != nil {
-								//If there is an error with demodata.sql
-								Log(LogEntry{"CORE.INSTALL", false, "Error installing demo data: " + err.Error()})
-							}
-						}
-					}
+					LogFatal(LogEntry{"CORE.INSTALL", false, "Installation of '" + file.Name() + "' failed with error: " + err.Error()})
+					return nil
 				}
+
+				Log(LogEntry{"CORE.INSTALL", true, file.Name() + " installed OK"})
+
 			}
 		}
-	} //End sql installation
+
+	}
 
 	//Attempt to updated the bundles installed list
 	newBundlesInstalled, err := Bundles(viper.GetStringSlice("bundlesInstalled")).InstallBundle(args[0])
@@ -215,6 +228,52 @@ func installBundle(cmd *cobra.Command, args []string) error {
 
 	//Bundle installation complete
 	Log(LogEntry{"CORE.INSTALL", true, "Installation of bundle " + args[0] + " completed"})
+	return nil
+
+}
+
+func processBundleFile(db *sql.DB, filename string) error {
+
+	//Attempt to read file
+	sqlBytes, err := afero.ReadFile(AppFs, filename)
+
+	if err != nil {
+		return err
+	}
+
+	//Run the SQL
+	if _, err = db.Exec(string(sqlBytes)); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func setupDBSchema(db *sql.DB, bundleName string) error {
+
+	//Attempt to create a schema matching the bundle's name,
+	_, err := db.Exec(fmt.Sprintf(SQLToCreateSchema, bundleName))
+
+	if err != nil {
+		return err
+	}
+
+	//Set admin privileges for everything in this schema going forwards
+	_, err = db.Exec(fmt.Sprintf(SQLToGrantBundleAdminPermissions, bundleName, bundleName, bundleName))
+
+	if err != nil {
+		return err
+	}
+
+	//Set the search path to the bundle schema so that all SQL commands take
+	//place within the schema
+	_, err = db.Exec(fmt.Sprintf(SQLToSetSearchPathForBundle, bundleName))
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 
 }
