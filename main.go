@@ -21,7 +21,6 @@ import (
 	"github.com/ecosystemsoftware/ecosystem/auth"
 	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/ecosystemsoftware/ecosystem/email"
-	"github.com/ecosystemsoftware/ecosystem/graphql"
 	"github.com/ecosystemsoftware/ecosystem/rest"
 )
 
@@ -42,5 +41,4 @@ func activatePackages() {
 	rest.Activate()
 	auth.Activate()
 	email.Activate()
-	graphql.Activate()
 }

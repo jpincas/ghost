@@ -1,6 +1,6 @@
 ![](https://raw.githubusercontent.com/ecosystemsoftware/ecosystem-website/master/themes/ecosystem/static/images/ecosystem-logo.png)
 
-**Warning: This project is under active heavy development, and the api is likely to change often.  Furthermore, the documentation lags behind the code. Please contact me if you're interested in using it now and I'll help you get set up.**
+**Warning: This project is under active heavy development, and the api is changing constantly.  Furthermore, the documentation lags behind the code. Please contact me if you're interested in using it now and I'll help you get set up.**
 
 # EcoSystem
 
