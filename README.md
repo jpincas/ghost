@@ -1,8 +1,6 @@
-![](https://raw.githubusercontent.com/ecosystemsoftware/ecosystem-website/master/themes/ecosystem/static/images/ecosystem-logo.png)
-
 **Warning: This project is under active heavy development, and the api is changing constantly.  Furthermore, the documentation lags behind the code. Please contact me if you're interested in using it now and I'll help you get set up.**
 
-# EcoSystem
+# Ghost
 
 EcoSystem is a platform that allows you to quickly develop completely custom data-driven websites, web-applications and backend systems.  EcoSystem doesn't assume anything about the data structure or logic of your business because you code it directly and freely at the database layer using the power of PostgreSQL.  EcoSystem then augments your database layer with a generic web and JSON API server written in Go, giving you a *bridge* to your data and logic with minimal boilerplate.
 
