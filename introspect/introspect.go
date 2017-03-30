@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ecosystemsoftware/ecosystem/core"
+	ghost "github.com/jpincas/ghost/tools"
 )
 
 //GetSchema returns a Schema struct corresponding to dbSchema.dbTable
@@ -107,7 +107,7 @@ func (i dbInfo) dbInfoToSchema() Schema {
 //readDBInfo returns a structure containing db meta information for table.schema
 func readDBInfo(schema string, table string) (DBInfo dbInfo, err error) {
 	sqlString := fmt.Sprintf(sqlToGetTableInfo, "admin", table, schema, table)
-	rows, err := core.DB.Query(sqlString)
+	rows, err := ghost.DB.Query(sqlString)
 	if err != nil {
 		return nil, err
 	}

@@ -62,9 +62,9 @@ func readConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		//Initialise the db config structs for later use
 		InitDBConnectionConfigs()
-		Log(LogEntry{"CORE.CONFIG", true, "Config file detected and correctly applied:" + viper.ConfigFileUsed()})
+		Log(LogEntry{"ghost.CONFIG", true, "Config file detected and correctly applied:" + viper.ConfigFileUsed()})
 	} else {
-		LogFatal(LogEntry{"CORE.CONFIG", true, "Config file not found. Aborting"})
+		LogFatal(LogEntry{"ghost.CONFIG", true, "Config file not found. Aborting"})
 	}
 
 }

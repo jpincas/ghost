@@ -2,7 +2,7 @@
 
 # Ghost
 
-EcoSystem is a platform that allows you to quickly develop completely custom data-driven websites, web-applications and backend systems.  EcoSystem doesn't assume anything about the data structure or logic of your business because you code it directly and freely at the database layer using the power of PostgreSQL.  EcoSystem then augments your database layer with a generic web and JSON API server written in Go, giving you a *bridge* to your data and logic with minimal boilerplate.
+ghost is a platform that allows you to quickly develop completely custom data-driven websites, web-applications and backend systems.  ghost doesn't assume anything about the data structure or logic of your business because you code it directly and freely at the database layer using the power of PostgreSQL.  ghost then augments your database layer with a generic web and JSON API server written in Go, giving you a *bridge* to your data and logic with minimal boilerplate.
 
 ## Features
 
@@ -16,9 +16,9 @@ EcoSystem is a platform that allows you to quickly develop completely custom dat
 
 ## What's in the box?
 
-**Short version:** EcoSystem is a JSON API server written in Go (this repository).
+**Short version:** ghost is a JSON API server written in Go (this repository).
 
-**Slightly longer version:** this repository contains the Go source code for the EcoSystem application, which is actually a command-line tool that allows you to easily initialise, configure and launch the EcoSystem server, as well as perform operations on **bundles** (more on those later).  If you are familiar with Go, you can also easily build a custom version of the server by including the packages (cmd, ecosql, handlers and utilities) as dependencies in your project. If you'd like to do that, check out the [Custom EcoSystem Server](https://github.com/ecosystemsoftware/ecosystem-server-custom) repository for some instructions and a template to work from.
+**Slightly longer version:** this repository contains the Go source code for the ghost application, which is actually a command-line tool that allows you to easily initialise, configure and launch the ghost server, as well as perform operations on **bundles** (more on those later).  If you are familiar with Go, you can also easily build a custom version of the server by including the packages (cmd, ecosql, handlers and utilities) as dependencies in your project. If you'd like to do that, check out the [Custom ghost Server](https://github.com/jpincas/ghost-server-custom) repository for some instructions and a template to work from.
 
 
 ## Getting Started
@@ -30,9 +30,9 @@ If you have Go installed and access to a Postgres server, it should take you les
 - Go installed and environment variables correctly configured
 - A Postgres database server (local or remote) to which you can connect
 
-### Step 1: Install EcoSystem
+### Step 1: Install ghost
 
-To start with, fetch the source code and dependencies and compile into an executable which will go into your $GOPATH/bin directory.  That's just `go get github.com/ecosystemsoftware/ecosystem`.  Assuming your [$GOPATH/bin is part of your PATH](https://golang.org/doc/install), you should now be able to run 'ecosystem' from anywhere on the command line.
+To start with, fetch the source code and dependencies and compile into an executable which will go into your $GOPATH/bin directory.  That's just `go get github.com/jpincas/ghost`.  Assuming your [$GOPATH/bin is part of your PATH](https://golang.org/doc/install), you should now be able to run 'ghost' from anywhere on the command line.
 
 ### Step 2:  Create a database
 
@@ -44,39 +44,39 @@ Make a new folder from which to run the server and `cd` into it:
 
 ### Step 4: Create a configuration file
 
-Just type `ecosystem` to get going.  Since you don't have a defualt *config,json*, EcoSystem will generate one for you.
+Just type `ghost` to get going.  Since you don't have a defualt *config,json*, ghost will generate one for you.
 
 ### Step 5: Configure the database connection
 
 If you're working locally, the defaults will probably just work out-of-the-box.  Otherwise, open *config.json* and edit the database connection parameters.
 
-### Step 6: Initialise EcoSystem
+### Step 6: Initialise ghost
 
-EcoSystem needs to create a number of built-in tables, roles, permissions and functions, as well as a few folders, so just type `ecosystem init` to have it do that for you.
+ghost needs to create a number of built-in tables, roles, permissions and functions, as well as a few folders, so just type `ghost init` to have it do that for you.
 
 ### Step 7: Create an admin user
 
-Set yourself up as an admin user with full permissions by typing `ecosystem new user [your@email.com] --admin`
+Set yourself up as an admin user with full permissions by typing `ghost new user [your@email.com] --admin`
 
 ### Step 8: Download and install a bundle
 
-The easiest way to get started with EcoSystem is by installing an existing bundle.  Bundles are just folders that group together everything EcoSystem needs.  Once you get familiar with EcoSystem, you'll create your own bundles, but for now, let's clone a simple demo bundle and install it with demo data:
+The easiest way to get started with ghost is by installing an existing bundle.  Bundles are just folders that group together everything ghost needs.  Once you get familiar with ghost, you'll create your own bundles, but for now, let's clone a simple demo bundle and install it with demo data:
 
 ```
 $ cd bundles
-$ git clone git@github.com:ecosystemsoftware/eco_bundle_dogshelter.git
+$ git clone git@github.com:jpincas/eco_bundle_dogshelter.git
 $ cd ..
-$ ecosystem install eco_bundle_dogshelter --demodata
+$ ghost install eco_bundle_dogshelter --demodata
 ```
 
 ### Step 9: Run the server
 
-Run the server in 'demo' mode (disabling authorisation) with `ecosystem serve -s=secret -d`
+Run the server in 'demo' mode (disabling authorisation) with `ghost serve -s=secret -d`
 
 
-## Congrats!  You now have a backend powered by EcoSystem
+## Congrats!  You now have a backend powered by ghost
 
-The JSON API is at `/api` (believe it or not).  Remember schema and table/view names map directly to API endpoints, so `ecosystem_bundle_dogshelter.dogs_available` is at `localhost:3000/api/eco_bundle_dogshelter/dogs_available`
+The JSON API is at `/api` (believe it or not).  Remember schema and table/view names map directly to API endpoints, so `ghost_bundle_dogshelter.dogs_available` is at `localhost:3000/api/eco_bundle_dogshelter/dogs_available`
 
 All requests to the API need to go through authorisation, so if you'd like to send some test requests, you'll need to start by requesting a JWT from **/login** - just include a JSON body in the request like this:
 
@@ -90,7 +90,7 @@ All requests to the API need to go through authorisation, so if you'd like to se
 grab the JWT that comes back and include it with your requests in an authorization header: `Authorization: Bearer xxxxxx...` - you'll have full admin permissions since you set yourself up as an admin user earlier.
 
 
-***The above is real whistlestop tour of EcoSystem and you probably have questions.  We're working hard to release better documentation, videos, tutorials etc, but in the meantime, please check out [the developer section of the EcoSystem website](www.ecosystem.software/developers)***
+***The above is real whistlestop tour of ghost and you probably have questions.  We're working hard to release better documentation, videos, tutorials etc, but in the meantime, please check out [the developer section of the ghost website](www.ghost.software/developers)***
 
 ## Configuration
 
@@ -103,22 +103,22 @@ grab the JWT that comes back and include it with your requests in an authorizati
 | pgPort                   | Server port for the Postgres connection  | 5432                            |
 | pgServer                 | Database server to connect to            | localhost                       |
 | pgDisableSSL             | Disable SSL mode on DB connection        | FALSE                           |
-| apiPort                  | Port to serve the EcoSystem API on       | 3000                            |
+| apiPort                  | Port to serve the ghost API on       | 3000                            |
 | smtpHost                 | SMTP server for outgoing emails          |                                 |
 | smtpPort                 | SMTP port for outgoing emails            |                                 |
 | smtpUserName             | SMTP authentication username             |                                 |
 | smtpFrom                 | 'From' address for outgoing emails       |                                 |
 | emailFrom                | 'From' name for outgoing emails          |                                 |
 | jwtRealm                 | Realm parameter for JWT authentication tokens | yourappname                     |
-| bundlesInstalled         | An automatically maintained list of bundles installed.  If you use `ecosystem install` and `ecosystem uninstall` commands, you shouldn't need to touch this. |               
+| bundlesInstalled         | An automatically maintained list of bundles installed.  If you use `ghost install` and `ghost uninstall` commands, you shouldn't need to touch this. |               
 | host                     | The server name or IP address            | localhost                       |
 | protocol                 | Serve with http or https                 | http                            |
 
 ### Command-Line
 
-For convenience and security, some configurations are specified on the command line when using `ecosystem` commands. In general, type `ecosystem --help` for a list of commands and available flags.
+For convenience and security, some configurations are specified on the command line when using `ghost` commands. In general, type `ghost --help` for a list of commands and available flags.
 
-Running `ecosystem ` on its own, with no command or arguments, verifies that the configuration file is present and readable.  If not, a new default *config.json* will be created for you, with all possible attributes.
+Running `ghost ` on its own, with no command or arguments, verifies that the configuration file is present and readable.  If not, a new default *config.json* will be created for you, with all possible attributes.
 
 |             |            | Flags                                    |                                          |
 | ----------- | ---------- | ---------------------------------------- | ---------------------------------------- |
@@ -126,12 +126,12 @@ Running `ecosystem ` on its own, with no command or arguments, verifies that the
 |             |            | -c, —configfile                          | **Optional:** Specify a different configuration file from the default *config.json* |
 | `init`      |            |                                          | Performs full initialisation - DB and folders |
 | `init`      | `db`       |                                          | Performs the DB initialisation for built-in tables, roles and permissions |
-| `init`      | `folders`  |                                          | Creates the EcoSystem folder structure   |
-| `install`   | `[bundle]` | —demodata; -r, —reinstall                | Install named EcoSystem bundle.  Bundle folder must be downloaded/cloned into /bundles first. **Optional:** Include demo data with the bundle install. **Optional:** Uninstall the bundle before installing |
-| `uninstall` | `[bundle]` |                                          | Uninstall named EcoSystem bundle.  Will not delete the bundle folder from /bundles |
-| `new`       | `bundle`   |                                          | Creates the folder structure for a new EcoSystem bundle |
+| `init`      | `folders`  |                                          | Creates the ghost folder structure   |
+| `install`   | `[bundle]` | —demodata; -r, —reinstall                | Install named ghost bundle.  Bundle folder must be downloaded/cloned into /bundles first. **Optional:** Include demo data with the bundle install. **Optional:** Uninstall the bundle before installing |
+| `uninstall` | `[bundle]` |                                          | Uninstall named ghost bundle.  Will not delete the bundle folder from /bundles |
+| `new`       | `bundle`   |                                          | Creates the folder structure for a new ghost bundle |
 | `new`       | `user`     | —admin                                   | Creates a new user. **Optional:** make user with admin permissions |
-| `serve`     |            | -d, —demomode; -s, —secret; —smtppw | Starts the EcoSystem server. **Optional:** Run the server in demo mode, allowing users to log in with magic code '123456', rather than having to request a code. **Required:** Encryption secret for JWT signing.  Remember to use the same secret every time you start the server, or JWTs previously issued will not be valid. |
+| `serve`     |            | -d, —demomode; -s, —secret; —smtppw | Starts the ghost server. **Optional:** Run the server in demo mode, allowing users to log in with magic code '123456', rather than having to request a code. **Required:** Encryption secret for JWT signing.  Remember to use the same secret every time you start the server, or JWTs previously issued will not be valid. |
 
 ### SMTP Configuration
 
@@ -147,5 +147,5 @@ For example, if you wanted to demo admin panel functionality, you might create a
 
 ## Licence
 
-**Build freely with EcoSystem**.  The EcoSystem Server and The EcoSystem Admin Panel App are licensed under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).  The content on the [EcoSystem website] (http://www.ecosystem.software) is licensed under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/).  Neither licence grants permission to use the trade names, trademarks, service marks, or product names of EcoSystem Software LLP, including the EcoSystem logo and symbol, except as required for reasonable and customary use.
+**Build freely with ghost**.  The ghost Server and The ghost Admin Panel App are licensed under the [Apache 2.0 License](https://www.apache.org/licenses/LICENSE-2.0).  The content on the [ghost website] (http://www.ghost.software) is licensed under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](http://creativecommons.org/licenses/by-nc-nd/4.0/).  Neither licence grants permission to use the trade names, trademarks, service marks, or product names of ghost Software LLP, including the ghost logo and symbol, except as required for reasonable and customary use.
 

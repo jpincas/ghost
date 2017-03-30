@@ -199,7 +199,7 @@ Content-Type: text/html; charset="UTF-8"
                         <tr>
                             <td>
                                  <p>Hi there {{.To}},</p>
-            <p>We've received a request to log into EcoSystem</p>
+            <p>We've received a request to log into ghost</p>
             <!-- button -->
             <table class="" cellpadding="0" cellspacing="0" border="0">
               <tr>
@@ -234,7 +234,7 @@ Content-Type: text/html; charset="UTF-8"
                     <table>
                         <tr>
                             <td align="center">
-                                <p>EcoSystem</a>.
+                                <p>ghost</a>.
                                 </p>
                             </td>
                         </tr>

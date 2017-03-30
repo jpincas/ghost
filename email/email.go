@@ -21,7 +21,6 @@ import (
 	"net/smtp"
 	"strings"
 
-	"github.com/ecosystemsoftware/ecosystem/core"
 	"github.com/spf13/viper"
 )
 
@@ -37,7 +36,7 @@ var MailServer smtpServer
 //EmailSetup sets up the shared SMTP connection, tests it and marks whether it is working or not
 func Activate() error {
 
-	core.Log(core.LogEntry{"EMAIL", true, "Initialising email system..."})
+	ghost.Log(ghost.LogEntry{"EMAIL", true, "Initialising email system..."})
 
 	//Setup the smtp config struct, and mark as not working
 	//Read in the configuration parameters from Viper
@@ -53,20 +52,20 @@ func Activate() error {
 
 	//Test the SMTP connection
 	if err := MailServer.TestConnection(); err != nil {
-		core.Log(core.LogEntry{"EMAIL", false, "Error initialising email server"})
-		core.Log(core.LogEntry{"EMAIL", false, err.Error()})
-		core.Log(core.LogEntry{"EMAIL", false, "Email system will not function"})
+		ghost.Log(ghost.LogEntry{"EMAIL", false, "Error initialising email server"})
+		ghost.Log(ghost.LogEntry{"EMAIL", false, err.Error()})
+		ghost.Log(ghost.LogEntry{"EMAIL", false, "Email system will not function"})
 		return err
 	}
 
 	//If it passes, setup the config
 	MailServer.Working = true
-	core.Log(core.LogEntry{"EMAIL", true, "Email system correctly initialised"})
+	ghost.Log(ghost.LogEntry{"EMAIL", true, "Email system correctly initialised"})
 	return nil
 
 }
 
-//SendEmail is used internally by ECOSystem modules to send transactional emails
+//SendEmail is used internally by ghost modules to send transactional emails
 func (s smtpServer) SendEmail(to []string, subject string, data map[string]string, templates *template.Template, templateToUse string) (err error) {
 
 	//Prepare the date for the email template

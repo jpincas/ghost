@@ -1,6 +1,6 @@
-ecosystem
+ghost
 bundles
-ecosystem-admin
+ghost-admin
 img
 .DS_Store
 nohup.out

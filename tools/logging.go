@@ -29,7 +29,7 @@ type LogEntry struct {
 	Message     string
 }
 
-//Log outputs a custom ecosystem log entry
+//Log outputs a custom ghost log entry
 func Log(l LogEntry) {
 
 	var entryType string
@@ -43,7 +43,7 @@ func Log(l LogEntry) {
 	log.Println(logText)
 }
 
-//LogFatal outputs a custom ecosystem log entry and exits
+//LogFatal outputs a custom ghost log entry and exits
 func LogFatal(l LogEntry) {
 
 	entryType := color.Sprint("@{wR}FATAL")
@@ -51,7 +51,7 @@ func LogFatal(l LogEntry) {
 	log.Fatalln(logText)
 }
 
-//LogDebug outputs a custom ecosystem log entry if debugmode is on
+//LogDebug outputs a custom ghost log entry if debugmode is on
 func LogDebug(l LogEntry) {
 
 	if viper.GetBool("debug") {

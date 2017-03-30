@@ -47,8 +47,8 @@ func init() {
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "Starts the EcoSystem server",
-	Long:  `Start the EcoSystem API Server`,
+	Short: "Starts the ghost server",
+	Long:  `Start the ghost API Server`,
 	RunE:  serve,
 }
 
@@ -68,7 +68,7 @@ func preServe() {
 	//Check to make sure a secret has been provided
 	//No default provided as a security measure, server will exit of nothing provided
 	if viper.GetString("secret") == "" {
-		LogFatal(LogEntry{"CORE.SERVE", false, "No signing secret provided"})
+		LogFatal(LogEntry{"ghost.SERVE", false, "No signing secret provided"})
 	}
 
 	//Establish a temporary connection as the super user
@@ -78,7 +78,7 @@ func preServe() {
 	serverPW := RandomString(16)
 	_, err := dbTemp.Exec(fmt.Sprintf(SQLToSetServerRolePassword, serverPW))
 	if err != nil {
-		LogFatal(LogEntry{"CORE.SERVE", false, "Error setting server role password: " + err.Error()})
+		LogFatal(LogEntry{"ghost.SERVE", false, "Error setting server role password: " + err.Error()})
 	}
 
 	dbTemp.Close()
@@ -92,7 +92,7 @@ func preServe() {
 
 func startServer() {
 
-	Log(LogEntry{"CORE.SERVE", true, "Server started on port " + viper.GetString("apiPort")})
+	Log(LogEntry{"ghost.SERVE", true, "Server started on port " + viper.GetString("apiPort")})
 	http.ListenAndServe(":"+viper.GetString("apiPort"), Router)
 
 }

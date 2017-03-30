@@ -24,8 +24,8 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/diegobernardes/ttlcache"
-	"github.com/ecosystemsoftware/ecosystem/core"
-	ecomail "github.com/ecosystemsoftware/ecosystem/email"
+	ghost "github.com/jpincas/ghost/tools"
+	ecomail "github.com/jpincas/ghost/email"
 	"github.com/spf13/viper"
 )
 
@@ -34,7 +34,7 @@ var templates *template.Template
 
 //Activate is the main package activation function
 func Activate() error {
-	core.Log(core.LogEntry{"AUTH", true, "Activating..."})
+	ghost.Log(ghost.LogEntry{"AUTH", true, "Activating..."})
 	parseTemplates()
 	//Set the routes for the package
 	setRoutes()
@@ -44,7 +44,7 @@ func Activate() error {
 func parseTemplates() {
 
 	templates = template.Must(template.New("base").Parse(baseTemplate))
-	core.Log(core.LogEntry{"AUTH", true, "Loaded templates" + templates.DefinedTemplates()})
+	ghost.Log(ghost.LogEntry{"AUTH", true, "Loaded templates" + templates.DefinedTemplates()})
 
 }
 
@@ -54,7 +54,7 @@ var MagicCodeCache = initCache(300) //5 minute expiry
 func initCache(exp time.Duration) *ttlcache.Cache {
 
 	if exp < 1 {
-		core.Log(core.LogEntry{"AUTH", false, "Cache expiry cannot be zero or negative"})
+		ghost.Log(ghost.LogEntry{"AUTH", false, "Cache expiry cannot be zero or negative"})
 	}
 
 	newCache := ttlcache.NewCache()
@@ -72,7 +72,7 @@ func RequestMagicCode(email string) error {
 
 	//First, lookup the email in the users table
 	var id string
-	err := core.DB.QueryRow(fmt.Sprintf(core.SQLToFindUserByEmail, email)).Scan(&id)
+	err := ghost.DB.QueryRow(fmt.Sprintf(ghost.SQLToFindUserByEmail, email)).Scan(&id)
 
 	//If the user doesn't exist in the DB
 	if err != nil {
@@ -81,7 +81,7 @@ func RequestMagicCode(email string) error {
 
 	//User exists in the DB
 	//Create a temporary, one-off password consisting of 6 random characters
-	pw := core.RandomString(6)
+	pw := ghost.RandomString(6)
 	//Set it in the cache
 	MagicCodeCache.Set(email, pw)
 

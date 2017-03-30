@@ -17,7 +17,7 @@ package introspect
 import (
 	"fmt"
 
-	"github.com/ecosystemsoftware/ecosystem/core"
+	ghost "github.com/jpincas/ghost/tools"
 )
 
 //DBTable describes a database table
@@ -29,9 +29,9 @@ type DBTable struct {
 //GetDBTables returns a list of all tables in a schema with table name and table type fields
 func GetDBTables(dbSchema string) (tables []DBTable, err error) {
 
-	sqlString := core.SqlQuery(fmt.Sprintf(sqlToGetTablesInSchema, dbSchema)).SetQueryRole("admin").ToSQLString()
+	sqlString := ghost.SqlQuery(fmt.Sprintf(sqlToGetTablesInSchema, dbSchema)).SetQueryRole("admin").ToSQLString()
 
-	rows, err := core.DB.Query(sqlString)
+	rows, err := ghost.DB.Query(sqlString)
 	if err != nil {
 		return nil, err
 	}
@@ -54,9 +54,9 @@ func GetDBTables(dbSchema string) (tables []DBTable, err error) {
 //GetDBSchemas returns a list of non 'postgres' schemas in the database
 func GetDBSchemas() (schemas []string, err error) {
 
-	sqlString := core.SqlQuery(sqlToGetSchemasInDB).SetQueryRole("admin").ToSQLString()
+	sqlString := ghost.SqlQuery(sqlToGetSchemasInDB).SetQueryRole("admin").ToSQLString()
 
-	rows, err := core.DB.Query(sqlString)
+	rows, err := ghost.DB.Query(sqlString)
 	if err != nil {
 		return nil, err
 	}

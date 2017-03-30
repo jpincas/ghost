@@ -23,10 +23,10 @@ import (
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "ecosystem [command] [arguments]",
-	Short: "EcoSystem command line tool",
-	Long: `Use to initialise or launch the EcoSystem server or create new users or bundles.
-	Use the bare command 'ecosystem' to create a new config.json or verify an existing one.`,
+	Use:   "ghost [command] [arguments]",
+	Short: "ghost command line tool",
+	Long: `Use to initialise or launch the ghost server or create new users or bundles.
+	Use the bare command 'ghost' to create a new config.json or verify an existing one.`,
 	RunE: createConfigIfNotExists,
 }
 
@@ -53,13 +53,13 @@ func createConfigIfNotExists(cmd *cobra.Command, args []string) error {
 	viper.SetConfigName(viper.GetString("configfile"))
 
 	if err := viper.ReadInConfig(); err == nil {
-		LogFatal(LogEntry{"CORE.CONFIG", true, "Config file already exists:" + viper.ConfigFileUsed()})
+		LogFatal(LogEntry{"ghost.CONFIG", true, "Config file already exists:" + viper.ConfigFileUsed()})
 	} else {
 		if err := createDefaultConfigFile(viper.GetString("configfile")); err != nil {
-			LogFatal(LogEntry{"CORE.CONFIG", false, "Error creating config file: " + err.Error()})
+			LogFatal(LogEntry{"ghost.CONFIG", false, "Error creating config file: " + err.Error()})
 		} else {
 			//Otherwise create one
-			Log(LogEntry{"CORE.CONFIG", true, "Config file created"})
+			Log(LogEntry{"ghost.CONFIG", true, "Config file created"})
 		}
 	}
 

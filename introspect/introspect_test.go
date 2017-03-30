@@ -21,7 +21,7 @@ import (
 
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 
-	"github.com/ecosystemsoftware/ecosystem/core"
+	ghost "github.com/jpincas/ghost/tools"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,11 +30,11 @@ var columns = []string{"column_name", "data_type", "is_nullable", "column_defaul
 func TestGetSchema(t *testing.T) {
 	var err error
 	var mock sqlmock.Sqlmock
-	core.DB, mock, err = sqlmock.New()
+	ghost.DB, mock, err = sqlmock.New()
 	if err != nil {
 		t.Errorf("An error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer core.DB.Close()
+	defer ghost.DB.Close()
 
 	rows := []string{"id,text,NO,'adefault'::text,10,reftable,refcol", "otherfield,numeric,YES,20,5,reftable,refcol"}
 
@@ -68,7 +68,7 @@ func TestGetSchema(t *testing.T) {
 	assert.Equal(t, expectedSchema, s, "Should be equal")
 
 	//Close the DB connection and test again
-	core.DB.Close()
+	ghost.DB.Close()
 	_, err = GetSchema("schema", "table")
 	assert.Error(t, err)
 
@@ -77,11 +77,11 @@ func TestGetSchema(t *testing.T) {
 func TestGetSchemaJSON(t *testing.T) {
 	var err error
 	var mock sqlmock.Sqlmock
-	core.DB, mock, err = sqlmock.New()
+	ghost.DB, mock, err = sqlmock.New()
 	if err != nil {
 		t.Errorf("An error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer core.DB.Close()
+	defer ghost.DB.Close()
 
 	rows := []string{"id,text,NO,'adefault'::text,10,reftable,refcol", "otherfield,numeric,YES,20,5,reftable,refcol"}
 
@@ -98,7 +98,7 @@ func TestGetSchemaJSON(t *testing.T) {
 	assert.NotEmpty(t, j, "Should have content")
 
 	//Close the DB connection and test again
-	core.DB.Close()
+	ghost.DB.Close()
 	_, err = GetSchemaJSON("schema", "table")
 	assert.Error(t, err)
 
@@ -119,11 +119,11 @@ func TestReadDBInfo(t *testing.T) {
 
 	var err error
 	var mock sqlmock.Sqlmock
-	core.DB, mock, err = sqlmock.New()
+	ghost.DB, mock, err = sqlmock.New()
 	if err != nil {
 		t.Errorf("An error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer core.DB.Close()
+	defer ghost.DB.Close()
 
 	assert := assert.New(t)
 

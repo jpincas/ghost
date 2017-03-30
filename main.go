@@ -18,19 +18,19 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ecosystemsoftware/ecosystem/auth"
-	"github.com/ecosystemsoftware/ecosystem/core"
-	"github.com/ecosystemsoftware/ecosystem/email"
-	"github.com/ecosystemsoftware/ecosystem/rest"
+	"github.com/jpincas/ghost/auth"
+	ghost "github.com/jpincas/ghost/tools"
+	"github.com/jpincas/ghost/email"
+	"github.com/jpincas/ghost/rest"
 )
 
 func main() {
 
-	//Tell EcoSystem which packages to activate
-	core.ActivatePackages = activatePackages
+	//Tell ghost which packages to activate
+	ghost.ActivatePackages = activatePackages
 
 	//Bootstrap the application
-	if err := core.RootCmd.Execute(); err != nil {
+	if err := ghost.RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}

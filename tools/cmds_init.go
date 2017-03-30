@@ -36,7 +36,7 @@ func init() {
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Complete initial setup of database and folder structure",
-	Long:  `Performs a complete initialisation of the database and folder structure for EcoSystem`,
+	Long:  `Performs a complete initialisation of the database and folder structure for ghost`,
 	RunE:  initAll,
 }
 
@@ -53,8 +53,8 @@ var initDBCmd = &cobra.Command{
 // initCmd initialises the folder structure
 var initFoldersCmd = &cobra.Command{
 	Use:   "folders",
-	Short: "Creates EcoSystem folder structure",
-	Long: `Performs a complete initialisation of the folder structure for EcoSystem.
+	Short: "Creates ghost folder structure",
+	Long: `Performs a complete initialisation of the folder structure for ghost.
 	Folders that already exist will not be overwritten.`,
 	RunE: initFolders,
 }
@@ -73,11 +73,11 @@ func initAll(cmd *cobra.Command, args []string) error {
 	if proceedWithInit {
 		initDB(cmd, args)
 		initFolders(cmd, args)
-		Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem initialisation"})
+		Log(LogEntry{"ghost.INIT", true, "Successfully completed ghost initialisation"})
 		return nil
 	}
 
-	Log(LogEntry{"CORE.INIT", false, "Aborted by user"})
+	Log(LogEntry{"ghost.INIT", false, "Aborted by user"})
 
 	return nil
 }
@@ -104,15 +104,15 @@ func initDB(cmd *cobra.Command, args []string) error {
 	_, err = db.Exec(SQLToGrantBuiltInPermissions)
 
 	if err != nil {
-		LogFatal(LogEntry{"CORE.INIT", false, "Could not complete database setup: " + err.Error()})
+		LogFatal(LogEntry{"ghost.INIT", false, "Could not complete database setup: " + err.Error()})
 	}
 
-	Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem database initialisation"})
+	Log(LogEntry{"ghost.INIT", true, "Successfully completed ghost database initialisation"})
 	return nil
 
 }
 
-//initFolders initialises the filesystem used by EcoSystem
+//initFolders initialises the filesystem used by ghost
 func initFolders(cmd *cobra.Command, args []string) error {
 
 	readConfig()
@@ -121,9 +121,9 @@ func initFolders(cmd *cobra.Command, args []string) error {
 	err = os.Mkdir("./bundles", os.ModePerm)
 
 	if err != nil {
-		Log(LogEntry{"CORE.INIT", false, "Could not complete folder setup: " + err.Error()})
+		Log(LogEntry{"ghost.INIT", false, "Could not complete folder setup: " + err.Error()})
 	}
 
-	Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem folder initialisation"})
+	Log(LogEntry{"ghost.INIT", true, "Successfully completed ghost folder initialisation"})
 	return nil
 }

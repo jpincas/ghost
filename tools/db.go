@@ -109,14 +109,14 @@ func (d dbConfig) getDBConnectionString(serverPW string) (dbConnectionString str
 //connectToDB connects to the database and returns a connection pool
 func connectToDB(dbConnectionString string) *sql.DB {
 	//Initialise database
-	Log(LogEntry{"CORE.DB", true, "Connecting to " + dbConnectionString})
+	Log(LogEntry{"ghost.DB", true, "Connecting to " + dbConnectionString})
 
 	dbConnection, _ := sql.Open("postgres", dbConnectionString)
 	//Ping database to check connectivity
 	if err := dbConnection.Ping(); err != nil {
-		LogFatal(LogEntry{"CORE.DB", false, "Error connecting to Postgres as super user during setup. " + err.Error()})
+		LogFatal(LogEntry{"ghost.DB", false, "Error connecting to Postgres as super user during setup. " + err.Error()})
 	} else {
-		Log(LogEntry{"CORE.DB", true, "Connected to " + dbConnectionString})
+		Log(LogEntry{"ghost.DB", true, "Connected to " + dbConnectionString})
 	}
 	return dbConnection
 }
