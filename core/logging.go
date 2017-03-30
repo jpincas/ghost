@@ -54,7 +54,7 @@ func LogFatal(l LogEntry) {
 //LogDebug outputs a custom ecosystem log entry if debugmode is on
 func LogDebug(l LogEntry) {
 
-	if viper.GetBool("demomode") {
+	if viper.GetBool("debug") {
 		entryType := color.Sprint("@yDEBUG")
 		logText := fmt.Sprintf("%s | %s | %s", l.PackageName, entryType, l.Message)
 		log.Println(logText)
