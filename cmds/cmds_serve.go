@@ -68,7 +68,7 @@ func preServe() {
 
 	//Setup the email system if required
 	if ghost.Config.ActivateEmail {
-		ghost.MailServer.Setup()
+		ghost.App.MailServer.Setup()
 	}
 
 	//Check to make sure a secret has been provided
@@ -90,7 +90,7 @@ func preServe() {
 	dbTemp.Close()
 
 	//Establish a permanent connection
-	ghost.DB = ghost.ServerUserDBConfig.ReturnDBConnection(serverPW)
+	ghost.App.DB = ghost.ServerUserDBConfig.ReturnDBConnection(serverPW)
 
 	ActivatePackages()
 

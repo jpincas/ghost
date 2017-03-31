@@ -164,7 +164,7 @@ func requestLogin(w http.ResponseWriter, r *http.Request) {
 
 	//Lookup the email in the users table
 	var id string
-	err := ghost.DB.QueryRow(fmt.Sprintf(ghost.SQLToFindUserByEmail, email)).Scan(&id)
+	err := ghost.App.DB.QueryRow(fmt.Sprintf(ghost.SQLToFindUserByEmail, email)).Scan(&id)
 	cachedCode, emailIsInCache := MagicCodeCache.Get(email.(string))
 
 	//For Demo Mode ONLY - bypass the magic code

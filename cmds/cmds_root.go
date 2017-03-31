@@ -35,7 +35,7 @@ var RootCmd = &cobra.Command{
 var pingCmd = &cobra.Command{
 	Use:   "ping",
 	Short: "Ping test",
-	Long:  `Pings the DB and returns OK if the connection is ready.`,
+	Long:  `Pings the App.DB and returns OK if the connection is ready.`,
 	RunE:  ping,
 }
 

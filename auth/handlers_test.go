@@ -178,7 +178,7 @@ func (suite *AuthHandlerTests) TestRequestLogin_nocode2() {
 //Test demo mode automatic authorisation with code 123456
 func (suite *AuthHandlerTests) TestRequestLogin_demomode() {
 
-	ghost.DB, suite.Mock, _ = sqlmock.New()
+	ghost.App.DB, suite.Mock, _ = sqlmock.New()
 	rows := sqlmock.NewRows([]string{"id"}).AddRow("130e6150-7098-4f72-8842-0e16629f32de")
 	suite.Mock.ExpectQuery("is@registered.com").WillReturnRows(rows)
 
@@ -200,7 +200,7 @@ func (suite *AuthHandlerTests) TestRequestLogin_demomode() {
 //Test demo mode off with same setting
 func (suite *AuthHandlerTests) TestRequestLogin_fail() {
 
-	ghost.DB, suite.Mock, _ = sqlmock.New()
+	ghost.App.DB, suite.Mock, _ = sqlmock.New()
 	rows := sqlmock.NewRows([]string{"id"}).AddRow("130e6150-7098-4f72-8842-0e16629f32de")
 	suite.Mock.ExpectQuery("is@registered.com").WillReturnRows(rows)
 
@@ -217,7 +217,7 @@ func (suite *AuthHandlerTests) TestRequestLogin_fail() {
 
 func (suite *AuthHandlerTests) TestRequestLogin_ok() {
 
-	ghost.DB, suite.Mock, _ = sqlmock.New()
+	ghost.App.DB, suite.Mock, _ = sqlmock.New()
 	rows := sqlmock.NewRows([]string{"id"}).AddRow("130e6150-7098-4f72-8842-0e16629f32de")
 	suite.Mock.ExpectQuery("is@registered.com").WillReturnRows(rows)
 

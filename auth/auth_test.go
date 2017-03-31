@@ -47,7 +47,7 @@ func TestRequestMagicCodeUserNotInDB(t *testing.T) {
 	ecomail.MailServer.Working = true
 	err := RequestMagicCode("user@notindb")
 	if err.Error() != "Email address not in user database" {
-		t.Error("User is not in DB, should return an error")
+		t.Error("User is not in App.DB, should return an error")
 	}
 	teardown()
 }
@@ -87,12 +87,12 @@ func TestGetToken(t *testing.T) {
 
 func setup() {
 
-	//Set up a mock DB
+	//Set up a mock App.DB
 	var (
 		mock sqlmock.Sqlmock
 		err  error
 	)
-	ghost.DB, mock, err = sqlmock.New()
+	ghost.App.DB, mock, err = sqlmock.New()
 
 	if err != nil {
 		log.Fatalf("An error '%s' was not expected when opening a stub database connection", err)
@@ -109,5 +109,5 @@ func setup() {
 }
 
 func teardown() {
-	ghost.DB.Close()
+	ghost.App.DB.Close()
 }

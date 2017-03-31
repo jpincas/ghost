@@ -72,14 +72,14 @@ func RequestMagicCode(email string) error {
 
 	//First, lookup the email in the users table
 	var id string
-	err := ghost.DB.QueryRow(fmt.Sprintf(ghost.SQLToFindUserByEmail, email)).Scan(&id)
+	err := ghost.App.DB.QueryRow(fmt.Sprintf(ghost.SQLToFindUserByEmail, email)).Scan(&id)
 
-	//If the user doesn't exist in the DB
+	//If the user doesn't exist in the App.DB
 	if err != nil {
 		return errors.New("Email address not in user database")
 	}
 
-	//User exists in the DB
+	//User exists in the App.DB
 	//Create a temporary, one-off password consisting of 6 random characters
 	pw := ghost.RandomString(6)
 	//Set it in the cache

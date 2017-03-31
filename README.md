@@ -99,10 +99,10 @@ grab the JWT that comes back and include it with your requests in an authorizati
 | Attribute                | Function                                 | Default                         |
 | ------------------------ | ---------------------------------------- | ------------------------------- |
 | pgSuperUser              | Username of database superuser with which to connect for initial setup | postgres                        |
-| pgDBName                 | Name of the Postgres DB to connect to    | testdb                          |
+| pgDBName                 | Name of the Postgres App.DB to connect to    | testdb                          |
 | pgPort                   | Server port for the Postgres connection  | 5432                            |
 | pgServer                 | Database server to connect to            | localhost                       |
-| pgDisableSSL             | Disable SSL mode on DB connection        | FALSE                           |
+| pgDisableSSL             | Disable SSL mode on App.DB connection        | FALSE                           |
 | apiPort                  | Port to serve the ghost API on       | 3000                            |
 | smtpHost                 | SMTP server for outgoing emails          |                                 |
 | smtpPort                 | SMTP port for outgoing emails            |                                 |
@@ -124,8 +124,8 @@ Running `ghost ` on its own, with no command or arguments, verifies that the con
 | ----------- | ---------- | ---------------------------------------- | ---------------------------------------- |
 | All         |            | -p, —pgpw                                | **Optional:** Postgres super user password, if required |
 |             |            | -c, —configfile                          | **Optional:** Specify a different configuration file from the default *config.json* |
-| `init`      |            |                                          | Performs full initialisation - DB and folders |
-| `init`      | `db`       |                                          | Performs the DB initialisation for built-in tables, roles and permissions |
+| `init`      |            |                                          | Performs full initialisation - App.DB and folders |
+| `init`      | `db`       |                                          | Performs the App.DB initialisation for built-in tables, roles and permissions |
 | `init`      | `folders`  |                                          | Creates the ghost folder structure   |
 | `install`   | `[bundle]` | —demodata; -r, —reinstall                | Install named ghost bundle.  Bundle folder must be downloaded/cloned into /bundles first. **Optional:** Include demo data with the bundle install. **Optional:** Uninstall the bundle before installing |
 | `uninstall` | `[bundle]` |                                          | Uninstall named ghost bundle.  Will not delete the bundle folder from /bundles |

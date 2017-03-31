@@ -53,7 +53,7 @@ var installCmd = &cobra.Command{
 var unInstallCmd = &cobra.Command{
 	Use:   "uninstall [bundle]",
 	Short: "Removes an ghost bundle",
-	Long: `Removes an ghost bundle by deleting the DB schema, deleting template
+	Long: `Removes an ghost bundle by deleting the App.DB schema, deleting template
 	files and images,`,
 	RunE: unInstallBundle,
 }
