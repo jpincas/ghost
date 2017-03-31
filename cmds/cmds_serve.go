@@ -99,7 +99,7 @@ func preServe() {
 func startServer() {
 
 	ghost.Log(ghost.LogEntry{"ghost.SERVE", true, "Server started on port " + viper.GetString("apiPort")})
-	http.ListenAndServe(":"+viper.GetString("apiPort"), ghost.Router)
+	http.ListenAndServe(":"+viper.GetString("apiPort"), ghost.App.Router)
 
 }
 
