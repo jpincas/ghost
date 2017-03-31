@@ -21,25 +21,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-//Config is the basic structure of the config.json file
-type Config struct {
-	PgSuperUser      string  `json:"pgSuperUser"`
-	PgDBName         string  `json:"pgDBName"`
-	PgPort           string  `json:"pgPort"`
-	PgServer         string  `json:"pgServer"`
-	PgDisableSSL     bool    `json:"pgDisableSSL"`
-	ApiPort          string  `json:"apiPort"`
-	SmtpHost         string  `json:"smtpHost"`
-	SmtpPort         string  `json:"smtpPort"`
-	SmtpUserName     string  `json:"smtpUserName"`
-	SmtpFrom         string  `json:"smtpFrom"`
-	EmailFrom        string  `json:"emailFrom"`
-	JWTRealm         string  `json:"jwtRealm"`
-	BundlesInstalled Bundles `json:"bundlesInstalled"`
-	Host             string  `json:"host"`
-	Protocol         string  `json:"protocol"`
-}
-
+//Set sensible viper defaults
 func init() {
 
 	viper.SetDefault("pgSuperUser", "postgres")
@@ -55,16 +37,65 @@ func init() {
 
 }
 
-func readConfig() {
+//Configuration is the app-wide configuration object
+var Config config
 
-	viper.SetConfigName(viper.GetString("configfile"))
+//Config is the basic structure of the config.json file
+type config struct {
+	//PG Settings
+	PgSuperUser  string `json:"pgSuperUser"`
+	PgDBName     string `json:"pgDBName"`
+	PgPort       string `json:"pgPort"`
+	PgServer     string `json:"pgServer"`
+	PgDisableSSL bool   `json:"pgDisableSSL"`
+	//General Settings
+	ApiPort  string `json:"apiPort"`
+	JWTRealm string `json:"jwtRealm"`
+	Host     string `json:"host"`
+	Protocol string `json:"protocol"`
+	//CORS Settings
+	Cors                 bool     `json:"cors"`
+	CorsAllowedOrigins   []string `json:"corsAllowedOrigins"`
+	CorsAllowedMethods   []string `json:"corsAllowedMethods"`
+	CorsAllowedHeaders   []string `json:"corsAllowedHeaders"`
+	CorsExposedHeaders   []string `json:"corsExposedHeaders"`
+	CorsAllowCredentials bool     `json:"corsAllowCredentials"`
+	CorsMaxAge           int      `json:"corsMaxAge"`
+
+	//Email Settings
+	SmtpHost     string `json:"smtpHost"`
+	SmtpPort     string `json:"smtpPort"`
+	SmtpUserName string `json:"smtpUserName"`
+	SmtpFrom     string `json:"smtpFrom"`
+	EmailFrom    string `json:"emailFrom"`
+	//Bundles installed
+	BundlesInstalled Bundles `json:"bundlesInstalled"`
+}
+
+//Setup hydrates the app-wide config object by reading in a specified config file
+//Also initialises the database setting config objects
+func (c *config) Setup(configFileName string) {
+
+	viper.SetConfigName(configFileName)
 
 	if err := viper.ReadInConfig(); err == nil {
+
 		//Initialise the db config structs for later use
 		InitDBConnectionConfigs()
+
+		//Unmarshall the whole config file into a config object
+		if err := viper.Unmarshal(c); err != nil {
+
+			LogFatal(LogEntry{"ghost.CONFIG", true, "Error decoding config file. Aborting"})
+
+		}
+
 		Log(LogEntry{"ghost.CONFIG", true, "Config file detected and correctly applied:" + viper.ConfigFileUsed()})
+
 	} else {
+
 		LogFatal(LogEntry{"ghost.CONFIG", true, "Config file not found. Aborting"})
+
 	}
 
 }
@@ -73,25 +104,37 @@ func readConfig() {
 //Will overwrite existing config.json, so ask for confirmation
 func createDefaultConfigFile(configFileName string) error {
 
-	config := Config{
-		PgSuperUser:      "postgres",
-		PgDBName:         "testdb",
-		PgPort:           "5432",
-		PgServer:         "localhost",
-		PgDisableSSL:     true,
-		ApiPort:          "3000",
-		SmtpHost:         "smtp",
-		SmtpPort:         "25",
-		SmtpUserName:     "info@yourdomain.com",
-		SmtpFrom:         "info@yourdomain.com",
-		EmailFrom:        "Your Name",
-		JWTRealm:         "Your App Name",
+	c := config{
+		//PG Settings
+		PgSuperUser:  "postgres",
+		PgDBName:     "testdb",
+		PgPort:       "5432",
+		PgServer:     "localhost",
+		PgDisableSSL: true,
+		//General Settings
+		ApiPort:  "3000",
+		JWTRealm: "Your App Name",
+		Host:     "localhost",
+		Protocol: "http",
+		//CORS Settings
+		Cors:                 false,
+		CorsAllowedOrigins:   []string{"*"},
+		CorsAllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "SEARCH"},
+		CorsAllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		CorsExposedHeaders:   []string{"Link"},
+		CorsAllowCredentials: true,
+		CorsMaxAge:           300,
+		//Email Settings
+		SmtpHost:     "smtp",
+		SmtpPort:     "25",
+		SmtpUserName: "info@yourdomain.com",
+		SmtpFrom:     "info@yourdomain.com",
+		EmailFrom:    "Your Name",
+		//Bundls installed
 		BundlesInstalled: make([]string, 0, 0),
-		Host:             "localhost",
-		Protocol:         "http",
 	}
 
-	configJSON, _ := json.MarshalIndent(config, "", "\t")
+	configJSON, _ := json.MarshalIndent(c, "", "\t")
 	fileName := configFileName + ".json"
 	err := ioutil.WriteFile(fileName, configJSON, 0644)
 	if err != nil {

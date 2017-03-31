@@ -22,6 +22,7 @@ import (
 
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var isAdmin bool
@@ -58,7 +59,7 @@ var newBundleCmd = &cobra.Command{
 
 func createNewUser(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	Config.Setup(viper.GetString("configfile"))
 
 	if len(args) < 1 {
 		return errors.New("user's email must be provided")
@@ -93,7 +94,7 @@ func createNewUser(cmd *cobra.Command, args []string) error {
 
 func createNewBundle(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	Config.Setup(viper.GetString("configfile"))
 
 	//Check for bundle name
 	if len(args) < 1 {

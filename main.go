@@ -19,9 +19,8 @@ import (
 	"os"
 
 	"github.com/jpincas/ghost/auth"
-	ghost "github.com/jpincas/ghost/tools"
 	"github.com/jpincas/ghost/email"
-	"github.com/jpincas/ghost/rest"
+	ghost "github.com/jpincas/ghost/tools"
 )
 
 func main() {
@@ -38,7 +37,6 @@ func main() {
 
 func activatePackages() {
 	//Standard packages
-	rest.Activate()
 	auth.Activate()
 	email.Activate()
 }

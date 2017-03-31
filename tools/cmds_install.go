@@ -60,17 +60,24 @@ var unInstallCmd = &cobra.Command{
 //uninstallBundle is the removal function for a bundle
 func unInstallBundle(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	configFile := viper.GetString("configfile")
+	Config.Setup(configFile)
 
 	//Check for bundle name
 	if len(args) < 1 {
 		return errors.New("a bundle name must be provided")
 	}
 
-	//Ask for confirmation
-	c := AskForConfirmation("This will delete the bundle, causing loss of all data in the schema created by the bundle.  Are you sure you want to do this?")
+	//If user has used -noprompt flag then we don't prompt for confirmation
+	var proceedWithInit = false
+	if viper.GetBool("noprompt") {
+		proceedWithInit = true
+	} else {
+		proceedWithInit = AskForConfirmation("This will delete the bundle, causing loss of all data in the schema created by the bundle.  Are you sure you want to do this?")
+	}
 
-	if c {
+	if proceedWithInit {
+
 		//Establish a temporary connection as the super user
 		db := SuperUserDBConfig.ReturnDBConnection("")
 		defer db.Close()
@@ -80,20 +87,12 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 		db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
 
 		//Attempt to updated the bundles installed list
-		newBundlesInstalled, err := Bundles(viper.GetStringSlice("bundlesInstalled")).UnInstallBundle(args[0])
-
-		//If there is any error, log it
-		if err != nil {
-			Log(LogEntry{"ghost.INSTALL", false, "Error updating bundles installed list: " + err.Error()})
+		if err := Config.UnInstallBundle(args[0]); err != nil {
+			Log(LogEntry{"ghost.INSTALL", false, "Error uninstalling bundle: " + err.Error()})
 		}
 
-		//Otherwise set the viper configuration to the new bundles list and overwrite the config.json
-		viper.Set("bundlesInstalled", newBundlesInstalled)
-		var config Config
-		viper.Unmarshal(&config)
-		configJSON, _ := json.MarshalIndent(config, "", "\t")
-		err = ioutil.WriteFile(viper.GetString("configfile")+".json", configJSON, 0644)
-		if err != nil {
+		configJSON, _ := json.MarshalIndent(Config, "", "\t")
+		if err := ioutil.WriteFile(configFile+".json", configJSON, 0644); err != nil {
 			Log(LogEntry{"ghost.INSTALL", false, "Error updating config file: " + err.Error()})
 		}
 
@@ -109,7 +108,8 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 //installBundle is the entire installation procedure for an ghost Bundle
 func installBundle(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	configFile := viper.GetString("configfile")
+	Config.Setup(configFile)
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -206,25 +206,18 @@ func installBundle(cmd *cobra.Command, args []string) error {
 
 	}
 
-	//Attempt to updated the bundles installed list
-	newBundlesInstalled, err := Bundles(viper.GetStringSlice("bundlesInstalled")).InstallBundle(args[0])
-
-	//If there is any error, return it
-	if err != nil {
-		Log(LogEntry{"ghost.INSTALL", false, "Error updating bundles installed list: " + err.Error()})
+	//Attempt to update the bundles installed list
+	if err := Config.InstallBundle(args[0]); err != nil {
+		Log(LogEntry{"ghost.INSTALL", false, "Error installing bundle: " + err.Error()})
 	}
 
-	//Otherwise set the viper configuration to the new bundles list and overwrite the config.json
-	viper.Set("bundlesInstalled", newBundlesInstalled)
-	var config Config
-	viper.Unmarshal(&config)
-	configJSON, _ := json.MarshalIndent(config, "", "\t")
-	err = ioutil.WriteFile(viper.GetString("configfile")+".json", configJSON, 0644)
-	if err != nil {
-		Log(LogEntry{"ghost.INSTALL", false, "Error updating config file: " + err.Error()})
+	//Rewrite the config file
+	configJSON, _ := json.MarshalIndent(Config, "", "\t")
+	if err := ioutil.WriteFile(configFile+".json", configJSON, 0644); err != nil {
+		Log(LogEntry{"ghost.INSTALL", false, "Error updating config file. Please update manually: " + err.Error()})
+	} else {
+		Log(LogEntry{"ghost.INSTALL", true, "config file updated"})
 	}
-
-	Log(LogEntry{"ghost.INSTALL", true, "config file updated"})
 
 	//Bundle installation complete
 	Log(LogEntry{"ghost.INSTALL", true, "Installation of bundle " + args[0] + " completed"})

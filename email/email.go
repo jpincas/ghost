@@ -21,6 +21,7 @@ import (
 	"net/smtp"
 	"strings"
 
+	ghost "github.com/jpincas/ghost/tools"
 	"github.com/spf13/viper"
 )
 

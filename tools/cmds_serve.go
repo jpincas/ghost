@@ -54,7 +54,7 @@ var serveCmd = &cobra.Command{
 
 func serve(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	Config.Setup(viper.GetString("configfile"))
 	preServe()
 	startServer()
 	return nil

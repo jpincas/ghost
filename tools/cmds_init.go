@@ -18,17 +18,14 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
-
-var isNoPrompt bool
 
 func init() {
 
 	RootCmd.AddCommand(initCmd)
 	initCmd.AddCommand(initDBCmd)
 	initCmd.AddCommand(initFoldersCmd)
-
-	initCmd.Flags().BoolVarP(&isNoPrompt, "noprompt", "n", false, "Don't prompt for confirmation")
 
 }
 
@@ -64,7 +61,7 @@ func initAll(cmd *cobra.Command, args []string) error {
 
 	//If user has used -noprompt flag then we don't prompt for confirmation
 	var proceedWithInit = false
-	if isNoPrompt {
+	if viper.GetBool("noprompt") {
 		proceedWithInit = true
 	} else {
 		proceedWithInit = AskForConfirmation("This will perform a complete (re)initialisation and may perform overwrites. Do you with to proceed?")
@@ -85,7 +82,7 @@ func initAll(cmd *cobra.Command, args []string) error {
 //initDB initialises the built-in database tables, roles and permissions
 func initDB(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	Config.Setup(viper.GetString("configfile"))
 
 	//Establish a temporary connection as the super user
 	db := SuperUserDBConfig.ReturnDBConnection("")
@@ -115,7 +112,7 @@ func initDB(cmd *cobra.Command, args []string) error {
 //initFolders initialises the filesystem used by ghost
 func initFolders(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	Config.Setup(viper.GetString("configfile"))
 
 	var err error
 	err = os.Mkdir("./bundles", os.ModePerm)

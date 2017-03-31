@@ -18,33 +18,39 @@ import "errors"
 
 type Bundles []string
 
-//installBundle adds the name of the new bundle to the slice of bundles
-func (b Bundles) InstallBundle(newBundle string) (Bundles, error) {
+func (c *config) InstallBundle(bundleName string) error {
 
+	b := c.BundlesInstalled
 	//Check if the bundle is already installed (should only happen if user has messed with config.json)
 	//If the name of the bundle being installed coincides with any of the names already in the bundle slice,
 	//then just return the original bundle slice
 	for _, a := range b {
-		if a == newBundle {
-			return b, errors.New("Bundle is already installed")
+		if a == bundleName {
+			return errors.New("Bundle is already installed")
 		}
 	}
 	//Otherwise append
-	return append(b, newBundle), nil
+	b = append(b, bundleName)
+	//Reset the bundle list on the config object
+	c.BundlesInstalled = b
+
+	return nil
+
 }
 
-func (b Bundles) UnInstallBundle(bundle string) (Bundles, error) {
+func (c *config) UnInstallBundle(bundleName string) error {
 
+	b := c.BundlesInstalled
 	//Search for the bundle to be uninstalled
 	for index, a := range b {
-		if a == bundle {
+		if a == bundleName {
 			//If found, splice it out
-			return append(b[:index], b[index+1:]...), nil
+			c.BundlesInstalled = append(b[:index], b[index+1:]...)
+			return nil
 		}
 	}
 
-	//Otherwise just return the original
-	return b, errors.New("Bundle is not installed")
+	return errors.New("Bundle is not installed")
 
 }
 

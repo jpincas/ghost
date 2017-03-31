@@ -43,6 +43,7 @@ func init() {
 	RootCmd.AddCommand(pingCmd)
 	RootCmd.PersistentFlags().StringP("pgpw", "p", "", "Postgres superuser password")
 	RootCmd.PersistentFlags().StringP("configfile", "c", "config", "Name of config file (without extension)")
+	RootCmd.PersistentFlags().BoolP("noprompt", "n", false, "Override prompt for confirmation")
 	viper.BindPFlags(RootCmd.PersistentFlags())
 
 }
@@ -68,7 +69,7 @@ func createConfigIfNotExists(cmd *cobra.Command, args []string) error {
 
 func ping(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	Config.Setup(viper.GetString("configfile"))
 
 	//Attempt to open a db connection
 	db := SuperUserDBConfig.ReturnDBConnection("")
