@@ -62,7 +62,7 @@ var unInstallCmd = &cobra.Command{
 func unInstallBundle(cmd *cobra.Command, args []string) error {
 
 	configFile := viper.GetString("configfile")
-	ghost.Config.Setup(configFile)
+	ghost.App.Config.Setup(configFile)
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -88,11 +88,11 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
 
 		//Attempt to updated the bundles installed list
-		if err := ghost.Config.UnInstallBundle(args[0]); err != nil {
+		if err := ghost.App.Config.UnInstallBundle(args[0]); err != nil {
 			ghost.Log(ghost.LogEntry{"ghost.INSTALL", false, "Error uninstalling bundle: " + err.Error()})
 		}
 
-		configJSON, _ := json.MarshalIndent(ghost.Config, "", "\t")
+		configJSON, _ := json.MarshalIndent(ghost.App.Config, "", "\t")
 		if err := ioutil.WriteFile(configFile+".json", configJSON, 0644); err != nil {
 			ghost.Log(ghost.LogEntry{"ghost.INSTALL", false, "Error updating config file: " + err.Error()})
 		}
@@ -110,7 +110,7 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 func installBundle(cmd *cobra.Command, args []string) error {
 
 	configFile := viper.GetString("configfile")
-	ghost.Config.Setup(configFile)
+	ghost.App.Config.Setup(configFile)
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -208,12 +208,12 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	}
 
 	//Attempt to update the bundles installed list
-	if err := ghost.Config.InstallBundle(args[0]); err != nil {
+	if err := ghost.App.Config.InstallBundle(args[0]); err != nil {
 		ghost.LLog("INSTALL", false, "Error installing bundle", err)
 	}
 
 	//Rewrite the config file
-	configJSON, _ := json.MarshalIndent(ghost.Config, "", "\t")
+	configJSON, _ := json.MarshalIndent(ghost.App.Config, "", "\t")
 	if err := ioutil.WriteFile(configFile+".json", configJSON, 0644); err != nil {
 		ghost.LLog("INSTALL", false, "Error updating config file. Please update manually", err)
 	} else {

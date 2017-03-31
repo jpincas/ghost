@@ -70,7 +70,7 @@ func createConfigIfNotExists(cmd *cobra.Command, args []string) error {
 
 func ping(cmd *cobra.Command, args []string) error {
 
-	ghost.Config.Setup(viper.GetString("configfile"))
+	ghost.App.Config.Setup(viper.GetString("configfile"))
 
 	//Attempt to open a db connection
 	db := ghost.SuperUserDBConfig.ReturnDBConnection("")

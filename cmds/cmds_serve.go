@@ -55,7 +55,7 @@ var serveCmd = &cobra.Command{
 
 func serve(cmd *cobra.Command, args []string) error {
 
-	ghost.Config.Setup(viper.GetString("configfile"))
+	ghost.App.Config.Setup(viper.GetString("configfile"))
 	preServe()
 	startServer()
 	return nil
@@ -67,7 +67,7 @@ var ActivatePackages func()
 func preServe() {
 
 	//Setup the email system if required
-	if ghost.Config.ActivateEmail {
+	if ghost.App.Config.ActivateEmail {
 		ghost.App.MailServer.Setup()
 	}
 
@@ -102,7 +102,3 @@ func startServer() {
 	http.ListenAndServe(":"+viper.GetString("apiPort"), ghost.App.Router)
 
 }
-
-//  Experimental search features
-// 	api.Handle("SEARCH", "/:schema/:table/", ReturnBlank) //Useful for when blank searches are sent by client, to avoid errors
-// 	api.Handle("SEARCH", "/:schema/:table/:searchTerm", SearchList)
