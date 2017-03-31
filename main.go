@@ -23,16 +23,10 @@ import (
 
 func main() {
 
-	//Tell ghost which packages to activate
-	cmds.ActivatePackages = activatePackages
-
 	//Bootstrap the application
 	if err := cmds.RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
-}
 
-func activatePackages() {
-	//Standard packages
 }

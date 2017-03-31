@@ -26,22 +26,17 @@ import (
 	"fmt"
 )
 
-var smtpPW string
-
 func init() {
-	RootCmd.AddCommand(serveCmd)
 
 	serveCmd.Flags().String("smtppw", "", "SMTP server password for outgoing mail")
-	viper.BindPFlag("smtppw", serveCmd.Flags().Lookup("smtppw"))
-
 	serveCmd.Flags().BoolP("demomode", "d", false, "Run server in demo mode")
-	viper.BindPFlag("demomode", serveCmd.Flags().Lookup("demomode"))
-
 	serveCmd.Flags().BoolP("debug", "b", false, "Run server in debug mode")
-	viper.BindPFlag("debug", serveCmd.Flags().Lookup("debug"))
-
 	serveCmd.Flags().StringP("secret", "s", "", "Secure secret for signing JWT")
-	viper.BindPFlag("secret", serveCmd.Flags().Lookup("secret"))
+	serveCmd.Flags().StringP("pgpw", "p", "", "Postgres superuser password")
+	serveCmd.Flags().StringP("configfile", "c", "config", "Name of config file (without extension)")
+	serveCmd.Flags().BoolP("noprompt", "n", false, "Override prompt for confirmation")
+
+	viper.BindPFlags(serveCmd.Flags())
 
 }
 
@@ -62,7 +57,7 @@ func serve(cmd *cobra.Command, args []string) error {
 }
 
 //ActivatePackages is a hook for activating packages from main
-var ActivatePackages func()
+var BeforeServe func()
 
 func preServe() {
 
@@ -92,7 +87,7 @@ func preServe() {
 	//Establish a permanent connection
 	ghost.App.DB = ghost.ServerUserDBConfig.ReturnDBConnection(serverPW)
 
-	ActivatePackages()
+	BeforeServe()
 
 }
 
