@@ -48,7 +48,7 @@ func Log(l LogEntry) {
 //LogFatal outputs a custom ghost log entry and exits
 func LogFatal(l LogEntry) {
 
-	entryType := color.Sprint("@{wR}FATAL")
+	entryType := color.Sprint("@{!r}FATAL")
 	logText := fmt.Sprintf("%s | %s | %s", l.PackageName, entryType, l.Message)
 	log.Fatalln(logText)
 }
@@ -78,10 +78,10 @@ func LLog(module string, isOk bool, message string, err error) {
 
 	errorText := ""
 	if err != nil {
-		errorText = "Error: " + err.Error()
+		errorText = color.Sprint(" | @rError: " + err.Error())
 	}
 
-	logText := fmt.Sprintf("%s | %s | %s | %s", module, entryType, message, errorText)
+	logText := fmt.Sprintf("%s | %s | %s %s", module, entryType, message, errorText)
 	log.Println(logText)
 }
 
@@ -90,11 +90,11 @@ func LLogFatal(module string, isOk bool, message string, err error) {
 
 	errorText := ""
 	if err != nil {
-		errorText = "Error: " + err.Error()
+		errorText = color.Sprint(" | @rError: " + err.Error())
 	}
 
-	entryType := color.Sprint("@{wR}FATAL")
-	logText := fmt.Sprintf("%s | %s | %s | %s", module, entryType, message, errorText)
+	entryType := color.Sprint("@{!r}FATAL")
+	logText := fmt.Sprintf("%s | %s | %s %s", module, entryType, message, errorText)
 	log.Fatalln(logText)
 }
 
@@ -103,13 +103,13 @@ func LLogDebug(module string, isOk bool, message string, err error) {
 
 	errorText := ""
 	if err != nil {
-		errorText = "Error: " + err.Error()
+		errorText = color.Sprint(" | @rError: " + err.Error())
 	}
 
 	if viper.GetBool("debug") {
 
 		entryType := color.Sprint("@yDEBUG")
-		logText := fmt.Sprintf("%s | %s | %s | %s", module, entryType, message, errorText)
+		logText := fmt.Sprintf("%s | %s | %s %s", module, entryType, message, errorText)
 		log.Println(logText)
 
 	}

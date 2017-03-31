@@ -17,6 +17,7 @@ package ghost
 import (
 	"fmt"
 	"os"
+	"path"
 
 	"errors"
 
@@ -98,26 +99,22 @@ func createNewBundle(cmd *cobra.Command, args []string) error {
 	}
 
 	//Check that bundle doesn't already exists
-	basePath := "./" + args[0]
+	basePath := path.Join("bundles", args[0])
 	exists, _ := afero.IsDir(ghost.FileSystem, basePath)
 	if exists {
 		ghost.LLogFatal("NEW", true, "Bundle "+args[0]+" already exists. Please provide a different name", nil)
 	}
 
 	//Create the folder structure
-	err := os.MkdirAll("./"+args[0]+"/templates/pages", os.ModePerm)
-	err = os.MkdirAll("./"+args[0]+"/templates/email", os.ModePerm)
-	err = os.MkdirAll("./"+args[0]+"/templates/partials", os.ModePerm)
-	err = os.MkdirAll("./"+args[0]+"/images", os.ModePerm)
-	err = os.MkdirAll("./"+args[0]+"/public", os.ModePerm)
-	err = os.MkdirAll("./"+args[0]+"/admin-panel", os.ModePerm)
+	err := os.MkdirAll(path.Join(basePath, "install"), os.ModePerm)
+	err = os.MkdirAll(path.Join(basePath, "demodata"), os.ModePerm)
 
 	if err != nil {
 		ghost.LLogFatal("NEW", true, "Could not complete folder setup", err)
 	}
 
-	_, err = os.Create("./" + args[0] + "/install.sql")
-	_, err = os.Create("./" + args[0] + "/demodata.sql")
+	_, err = os.Create(path.Join(basePath, "install", "00_install.sql"))
+	_, err = os.Create(path.Join(basePath, "demodata", "00_demodata.sql"))
 
 	if err != nil {
 		ghost.LLogFatal("NEW", true, "Could not complete folder setup", err)
