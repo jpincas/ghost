@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package email
+package tools
 
 import (
 	"bytes"
@@ -21,7 +21,6 @@ import (
 	"net/smtp"
 	"strings"
 
-	ghost "github.com/jpincas/ghost/tools"
 	"github.com/spf13/viper"
 )
 
@@ -37,7 +36,7 @@ var MailServer smtpServer
 //EmailSetup sets up the shared SMTP connection, tests it and marks whether it is working or not
 func Activate() error {
 
-	ghost.Log(ghost.LogEntry{"EMAIL", true, "Initialising email system..."})
+	Log(LogEntry{"EMAIL", true, "Initialising email system..."})
 
 	//Setup the smtp config struct, and mark as not working
 	//Read in the configuration parameters from Viper
@@ -53,15 +52,15 @@ func Activate() error {
 
 	//Test the SMTP connection
 	if err := MailServer.TestConnection(); err != nil {
-		ghost.Log(ghost.LogEntry{"EMAIL", false, "Error initialising email server"})
-		ghost.Log(ghost.LogEntry{"EMAIL", false, err.Error()})
-		ghost.Log(ghost.LogEntry{"EMAIL", false, "Email system will not function"})
+		Log(LogEntry{"EMAIL", false, "Error initialising email server"})
+		Log(LogEntry{"EMAIL", false, err.Error()})
+		Log(LogEntry{"EMAIL", false, "Email system will not function"})
 		return err
 	}
 
 	//If it passes, setup the config
 	MailServer.Working = true
-	ghost.Log(ghost.LogEntry{"EMAIL", true, "Email system correctly initialised"})
+	Log(LogEntry{"EMAIL", true, "Email system correctly initialised"})
 	return nil
 
 }
