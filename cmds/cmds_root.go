@@ -17,6 +17,7 @@ package ghost
 import (
 	"os"
 
+	ghost "github.com/jpincas/ghost/tools"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -54,13 +55,13 @@ func createConfigIfNotExists(cmd *cobra.Command, args []string) error {
 	viper.SetConfigName(viper.GetString("configfile"))
 
 	if err := viper.ReadInConfig(); err == nil {
-		LogFatal(LogEntry{"ghost.CONFIG", true, "Config file already exists:" + viper.ConfigFileUsed()})
+		ghost.LogFatal(ghost.LogEntry{"ghost.CONFIG", true, "Config file already exists:" + viper.ConfigFileUsed()})
 	} else {
-		if err := createDefaultConfigFile(viper.GetString("configfile")); err != nil {
-			LogFatal(LogEntry{"ghost.CONFIG", false, "Error creating config file: " + err.Error()})
+		if err := ghost.CreateDefaultConfigFile(viper.GetString("configfile")); err != nil {
+			ghost.LogFatal(ghost.LogEntry{"ghost.CONFIG", false, "Error creating config file: " + err.Error()})
 		} else {
 			//Otherwise create one
-			Log(LogEntry{"ghost.CONFIG", true, "Config file created"})
+			ghost.Log(ghost.LogEntry{"ghost.CONFIG", true, "Config file created"})
 		}
 	}
 
@@ -69,13 +70,13 @@ func createConfigIfNotExists(cmd *cobra.Command, args []string) error {
 
 func ping(cmd *cobra.Command, args []string) error {
 
-	Config.Setup(viper.GetString("configfile"))
+	ghost.Config.Setup(viper.GetString("configfile"))
 
 	//Attempt to open a db connection
-	db := SuperUserDBConfig.ReturnDBConnection("")
+	db := ghost.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 	//IF we get this far, just exit with success
-	Log(LogEntry{"PING", true, "Ping test passed"})
+	ghost.Log(ghost.LogEntry{"PING", true, "Ping test passed"})
 	os.Exit(0)
 
 	return nil

@@ -102,7 +102,7 @@ func (c *config) Setup(configFileName string) {
 
 //createDafaultConfigFile creates the default config.json template with sane defaults
 //Will overwrite existing config.json, so ask for confirmation
-func createDefaultConfigFile(configFileName string) error {
+func CreateDefaultConfigFile(configFileName string) error {
 
 	c := config{
 		//PG Settings

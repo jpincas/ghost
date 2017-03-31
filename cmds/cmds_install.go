@@ -23,6 +23,7 @@ import (
 
 	"database/sql"
 
+	ghost "github.com/jpincas/ghost/tools"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -61,7 +62,7 @@ var unInstallCmd = &cobra.Command{
 func unInstallBundle(cmd *cobra.Command, args []string) error {
 
 	configFile := viper.GetString("configfile")
-	Config.Setup(configFile)
+	ghost.Config.Setup(configFile)
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -73,31 +74,31 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 	if viper.GetBool("noprompt") {
 		proceedWithInit = true
 	} else {
-		proceedWithInit = AskForConfirmation("This will delete the bundle, causing loss of all data in the schema created by the bundle.  Are you sure you want to do this?")
+		proceedWithInit = ghost.AskForConfirmation("This will delete the bundle, causing loss of all data in the schema created by the bundle.  Are you sure you want to do this?")
 	}
 
 	if proceedWithInit {
 
 		//Establish a temporary connection as the super user
-		db := SuperUserDBConfig.ReturnDBConnection("")
+		db := ghost.SuperUserDBConfig.ReturnDBConnection("")
 		defer db.Close()
 
 		//Drop the schema
 		//If it doesn't exist, it won't be dropped - no big deal
-		db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
+		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
 
 		//Attempt to updated the bundles installed list
-		if err := Config.UnInstallBundle(args[0]); err != nil {
-			Log(LogEntry{"ghost.INSTALL", false, "Error uninstalling bundle: " + err.Error()})
+		if err := ghost.Config.UnInstallBundle(args[0]); err != nil {
+			ghost.Log(ghost.LogEntry{"ghost.INSTALL", false, "Error uninstalling bundle: " + err.Error()})
 		}
 
-		configJSON, _ := json.MarshalIndent(Config, "", "\t")
+		configJSON, _ := json.MarshalIndent(ghost.Config, "", "\t")
 		if err := ioutil.WriteFile(configFile+".json", configJSON, 0644); err != nil {
-			Log(LogEntry{"ghost.INSTALL", false, "Error updating config file: " + err.Error()})
+			ghost.Log(ghost.LogEntry{"ghost.INSTALL", false, "Error updating config file: " + err.Error()})
 		}
 
-		Log(LogEntry{"ghost.INSTALL", true, "config.json updated"})
-		Log(LogEntry{"ghost.INSTALL", true, "Uninstallation of bundle " + args[0] + " completed"})
+		ghost.Log(ghost.LogEntry{"ghost.INSTALL", true, "config.json updated"})
+		ghost.Log(ghost.LogEntry{"ghost.INSTALL", true, "Uninstallation of bundle " + args[0] + " completed"})
 
 	}
 
@@ -109,7 +110,7 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 func installBundle(cmd *cobra.Command, args []string) error {
 
 	configFile := viper.GetString("configfile")
-	Config.Setup(configFile)
+	ghost.Config.Setup(configFile)
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -119,38 +120,38 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	//Check that bundle installation folder exists
 	basePath := "./bundles/" + args[0] + "/install"
 
-	exists, err := afero.IsDir(AppFs, basePath)
+	exists, err := afero.IsDir(ghost.FileSystem, basePath)
 
 	if !exists || err != nil {
 		//Exit if doesn't exist
-		LogFatal(LogEntry{"ghost.INSTALL", false, "Bundle '" + args[0] + "' install folder not found or unreadable."})
+		ghost.LogFatal(ghost.LogEntry{"ghost.INSTALL", false, "Bundle '" + args[0] + "' install folder not found or unreadable."})
 	}
 
 	//Uninstall first if requested
 	if isReinstall {
-		Log(LogEntry{"ghost.INSTALL", true, "Uninstalling bundle " + args[0] + " before reinstalling"})
+		ghost.Log(ghost.LogEntry{"ghost.INSTALL", true, "Uninstalling bundle " + args[0] + " before reinstalling"})
 		unInstallBundle(cmd, args)
 	}
 
 	//Check for error reading directory or zero files
-	filesInDirectory, err := afero.ReadDir(AppFs, basePath)
+	filesInDirectory, err := afero.ReadDir(ghost.FileSystem, basePath)
 	if err != nil || len(filesInDirectory) == 0 {
-		LogFatal(LogEntry{"ghost.INSTALL", false, "No installation files could be read for bundle"})
+		ghost.LogFatal(ghost.LogEntry{"ghost.INSTALL", false, "No installation files could be read for bundle"})
 		return nil
 	}
 
-	Log(LogEntry{"ghost.INSTALL", true, "Installing bundle '" + args[0] + "'"})
+	ghost.Log(ghost.LogEntry{"ghost.INSTALL", true, "Installing bundle '" + args[0] + "'"})
 
 	//Establish a temporary connection as the super user
-	db := SuperUserDBConfig.ReturnDBConnection("")
+	db := ghost.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
 	//Set up a schema for the bundle
 	err = setupDBSchema(db, args[0])
 	if err != nil {
 		//IF there is any type of error, drop the schema, log and exit
-		db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
-		LogFatal(LogEntry{"ghost.INSTALL", false, "Schema creation failed with error " + err.Error()})
+		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
+		ghost.LogFatal(ghost.LogEntry{"ghost.INSTALL", false, "Schema creation failed with error " + err.Error()})
 		return nil
 	}
 
@@ -162,27 +163,27 @@ func installBundle(cmd *cobra.Command, args []string) error {
 			err := processBundleFile(db, path.Join(basePath, file.Name()))
 			if err != nil {
 				//IF there is any type of error, drop the schema, log and exit
-				db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
-				LogFatal(LogEntry{"ghost.INSTALL", false, "Installation of '" + file.Name() + "' failed with error: " + err.Error()})
+				db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
+				ghost.LogFatal(ghost.LogEntry{"ghost.INSTALL", false, "Installation of '" + file.Name() + "' failed with error: " + err.Error()})
 				return nil
 			}
-			Log(LogEntry{"ghost.INSTALL", true, file.Name() + " installed OK"})
+			ghost.Log(ghost.LogEntry{"ghost.INSTALL", true, file.Name() + " installed OK"})
 		}
 	}
 
 	//If the user has asked for demo data
 	if isInstallDemoData {
 
-		Log(LogEntry{"ghost.INSTALL", true, "Installing demo data"})
+		ghost.Log(ghost.LogEntry{"ghost.INSTALL", true, "Installing demo data"})
 
 		basePath := "./bundles/" + args[0] + "/demodata"
 
 		//Check for error reading directory or zero files
-		filesInDirectory, err := afero.ReadDir(AppFs, basePath)
+		filesInDirectory, err := afero.ReadDir(ghost.FileSystem, basePath)
 		if err != nil || len(filesInDirectory) == 0 {
 			//IF there is any type of error, drop the schema, log and exit
-			db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
-			LogFatal(LogEntry{"ghost.INSTALL", false, "No demo data files could be read for bundle"})
+			db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
+			ghost.LogFatal(ghost.LogEntry{"ghost.INSTALL", false, "No demo data files could be read for bundle"})
 			return nil
 		}
 
@@ -194,12 +195,12 @@ func installBundle(cmd *cobra.Command, args []string) error {
 				err := processBundleFile(db, path.Join(basePath, file.Name()))
 				if err != nil {
 					//IF there is any type of error, drop the schema, log and exit
-					db.Exec(fmt.Sprintf(SQLToDropSchema, args[0]))
-					LogFatal(LogEntry{"ghost.INSTALL", false, "Installation of '" + file.Name() + "' failed with error: " + err.Error()})
+					db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
+					ghost.LogFatal(ghost.LogEntry{"ghost.INSTALL", false, "Installation of '" + file.Name() + "' failed with error: " + err.Error()})
 					return nil
 				}
 
-				Log(LogEntry{"ghost.INSTALL", true, file.Name() + " installed OK"})
+				ghost.Log(ghost.LogEntry{"ghost.INSTALL", true, file.Name() + " installed OK"})
 
 			}
 		}
@@ -207,20 +208,20 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	}
 
 	//Attempt to update the bundles installed list
-	if err := Config.InstallBundle(args[0]); err != nil {
-		Log(LogEntry{"ghost.INSTALL", false, "Error installing bundle: " + err.Error()})
+	if err := ghost.Config.InstallBundle(args[0]); err != nil {
+		ghost.LLog("INSTALL", false, "Error installing bundle", err)
 	}
 
 	//Rewrite the config file
-	configJSON, _ := json.MarshalIndent(Config, "", "\t")
+	configJSON, _ := json.MarshalIndent(ghost.Config, "", "\t")
 	if err := ioutil.WriteFile(configFile+".json", configJSON, 0644); err != nil {
-		Log(LogEntry{"ghost.INSTALL", false, "Error updating config file. Please update manually: " + err.Error()})
+		ghost.LLog("INSTALL", false, "Error updating config file. Please update manually", err)
 	} else {
-		Log(LogEntry{"ghost.INSTALL", true, "config file updated"})
+		ghost.LLog("INSTALL", true, "config file updated", err)
 	}
 
 	//Bundle installation complete
-	Log(LogEntry{"ghost.INSTALL", true, "Installation of bundle " + args[0] + " completed"})
+	ghost.LLog("NSTALL", true, "Installation of bundle "+args[0]+" completed", nil)
 	return nil
 
 }
@@ -228,7 +229,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 func processBundleFile(db *sql.DB, filename string) error {
 
 	//Attempt to read file
-	sqlBytes, err := afero.ReadFile(AppFs, filename)
+	sqlBytes, err := afero.ReadFile(ghost.FileSystem, filename)
 
 	if err != nil {
 		return err
@@ -246,14 +247,14 @@ func processBundleFile(db *sql.DB, filename string) error {
 func setupDBSchema(db *sql.DB, bundleName string) error {
 
 	//Attempt to create a schema matching the bundle's name,
-	_, err := db.Exec(fmt.Sprintf(SQLToCreateSchema, bundleName))
+	_, err := db.Exec(fmt.Sprintf(ghost.SQLToCreateSchema, bundleName))
 
 	if err != nil {
 		return err
 	}
 
 	//Set admin privileges for everything in this schema going forwards
-	_, err = db.Exec(fmt.Sprintf(SQLToGrantBundleAdminPermissions, bundleName, bundleName, bundleName))
+	_, err = db.Exec(fmt.Sprintf(ghost.SQLToGrantBundleAdminPermissions, bundleName, bundleName, bundleName))
 
 	if err != nil {
 		return err
@@ -261,7 +262,7 @@ func setupDBSchema(db *sql.DB, bundleName string) error {
 
 	//Set the search path to the bundle schema so that all SQL commands take
 	//place within the schema
-	_, err = db.Exec(fmt.Sprintf(SQLToSetSearchPathForBundle, bundleName))
+	_, err = db.Exec(fmt.Sprintf(ghost.SQLToSetSearchPathForBundle, bundleName))
 
 	if err != nil {
 		return err

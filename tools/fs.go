@@ -18,6 +18,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-//AppFs is an afero struct representing the filesystem
+//FileSystem is an afero struct representing the filesystem
 //This is shared across the application
-var AppFs = afero.NewOsFs()
+var FileSystem = afero.NewOsFs()

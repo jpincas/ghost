@@ -23,9 +23,9 @@ import (
 // func TestCheckTemplate(t *testing.T) {
 
 // 	//Use afero for test file system
-// 	appFS := afero.NewMemMapFs()
-// 	appFS.MkdirAll("templates/testbundle/pages", 0755)
-// 	appFS.MkdirAll("templates/mytemplates/pages", 0755)
+// 	FileSystem := afero.NewMemMapFs()
+// 	FileSystem.MkdirAll("templates/testbundle/pages", 0755)
+// 	FileSystem.MkdirAll("templates/mytemplates/pages", 0755)
 
 // 	var wantExists, gotExists bool
 // 	var wantName, gotName string
@@ -39,7 +39,7 @@ import (
 // 	}
 
 // 	//4th PRIORITY: default template in non-bundle folder
-// 	afero.WriteFile(appFS, "templates/mytemplates", []byte("default template"), 0644)
+// 	afero.WriteFile(FileSystem, "templates/mytemplates", []byte("default template"), 0644)
 // 	t.Log("Template file single.html written to 'mytemplates' folder")
 // 	wantExists = true
 // 	wantName = "single.html"

@@ -22,6 +22,8 @@ import (
 	"github.com/wsxiaoys/terminal/color"
 )
 
+//Old style logging  -deprecated
+
 //LogEntry is a custom log output
 type LogEntry struct {
 	PackageName string
@@ -58,6 +60,58 @@ func LogDebug(l LogEntry) {
 		entryType := color.Sprint("@yDEBUG")
 		logText := fmt.Sprintf("%s | %s | %s", l.PackageName, entryType, l.Message)
 		log.Println(logText)
+	}
+
+}
+
+//New logging style
+
+//Log outputs a custom ghost log entry
+func LLog(module string, isOk bool, message string, err error) {
+
+	var entryType string
+	if isOk {
+		entryType = color.Sprint("@gOK")
+	} else {
+		entryType = color.Sprint("@rERROR")
+	}
+
+	errorText := ""
+	if err != nil {
+		errorText = "Error: " + err.Error()
+	}
+
+	logText := fmt.Sprintf("%s | %s | %s | %s", module, entryType, message, errorText)
+	log.Println(logText)
+}
+
+//LogFatal outputs a custom ghost log entry and exits
+func LLogFatal(module string, isOk bool, message string, err error) {
+
+	errorText := ""
+	if err != nil {
+		errorText = "Error: " + err.Error()
+	}
+
+	entryType := color.Sprint("@{wR}FATAL")
+	logText := fmt.Sprintf("%s | %s | %s | %s", module, entryType, message, errorText)
+	log.Fatalln(logText)
+}
+
+//LogDebug outputs a custom ghost log entry if debugmode is on
+func LLogDebug(module string, isOk bool, message string, err error) {
+
+	errorText := ""
+	if err != nil {
+		errorText = "Error: " + err.Error()
+	}
+
+	if viper.GetBool("debug") {
+
+		entryType := color.Sprint("@yDEBUG")
+		logText := fmt.Sprintf("%s | %s | %s | %s", module, entryType, message, errorText)
+		log.Println(logText)
+
 	}
 
 }

@@ -19,17 +19,17 @@ import (
 	"os"
 
 	"github.com/jpincas/ghost/auth"
+	cmds "github.com/jpincas/ghost/cmds"
 	"github.com/jpincas/ghost/email"
-	ghost "github.com/jpincas/ghost/tools"
 )
 
 func main() {
 
 	//Tell ghost which packages to activate
-	ghost.ActivatePackages = activatePackages
+	cmds.ActivatePackages = activatePackages
 
 	//Bootstrap the application
-	if err := ghost.RootCmd.Execute(); err != nil {
+	if err := cmds.RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}

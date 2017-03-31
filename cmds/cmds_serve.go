@@ -19,6 +19,7 @@ package ghost
 import (
 	"net/http"
 
+	ghost "github.com/jpincas/ghost/tools"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -54,7 +55,7 @@ var serveCmd = &cobra.Command{
 
 func serve(cmd *cobra.Command, args []string) error {
 
-	Config.Setup(viper.GetString("configfile"))
+	ghost.Config.Setup(viper.GetString("configfile"))
 	preServe()
 	startServer()
 	return nil
@@ -68,23 +69,23 @@ func preServe() {
 	//Check to make sure a secret has been provided
 	//No default provided as a security measure, server will exit of nothing provided
 	if viper.GetString("secret") == "" {
-		LogFatal(LogEntry{"ghost.SERVE", false, "No signing secret provided"})
+		ghost.LogFatal(ghost.LogEntry{"ghost.SERVE", false, "No signing secret provided"})
 	}
 
 	//Establish a temporary connection as the super user
-	dbTemp := SuperUserDBConfig.ReturnDBConnection("")
+	dbTemp := ghost.SuperUserDBConfig.ReturnDBConnection("")
 
 	//Generate a random server password, set it and get out
-	serverPW := RandomString(16)
-	_, err := dbTemp.Exec(fmt.Sprintf(SQLToSetServerRolePassword, serverPW))
+	serverPW := ghost.RandomString(16)
+	_, err := dbTemp.Exec(fmt.Sprintf(ghost.SQLToSetServerRolePassword, serverPW))
 	if err != nil {
-		LogFatal(LogEntry{"ghost.SERVE", false, "Error setting server role password: " + err.Error()})
+		ghost.LogFatal(ghost.LogEntry{"ghost.SERVE", false, "Error setting server role password: " + err.Error()})
 	}
 
 	dbTemp.Close()
 
 	//Establish a permanent connection
-	DB = ServerUserDBConfig.ReturnDBConnection(serverPW)
+	ghost.DB = ghost.ServerUserDBConfig.ReturnDBConnection(serverPW)
 
 	ActivatePackages()
 
@@ -92,8 +93,8 @@ func preServe() {
 
 func startServer() {
 
-	Log(LogEntry{"ghost.SERVE", true, "Server started on port " + viper.GetString("apiPort")})
-	http.ListenAndServe(":"+viper.GetString("apiPort"), Router)
+	ghost.Log(ghost.LogEntry{"ghost.SERVE", true, "Server started on port " + viper.GetString("apiPort")})
+	http.ListenAndServe(":"+viper.GetString("apiPort"), ghost.Router)
 
 }
 
