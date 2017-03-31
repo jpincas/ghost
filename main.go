@@ -18,9 +18,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jpincas/ghost/auth"
 	cmds "github.com/jpincas/ghost/cmds"
-	"github.com/jpincas/ghost/email"
 )
 
 func main() {
@@ -37,6 +35,4 @@ func main() {
 
 func activatePackages() {
 	//Standard packages
-	auth.Activate()
-	email.Activate()
 }

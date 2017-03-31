@@ -23,7 +23,7 @@ import (
 
 	"database/sql"
 
-	ghost "github.com/jpincas/ghost/tools"
+	"github.com/jpincas/ghost/ghost"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

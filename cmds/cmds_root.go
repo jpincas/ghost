@@ -17,7 +17,7 @@ package ghost
 import (
 	"os"
 
-	ghost "github.com/jpincas/ghost/tools"
+	"github.com/jpincas/ghost/ghost"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

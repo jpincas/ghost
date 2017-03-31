@@ -19,7 +19,7 @@ package ghost
 import (
 	"net/http"
 
-	ghost "github.com/jpincas/ghost/tools"
+	"github.com/jpincas/ghost/ghost"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -65,6 +65,11 @@ func serve(cmd *cobra.Command, args []string) error {
 var ActivatePackages func()
 
 func preServe() {
+
+	//Setup the email system if required
+	if ghost.Config.ActivateEmail {
+		ghost.MailServer.Setup()
+	}
 
 	//Check to make sure a secret has been provided
 	//No default provided as a security measure, server will exit of nothing provided
