@@ -55,13 +55,13 @@ func createConfigIfNotExists(cmd *cobra.Command, args []string) error {
 	viper.SetConfigName(viper.GetString("configfile"))
 
 	if err := viper.ReadInConfig(); err == nil {
-		ghost.LogFatal(ghost.LogEntry{"ghost.CONFIG", true, "Config file already exists:" + viper.ConfigFileUsed()})
+		ghost.LogFatal("ghost.CONFIG", true, "Config file already exists:"+viper.ConfigFileUsed(), err)
 	} else {
 		if err := ghost.CreateDefaultConfigFile(viper.GetString("configfile")); err != nil {
-			ghost.LogFatal(ghost.LogEntry{"ghost.CONFIG", false, "Error creating config file: " + err.Error()})
+			ghost.LogFatal("ghost.CONFIG", false, "Error creating config file: "+err.Error(), err)
 		} else {
 			//Otherwise create one
-			ghost.Log(ghost.LogEntry{"ghost.CONFIG", true, "Config file created"})
+			ghost.Log("ghost.CONFIG", true, "Config file created", nil)
 		}
 	}
 
@@ -76,7 +76,7 @@ func ping(cmd *cobra.Command, args []string) error {
 	db := ghost.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 	//IF we get this far, just exit with success
-	ghost.Log(ghost.LogEntry{"PING", true, "Ping test passed"})
+	ghost.Log("PING", true, "Ping test passed", nil)
 	os.Exit(0)
 
 	return nil

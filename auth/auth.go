@@ -24,8 +24,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/diegobernardes/ttlcache"
-	ghost "github.com/jpincas/ghost/tools"
-	ecomail "github.com/jpincas/ghost/email"
+	"github.com/jpincas/ghost/ghost"
 	"github.com/spf13/viper"
 )
 
@@ -34,7 +33,7 @@ var templates *template.Template
 
 //Activate is the main package activation function
 func Activate() error {
-	ghost.Log(ghost.LogEntry{"AUTH", true, "Activating..."})
+	ghost.Log("AUTH", true, "Activating...", nil)
 	parseTemplates()
 	//Set the routes for the package
 	setRoutes()
@@ -44,7 +43,7 @@ func Activate() error {
 func parseTemplates() {
 
 	templates = template.Must(template.New("base").Parse(baseTemplate))
-	ghost.Log(ghost.LogEntry{"AUTH", true, "Loaded templates" + templates.DefinedTemplates()})
+	ghost.Log("AUTH", true, "Loaded templates"+templates.DefinedTemplates(), nil)
 
 }
 
@@ -54,7 +53,7 @@ var MagicCodeCache = initCache(300) //5 minute expiry
 func initCache(exp time.Duration) *ttlcache.Cache {
 
 	if exp < 1 {
-		ghost.Log(ghost.LogEntry{"AUTH", false, "Cache expiry cannot be zero or negative"})
+		ghost.Log("AUTH", false, "Cache expiry cannot be zero or negative", nil)
 	}
 
 	newCache := ttlcache.NewCache()

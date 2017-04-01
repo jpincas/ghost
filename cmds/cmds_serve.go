@@ -69,7 +69,7 @@ func preServe() {
 	//Check to make sure a secret has been provided
 	//No default provided as a security measure, server will exit of nothing provided
 	if viper.GetString("secret") == "" {
-		ghost.LogFatal(ghost.LogEntry{"ghost.SERVE", false, "No signing secret provided"})
+		ghost.LogFatal("ghost.SERVE", false, "No signing secret provided", nil)
 	}
 
 	//Establish a temporary connection as the super user
@@ -79,7 +79,7 @@ func preServe() {
 	serverPW := ghost.RandomString(16)
 	_, err := dbTemp.Exec(fmt.Sprintf(ghost.SQLToSetServerRolePassword, serverPW))
 	if err != nil {
-		ghost.LogFatal(ghost.LogEntry{"ghost.SERVE", false, "Error setting server role password: " + err.Error()})
+		ghost.LogFatal("ghost.SERVE", false, "Error setting server role password:", err)
 	}
 
 	dbTemp.Close()
@@ -93,7 +93,7 @@ func preServe() {
 
 func startServer() {
 
-	ghost.Log(ghost.LogEntry{"ghost.SERVE", true, "Server started on port " + viper.GetString("apiPort")})
+	ghost.Log("ghost.SERVE", true, "Server started on port "+viper.GetString("apiPort"), nil)
 	http.ListenAndServe(":"+viper.GetString("apiPort"), ghost.App.Router)
 
 }

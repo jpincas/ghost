@@ -71,11 +71,11 @@ func initAll(cmd *cobra.Command, args []string) error {
 	if proceedWithInit {
 		initDB(cmd, args)
 		initFolders(cmd, args)
-		ghost.LLog("INIT", true, "Successfully completed ghost initialisation", nil)
+		ghost.Log("INIT", true, "Successfully completed ghost initialisation", nil)
 		return nil
 	}
 
-	ghost.LLog("INIT", false, "Aborted by user", nil)
+	ghost.Log("INIT", false, "Aborted by user", nil)
 
 	return nil
 }
@@ -102,10 +102,10 @@ func initDB(cmd *cobra.Command, args []string) error {
 	_, err = db.Exec(ghost.SQLToGrantBuiltInPermissions)
 
 	if err != nil {
-		ghost.LLogFatal("INIT", false, "Could not complete database setup", err)
+		ghost.LogFatal("INIT", false, "Could not complete database setup", err)
 	}
 
-	ghost.LLog("INIT", true, "Successfully completed ghost database initialisation", nil)
+	ghost.Log("INIT", true, "Successfully completed ghost database initialisation", nil)
 	return nil
 
 }
@@ -119,9 +119,9 @@ func initFolders(cmd *cobra.Command, args []string) error {
 	err = os.Mkdir("./bundles", os.ModePerm)
 
 	if err != nil {
-		ghost.LLog("INIT", false, "Could not complete folder setup", err)
+		ghost.Log("INIT", false, "Could not complete folder setup", err)
 	}
 
-	ghost.LLog("INIT", true, "Successfully completed ghost folder initialisation", nil)
+	ghost.Log("INIT", true, "Successfully completed ghost folder initialisation", nil)
 	return nil
 }

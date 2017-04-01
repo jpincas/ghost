@@ -80,11 +80,11 @@ func createNewUser(cmd *cobra.Command, args []string) error {
 
 	_, err := db.Exec(fmt.Sprintf(ghost.SQLToCreateAdministrator, args[0], role))
 	if err != nil {
-		ghost.LLogFatal("NEW", true, "Could not create new user", err)
+		ghost.LogFatal("NEW", true, "Could not create new user", err)
 		return nil
 	}
 
-	ghost.LLog("NEW", true, "Successfully created new user"+args[0]+" as "+role, nil)
+	ghost.Log("NEW", true, "Successfully created new user"+args[0]+" as "+role, nil)
 	return nil
 
 }
@@ -102,7 +102,7 @@ func createNewBundle(cmd *cobra.Command, args []string) error {
 	basePath := path.Join("bundles", args[0])
 	exists, _ := afero.IsDir(ghost.App.FileSystem, basePath)
 	if exists {
-		ghost.LLogFatal("NEW", true, "Bundle "+args[0]+" already exists. Please provide a different name", nil)
+		ghost.LogFatal("NEW", true, "Bundle "+args[0]+" already exists. Please provide a different name", nil)
 	}
 
 	//Create the folder structure
@@ -110,18 +110,18 @@ func createNewBundle(cmd *cobra.Command, args []string) error {
 	err = os.MkdirAll(path.Join(basePath, "demodata"), os.ModePerm)
 
 	if err != nil {
-		ghost.LLogFatal("NEW", true, "Could not complete folder setup", err)
+		ghost.LogFatal("NEW", true, "Could not complete folder setup", err)
 	}
 
 	_, err = os.Create(path.Join(basePath, "install", "00_install.sql"))
 	_, err = os.Create(path.Join(basePath, "demodata", "00_demodata.sql"))
 
 	if err != nil {
-		ghost.LLogFatal("NEW", true, "Could not complete folder setup", err)
+		ghost.LogFatal("NEW", true, "Could not complete folder setup", err)
 	}
 
 	//Creates the bundles
-	ghost.LLog("NEW", true, "Successfully created bundle "+args[0], err)
+	ghost.Log("NEW", true, "Successfully created bundle "+args[0], err)
 	return nil
 
 }
