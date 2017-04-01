@@ -1,11 +1,13 @@
-#Ghost
+![](https://raw.githubusercontent.com/jpincas/ghost/ghost-refactor/logo.png)
+
+# Ghost
 A command-line application and utility package that helps you build web backend services with Go and PostgreSQL (previously known as EcoSystem). 
 
 ## Why?
 
 I tend to write backends with a very thick database layer (PostgreSQL) and a very thin application (Go) layer.  Rather than recreate brittle functionality in application code, I prefer to take advantage of the power of Postgres, with its roles, permissions, grants, views, row-level security, functions and triggers.  I keep my business and data-control logic right in the database and totally avoid application level ORMs and suchlike.  
 
-This leads naturally to mostly generic application code, of the CRUDy, boilerplate type.  In fact, this approach leads to application code that is so generic that you could, in theory, avoid writing any at all.  The excellent projects [PostgREST] and [PostGraphQL] take the same approach and give you a REST API and/or GraphQL API respectively, without the need to touch any application code.  I strongly recommend taking a look at those projects to see if they fulfill your requirements.
+This leads naturally to mostly generic application code, of the CRUDy, boilerplate type.  In fact, this approach leads to application code that is so generic that you could, in theory, avoid writing any at all.  The excellent projects [PostgREST](https://github.com/begriffs/postgrest) and [PostGraphQL](https://github.com/postgraphql/postgraphql) take the same approach and give you a REST API and/or GraphQL API respectively, without the need to touch any application code.  I strongly recommend taking a look at those projects to see if they fulfill your requirements.
 
 Ghost shares a common philosophy with the above projects - indeed Ghost has a generic 'PostgreSQL-to-REST' subpackage available should you need it.  If you like this database-first approach, but need to write your own, custom server, then Ghost could help you reduce:
 
@@ -50,14 +52,14 @@ You should have Go (> 1.7) already installed and your $GOPATH correctly configur
 
 6) In *mybundle/install/00_install.sql*, paste this SQL to create a table: 
 
-```
+```sql
 CREATE TABLE helloworld(
 	hello text);
 ```
 
 7) In *mybundle/demodata/00_demodata.sql*, paste this SQL to add a new row: 
 
-```
+```sql
 INSERT INTO helloworld(hello)
 VALUES ('world');
 ```
@@ -68,7 +70,7 @@ VALUES ('world');
 
 1) Create `main.go` and copy this short program:
 
-```
+```go
 package main
 
 import (
