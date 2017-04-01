@@ -61,7 +61,7 @@ var newBundleCmd = &cobra.Command{
 
 func createNewUser(cmd *cobra.Command, args []string) error {
 
-	ghost.App.Config.Setup(viper.GetString("configfile"))
+	ghost.App.Setup(viper.GetString("configfile"))
 
 	if len(args) < 1 {
 		return errors.New("user's email must be provided")
@@ -91,7 +91,7 @@ func createNewUser(cmd *cobra.Command, args []string) error {
 
 func createNewBundle(cmd *cobra.Command, args []string) error {
 
-	ghost.App.Config.Setup(viper.GetString("configfile"))
+	ghost.App.Setup(viper.GetString("configfile"))
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -100,7 +100,7 @@ func createNewBundle(cmd *cobra.Command, args []string) error {
 
 	//Check that bundle doesn't already exists
 	basePath := path.Join("bundles", args[0])
-	exists, _ := afero.IsDir(ghost.FileSystem, basePath)
+	exists, _ := afero.IsDir(ghost.App.FileSystem, basePath)
 	if exists {
 		ghost.LLogFatal("NEW", true, "Bundle "+args[0]+" already exists. Please provide a different name", nil)
 	}

@@ -28,20 +28,20 @@ import (
 
 func init() {
 
-	serveCmd.Flags().String("smtppw", "", "SMTP server password for outgoing mail")
-	serveCmd.Flags().BoolP("demomode", "d", false, "Run server in demo mode")
-	serveCmd.Flags().BoolP("debug", "b", false, "Run server in debug mode")
-	serveCmd.Flags().StringP("secret", "s", "", "Secure secret for signing JWT")
-	serveCmd.Flags().StringP("pgpw", "p", "", "Postgres superuser password")
-	serveCmd.Flags().StringP("configfile", "c", "config", "Name of config file (without extension)")
-	serveCmd.Flags().BoolP("noprompt", "n", false, "Override prompt for confirmation")
+	ServeCmd.Flags().String("smtppw", "", "SMTP server password for outgoing mail")
+	ServeCmd.Flags().BoolP("demomode", "d", false, "Run server in demo mode")
+	ServeCmd.Flags().BoolP("debug", "b", false, "Run server in debug mode")
+	ServeCmd.Flags().StringP("secret", "s", "", "Secure secret for signing JWT")
+	ServeCmd.Flags().StringP("pgpw", "p", "", "Postgres superuser password")
+	ServeCmd.Flags().StringP("configfile", "c", "config", "Name of config file (without extension)")
+	ServeCmd.Flags().BoolP("noprompt", "n", false, "Override prompt for confirmation")
 
-	viper.BindPFlags(serveCmd.Flags())
+	viper.BindPFlags(ServeCmd.Flags())
 
 }
 
-// serveCmd represents the serve command
-var serveCmd = &cobra.Command{
+// ServeCmd represents the serve command
+var ServeCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Starts the ghost server",
 	Long:  `Start the ghost API Server`,
@@ -50,7 +50,7 @@ var serveCmd = &cobra.Command{
 
 func serve(cmd *cobra.Command, args []string) error {
 
-	ghost.App.Config.Setup(viper.GetString("configfile"))
+	ghost.App.Setup(viper.GetString("configfile"))
 	preServe()
 	startServer()
 	return nil

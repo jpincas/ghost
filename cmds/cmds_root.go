@@ -35,7 +35,7 @@ var RootCmd = &cobra.Command{
 var pingCmd = &cobra.Command{
 	Use:   "ping",
 	Short: "Ping test",
-	Long:  `Pings the App.DB and returns OK if the connection is ready.`,
+	Long:  `Pings the app and returns OK if the database connection is ready.`,
 	RunE:  ping,
 }
 
@@ -70,7 +70,7 @@ func createConfigIfNotExists(cmd *cobra.Command, args []string) error {
 
 func ping(cmd *cobra.Command, args []string) error {
 
-	ghost.App.Config.Setup(viper.GetString("configfile"))
+	ghost.App.Setup(viper.GetString("configfile"))
 
 	//Attempt to open a db connection
 	db := ghost.SuperUserDBConfig.ReturnDBConnection("")

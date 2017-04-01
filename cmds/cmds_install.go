@@ -41,8 +41,8 @@ func init() {
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	Use:   "install [bundle]",
-	Short: "Install an ghost bundle",
-	Long: `Installs an ghost bundle from the named folder.
+	Short: "Install a ghost bundle",
+	Long: `Installs a ghost bundle from the named folder.
 	Note: does not download anything, so the bundle folder must
 	exist and contain everything.  Previous to installing, either clone
 	or download the bundle into the 'bundles' directory`,
@@ -52,10 +52,9 @@ var installCmd = &cobra.Command{
 // installCmd represents the install command
 var unInstallCmd = &cobra.Command{
 	Use:   "uninstall [bundle]",
-	Short: "Removes an ghost bundle",
-	Long: `Removes an ghost bundle by deleting the App.DB schema, deleting template
-	files and images,`,
-	RunE: unInstallBundle,
+	Short: "Removes a ghost bundle",
+	Long:  `Removes a ghost bundle by deleting the schema`,
+	RunE:  unInstallBundle,
 }
 
 //uninstallBundle is the removal function for a bundle
@@ -120,7 +119,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	//Check that bundle installation folder exists
 	basePath := "./bundles/" + args[0] + "/install"
 
-	exists, err := afero.IsDir(ghost.FileSystem, basePath)
+	exists, err := afero.IsDir(ghost.App.FileSystem, basePath)
 
 	if !exists || err != nil {
 		//Exit if doesn't exist
@@ -134,7 +133,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	}
 
 	//Check for error reading directory or zero files
-	filesInDirectory, err := afero.ReadDir(ghost.FileSystem, basePath)
+	filesInDirectory, err := afero.ReadDir(ghost.App.FileSystem, basePath)
 	if err != nil || len(filesInDirectory) == 0 {
 		ghost.LogFatal(ghost.LogEntry{"ghost.INSTALL", false, "No installation files could be read for bundle"})
 		return nil
@@ -179,7 +178,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 		basePath := "./bundles/" + args[0] + "/demodata"
 
 		//Check for error reading directory or zero files
-		filesInDirectory, err := afero.ReadDir(ghost.FileSystem, basePath)
+		filesInDirectory, err := afero.ReadDir(ghost.App.FileSystem, basePath)
 		if err != nil || len(filesInDirectory) == 0 {
 			//IF there is any type of error, drop the schema, log and exit
 			db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
@@ -229,7 +228,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 func processBundleFile(db *sql.DB, filename string) error {
 
 	//Attempt to read file
-	sqlBytes, err := afero.ReadFile(ghost.FileSystem, filename)
+	sqlBytes, err := afero.ReadFile(ghost.App.FileSystem, filename)
 
 	if err != nil {
 		return err

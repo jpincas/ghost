@@ -83,7 +83,7 @@ func initAll(cmd *cobra.Command, args []string) error {
 //initDB initialises the built-in database tables, roles and permissions
 func initDB(cmd *cobra.Command, args []string) error {
 
-	ghost.App.Config.Setup(viper.GetString("configfile"))
+	ghost.App.Setup(viper.GetString("configfile"))
 
 	//Establish a temporary connection as the super user
 	db := ghost.SuperUserDBConfig.ReturnDBConnection("")
@@ -113,7 +113,7 @@ func initDB(cmd *cobra.Command, args []string) error {
 //initFolders initialises the filesystem used by ghost
 func initFolders(cmd *cobra.Command, args []string) error {
 
-	ghost.App.Config.Setup(viper.GetString("configfile"))
+	ghost.App.Setup(viper.GetString("configfile"))
 
 	var err error
 	err = os.Mkdir("./bundles", os.ModePerm)
