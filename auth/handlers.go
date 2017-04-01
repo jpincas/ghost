@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ecosystemsoftware/ecosystem/core"
+	ghost "github.com/jpincas/ghost/tools"
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/viper"
 )
@@ -28,7 +28,7 @@ import (
 func magicCode(w http.ResponseWriter, r *http.Request) {
 
 	//Set content type to JSON
-	w.Header().Set("Content-Type", core.ContentTypeJSON)
+	w.Header().Set("Content-Type", ghost.ContentTypeJSON)
 
 	//Set up the map into which the request body will be read
 	var (
@@ -53,7 +53,7 @@ func magicCode(w http.ResponseWriter, r *http.Request) {
 
 		//Output and return
 		w.WriteHeader(http.StatusBadRequest)
-		b, _ := json.Marshal(core.ResponseError{http.StatusBadRequest, "", message, "", "", ""})
+		b, _ := json.Marshal(ghost.ResponseError{http.StatusBadRequest, "", message, "", "", ""})
 		w.Write([]byte(b))
 		return
 
@@ -69,7 +69,7 @@ func magicCode(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 
 			w.WriteHeader(http.StatusServiceUnavailable)
-			b, _ := json.Marshal(core.ResponseError{http.StatusServiceUnavailable, "", err.Error(), "", "", ""})
+			b, _ := json.Marshal(ghost.ResponseError{http.StatusServiceUnavailable, "", err.Error(), "", "", ""})
 			w.Write([]byte(b))
 			return
 
@@ -83,7 +83,7 @@ func magicCode(w http.ResponseWriter, r *http.Request) {
 
 	//If no email provided
 	w.WriteHeader(http.StatusBadRequest)
-	b, _ := json.Marshal(core.ResponseError{http.StatusBadRequest, "", "No email address provided", "", "", ""})
+	b, _ := json.Marshal(ghost.ResponseError{http.StatusBadRequest, "", "No email address provided", "", "", ""})
 	w.Write([]byte(b))
 	return
 
@@ -96,7 +96,7 @@ func requestNewUserToken(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 
 		w.WriteHeader(http.StatusServiceUnavailable)
-		b, _ := json.Marshal(core.ResponseError{http.StatusServiceUnavailable, "", err.Error(), "", "", ""})
+		b, _ := json.Marshal(ghost.ResponseError{http.StatusServiceUnavailable, "", err.Error(), "", "", ""})
 		w.Write([]byte(b))
 		return
 
@@ -135,7 +135,7 @@ func requestLogin(w http.ResponseWriter, r *http.Request) {
 
 		//Output and return
 		w.WriteHeader(http.StatusBadRequest)
-		b, _ := json.Marshal(core.ResponseError{http.StatusBadRequest, "", message, "", "", ""})
+		b, _ := json.Marshal(ghost.ResponseError{http.StatusBadRequest, "", message, "", "", ""})
 		w.Write([]byte(b))
 		return
 
@@ -148,7 +148,7 @@ func requestLogin(w http.ResponseWriter, r *http.Request) {
 
 		//Output and return
 		w.WriteHeader(http.StatusBadRequest)
-		b, _ := json.Marshal(core.ResponseError{http.StatusBadRequest, "", "No email address provided", "", "", ""})
+		b, _ := json.Marshal(ghost.ResponseError{http.StatusBadRequest, "", "No email address provided", "", "", ""})
 		w.Write([]byte(b))
 		return
 
@@ -156,7 +156,7 @@ func requestLogin(w http.ResponseWriter, r *http.Request) {
 
 		//Output and return
 		w.WriteHeader(http.StatusBadRequest)
-		b, _ := json.Marshal(core.ResponseError{http.StatusBadRequest, "", "No magic code provided", "", "", ""})
+		b, _ := json.Marshal(ghost.ResponseError{http.StatusBadRequest, "", "No magic code provided", "", "", ""})
 		w.Write([]byte(b))
 		return
 
@@ -164,7 +164,7 @@ func requestLogin(w http.ResponseWriter, r *http.Request) {
 
 	//Lookup the email in the users table
 	var id string
-	err := core.DB.QueryRow(fmt.Sprintf(core.SQLToFindUserByEmail, email)).Scan(&id)
+	err := ghost.App.DB.QueryRow(fmt.Sprintf(ghost.SQLToFindUserByEmail, email)).Scan(&id)
 	cachedCode, emailIsInCache := MagicCodeCache.Get(email.(string))
 
 	//For Demo Mode ONLY - bypass the magic code
@@ -178,7 +178,7 @@ func requestLogin(w http.ResponseWriter, r *http.Request) {
 
 			//Output and return
 			w.WriteHeader(http.StatusServiceUnavailable)
-			b, _ := json.Marshal(core.ResponseError{http.StatusServiceUnavailable, "", err.Error(), "", "", ""})
+			b, _ := json.Marshal(ghost.ResponseError{http.StatusServiceUnavailable, "", err.Error(), "", "", ""})
 			w.Write([]byte(b))
 			return
 
@@ -200,7 +200,7 @@ func requestLogin(w http.ResponseWriter, r *http.Request) {
 
 			//Output and return
 			w.WriteHeader(http.StatusServiceUnavailable)
-			b, _ := json.Marshal(core.ResponseError{http.StatusServiceUnavailable, "", err.Error(), "", "", ""})
+			b, _ := json.Marshal(ghost.ResponseError{http.StatusServiceUnavailable, "", err.Error(), "", "", ""})
 			w.Write([]byte(b))
 			return
 
@@ -216,7 +216,7 @@ func requestLogin(w http.ResponseWriter, r *http.Request) {
 
 	//Default to unauthorised
 	w.WriteHeader(http.StatusUnauthorized)
-	b, _ := json.Marshal(core.ResponseError{http.StatusUnauthorized, "", "Could not log in with those credentials", "", "", ""})
+	b, _ := json.Marshal(ghost.ResponseError{http.StatusUnauthorized, "", "Could not log in with those credentials", "", "", ""})
 	w.Write([]byte(b))
 	return
 

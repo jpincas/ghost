@@ -15,14 +15,14 @@
 package auth
 
 import (
-	"github.com/ecosystemsoftware/ecosystem/core"
+	ghost "github.com/jpincas/ghost/tools"
 	"github.com/pressly/chi"
 )
 
 //SetRoutes adds the routes the router
 func setRoutes() {
 
-	core.Router.Route("/auth", func(r chi.Router) {
+	ghost.App.Router.Route("/auth", func(r chi.Router) {
 
 		r.Get("/newuser", requestNewUserToken)
 		r.Post("/login", requestLogin)

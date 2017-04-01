@@ -12,21 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package ghost
 
 import (
 	"os"
 
+	"github.com/jpincas/ghost/ghost"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "ecosystem [command] [arguments]",
-	Short: "EcoSystem command line tool",
-	Long: `Use to initialise or launch the EcoSystem server or create new users or bundles.
-	Use the bare command 'ecosystem' to create a new config.json or verify an existing one.`,
+	Use:   "ghost [command] [arguments]",
+	Short: "ghost command line tool",
+	Long: `Use to initialise or launch the ghost server or create new users or bundles.
+	Use the bare command 'ghost' to create a new config.json or verify an existing one.`,
 	RunE: createConfigIfNotExists,
 }
 
@@ -34,7 +35,7 @@ var RootCmd = &cobra.Command{
 var pingCmd = &cobra.Command{
 	Use:   "ping",
 	Short: "Ping test",
-	Long:  `Pings the DB and returns OK if the connection is ready.`,
+	Long:  `Pings the app and returns OK if the database connection is ready.`,
 	RunE:  ping,
 }
 
@@ -43,6 +44,7 @@ func init() {
 	RootCmd.AddCommand(pingCmd)
 	RootCmd.PersistentFlags().StringP("pgpw", "p", "", "Postgres superuser password")
 	RootCmd.PersistentFlags().StringP("configfile", "c", "config", "Name of config file (without extension)")
+	RootCmd.PersistentFlags().BoolP("noprompt", "n", false, "Override prompt for confirmation")
 	viper.BindPFlags(RootCmd.PersistentFlags())
 
 }
@@ -53,13 +55,13 @@ func createConfigIfNotExists(cmd *cobra.Command, args []string) error {
 	viper.SetConfigName(viper.GetString("configfile"))
 
 	if err := viper.ReadInConfig(); err == nil {
-		LogFatal(LogEntry{"CORE.CONFIG", true, "Config file already exists:" + viper.ConfigFileUsed()})
+		ghost.LogFatal("ghost.CONFIG", true, "Config file already exists:"+viper.ConfigFileUsed(), err)
 	} else {
-		if err := createDefaultConfigFile(viper.GetString("configfile")); err != nil {
-			LogFatal(LogEntry{"CORE.CONFIG", false, "Error creating config file: " + err.Error()})
+		if err := ghost.CreateDefaultConfigFile(viper.GetString("configfile")); err != nil {
+			ghost.LogFatal("ghost.CONFIG", false, "Error creating config file: "+err.Error(), err)
 		} else {
 			//Otherwise create one
-			Log(LogEntry{"CORE.CONFIG", true, "Config file created"})
+			ghost.Log("ghost.CONFIG", true, "Config file created", nil)
 		}
 	}
 
@@ -68,13 +70,13 @@ func createConfigIfNotExists(cmd *cobra.Command, args []string) error {
 
 func ping(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	ghost.App.Setup(viper.GetString("configfile"))
 
 	//Attempt to open a db connection
-	db := SuperUserDBConfig.ReturnDBConnection("")
+	db := ghost.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 	//IF we get this far, just exit with success
-	Log(LogEntry{"PING", true, "Ping test passed"})
+	ghost.Log("PING", true, "Ping test passed", nil)
 	os.Exit(0)
 
 	return nil

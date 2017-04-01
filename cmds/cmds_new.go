@@ -12,16 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package ghost
 
 import (
 	"fmt"
 	"os"
+	"path"
 
 	"errors"
 
+	"github.com/jpincas/ghost/ghost"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var isAdmin bool
@@ -51,26 +54,21 @@ var newUserCmd = &cobra.Command{
 
 var newBundleCmd = &cobra.Command{
 	Use:   "bundle [name]",
-	Short: "Create a new EcoSystem Bundle",
+	Short: "Create a new ghost Bundle",
 	Long:  `Scaffolds a new bundle including folder structure and required files`,
 	RunE:  createNewBundle,
 }
 
 func createNewUser(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	ghost.App.Setup(viper.GetString("configfile"))
 
 	if len(args) < 1 {
 		return errors.New("user's email must be provided")
 	}
 
-	// err := viper.ReadInConfig() // Find and read the config file
-	// if err != nil {             // Handle errors reading the config file
-	// 	log.Fatal("Could not read config.json: ", err.Error())
-	// }
-
 	//Establish a temporary connection as the super user
-	db := SuperUserDBConfig.ReturnDBConnection("")
+	db := ghost.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
 	//Set to the default role
@@ -80,20 +78,20 @@ func createNewUser(cmd *cobra.Command, args []string) error {
 		role = "admin"
 	}
 
-	_, err := db.Exec(fmt.Sprintf(SQLToCreateAdministrator, args[0], role))
+	_, err := db.Exec(fmt.Sprintf(ghost.SQLToCreateAdministrator, args[0], role))
 	if err != nil {
-		LogFatal(LogEntry{"CORE.NEW", true, "Could not create new user:" + err.Error()})
+		ghost.LogFatal("NEW", true, "Could not create new user", err)
 		return nil
 	}
 
-	Log(LogEntry{"CORE.NEW", true, "Successfully created new user " + args[0] + " as " + role})
+	ghost.Log("NEW", true, "Successfully created new user"+args[0]+" as "+role, nil)
 	return nil
 
 }
 
 func createNewBundle(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	fs := afero.NewOsFs()
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -101,34 +99,29 @@ func createNewBundle(cmd *cobra.Command, args []string) error {
 	}
 
 	//Check that bundle doesn't already exists
-	var AppFs = afero.NewOsFs()
-	basePath := "./" + args[0]
-	exists, _ := afero.IsDir(AppFs, basePath)
+	basePath := path.Join("bundles", args[0])
+	exists, _ := afero.IsDir(fs, basePath)
 	if exists {
-		LogFatal(LogEntry{"CORE.NEW", true, "Bundle " + args[0] + " already exists. Please provide a different name"})
+		ghost.LogFatal("NEW", true, "Bundle "+args[0]+" already exists. Please provide a different name", nil)
 	}
 
 	//Create the folder structure
-	err := os.MkdirAll("./"+args[0]+"/templates/pages", os.ModePerm)
-	err = os.MkdirAll("./"+args[0]+"/templates/email", os.ModePerm)
-	err = os.MkdirAll("./"+args[0]+"/templates/partials", os.ModePerm)
-	err = os.MkdirAll("./"+args[0]+"/images", os.ModePerm)
-	err = os.MkdirAll("./"+args[0]+"/public", os.ModePerm)
-	err = os.MkdirAll("./"+args[0]+"/admin-panel", os.ModePerm)
+	err := os.MkdirAll(path.Join(basePath, "install"), os.ModePerm)
+	err = os.MkdirAll(path.Join(basePath, "demodata"), os.ModePerm)
 
 	if err != nil {
-		LogFatal(LogEntry{"CORE.NEW", true, "Could not complete folder setup: " + err.Error()})
+		ghost.LogFatal("NEW", true, "Could not complete folder setup", err)
 	}
 
-	_, err = os.Create("./" + args[0] + "/install.sql")
-	_, err = os.Create("./" + args[0] + "/demodata.sql")
+	_, err = os.Create(path.Join(basePath, "install", "00_install.sql"))
+	_, err = os.Create(path.Join(basePath, "demodata", "00_demodata.sql"))
 
 	if err != nil {
-		LogFatal(LogEntry{"CORE.NEW", true, "Could not complete folder setup: " + err.Error()})
+		ghost.LogFatal("NEW", true, "Could not complete folder setup", err)
 	}
 
 	//Creates the bundles
-	Log(LogEntry{"CORE.NEW", true, "Successfully created bundle " + args[0]})
+	ghost.Log("NEW", true, "Successfully created bundle "+args[0], err)
 	return nil
 
 }

@@ -18,27 +18,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ecosystemsoftware/ecosystem/auth"
-	"github.com/ecosystemsoftware/ecosystem/core"
-	"github.com/ecosystemsoftware/ecosystem/email"
-	"github.com/ecosystemsoftware/ecosystem/rest"
+	cmds "github.com/jpincas/ghost/cmds"
 )
 
 func main() {
 
-	//Tell EcoSystem which packages to activate
-	core.ActivatePackages = activatePackages
-
 	//Bootstrap the application
-	if err := core.RootCmd.Execute(); err != nil {
+	if err := cmds.RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
-}
 
-func activatePackages() {
-	//Standard packages
-	rest.Activate()
-	auth.Activate()
-	email.Activate()
 }

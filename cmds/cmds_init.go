@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package core
+package ghost
 
 import (
 	"os"
 
+	"github.com/jpincas/ghost/ghost"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
-
-var isNoPrompt bool
 
 func init() {
 
@@ -28,15 +28,13 @@ func init() {
 	initCmd.AddCommand(initDBCmd)
 	initCmd.AddCommand(initFoldersCmd)
 
-	initCmd.Flags().BoolVarP(&isNoPrompt, "noprompt", "n", false, "Don't prompt for confirmation")
-
 }
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Complete initial setup of database and folder structure",
-	Long:  `Performs a complete initialisation of the database and folder structure for EcoSystem`,
+	Long:  `Performs a complete initialisation of the database and folder structure for ghost`,
 	RunE:  initAll,
 }
 
@@ -53,8 +51,8 @@ var initDBCmd = &cobra.Command{
 // initCmd initialises the folder structure
 var initFoldersCmd = &cobra.Command{
 	Use:   "folders",
-	Short: "Creates EcoSystem folder structure",
-	Long: `Performs a complete initialisation of the folder structure for EcoSystem.
+	Short: "Creates ghost folder structure",
+	Long: `Performs a complete initialisation of the folder structure for ghost.
 	Folders that already exist will not be overwritten.`,
 	RunE: initFolders,
 }
@@ -64,20 +62,20 @@ func initAll(cmd *cobra.Command, args []string) error {
 
 	//If user has used -noprompt flag then we don't prompt for confirmation
 	var proceedWithInit = false
-	if isNoPrompt {
+	if viper.GetBool("noprompt") {
 		proceedWithInit = true
 	} else {
-		proceedWithInit = AskForConfirmation("This will perform a complete (re)initialisation and may perform overwrites. Do you with to proceed?")
+		proceedWithInit = ghost.AskForConfirmation("This will perform a complete (re)initialisation and may perform overwrites. Do you with to proceed?")
 	}
 
 	if proceedWithInit {
 		initDB(cmd, args)
 		initFolders(cmd, args)
-		Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem initialisation"})
+		ghost.Log("INIT", true, "Successfully completed ghost initialisation", nil)
 		return nil
 	}
 
-	Log(LogEntry{"CORE.INIT", false, "Aborted by user"})
+	ghost.Log("INIT", false, "Aborted by user", nil)
 
 	return nil
 }
@@ -85,45 +83,45 @@ func initAll(cmd *cobra.Command, args []string) error {
 //initDB initialises the built-in database tables, roles and permissions
 func initDB(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	ghost.App.Setup(viper.GetString("configfile"))
 
 	//Establish a temporary connection as the super user
-	db := SuperUserDBConfig.ReturnDBConnection("")
+	db := ghost.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
 	//Run initialisation SQL
 	var err error
-	_, err = db.Exec(SQLToCreateAdminRole)
-	_, err = db.Exec(SQLToGrantAdminPermissions) //Do this first so everything created after will have correct admin permissions by default
-	_, err = db.Exec(SQLToCreateUUIDExtension)
-	_, err = db.Exec(SQLToCreateUsersTable)
-	_, err = db.Exec(SQLToCreateFuncToGenerateNewUserID)
-	_, err = db.Exec(SQLToCreateTriggerOnNewUserInsert)
-	_, err = db.Exec(SQLToCreateServerRole)
-	_, err = db.Exec(SQLToCreateAnonRole)
-	_, err = db.Exec(SQLToGrantBuiltInPermissions)
+	_, err = db.Exec(ghost.SQLToCreateAdminRole)
+	_, err = db.Exec(ghost.SQLToGrantAdminPermissions) //Do this first so everything created after will have correct admin permissions by default
+	_, err = db.Exec(ghost.SQLToCreateUUIDExtension)
+	_, err = db.Exec(ghost.SQLToCreateUsersTable)
+	_, err = db.Exec(ghost.SQLToCreateFuncToGenerateNewUserID)
+	_, err = db.Exec(ghost.SQLToCreateTriggerOnNewUserInsert)
+	_, err = db.Exec(ghost.SQLToCreateServerRole)
+	_, err = db.Exec(ghost.SQLToCreateAnonRole)
+	_, err = db.Exec(ghost.SQLToGrantBuiltInPermissions)
 
 	if err != nil {
-		LogFatal(LogEntry{"CORE.INIT", false, "Could not complete database setup: " + err.Error()})
+		ghost.LogFatal("INIT", false, "Could not complete database setup", err)
 	}
 
-	Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem database initialisation"})
+	ghost.Log("INIT", true, "Successfully completed ghost database initialisation", nil)
 	return nil
 
 }
 
-//initFolders initialises the filesystem used by EcoSystem
+//initFolders initialises the filesystem used by ghost
 func initFolders(cmd *cobra.Command, args []string) error {
 
-	readConfig()
+	ghost.App.Setup(viper.GetString("configfile"))
 
 	var err error
 	err = os.Mkdir("./bundles", os.ModePerm)
 
 	if err != nil {
-		Log(LogEntry{"CORE.INIT", false, "Could not complete folder setup: " + err.Error()})
+		ghost.Log("INIT", false, "Could not complete folder setup", err)
 	}
 
-	Log(LogEntry{"CORE.INIT", true, "Successfully completed EcoSystem folder initialisation"})
+	ghost.Log("INIT", true, "Successfully completed ghost folder initialisation", nil)
 	return nil
 }

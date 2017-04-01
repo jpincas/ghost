@@ -22,7 +22,7 @@ import (
 	"net/http"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/ecosystemsoftware/ecosystem/core"
+	ghost "github.com/jpincas/ghost/tools"
 	"github.com/pressly/chi/render"
 )
 
@@ -45,7 +45,7 @@ func Authorizator(next http.Handler) http.Handler {
 
 		var role string
 		//Search the user table for the user's role
-		err := core.DB.QueryRow(fmt.Sprintf(core.SQLToGetUsersRole, userID)).Scan(&role)
+		err := ghost.App.DB.QueryRow(fmt.Sprintf(ghost.SQLToGetUsersRole, userID)).Scan(&role)
 
 		//If an error comes back
 		if err != nil {
@@ -55,7 +55,7 @@ func Authorizator(next http.Handler) http.Handler {
 			} else {
 				//Else if there is any other error, don't authorise
 				render.Status(r, http.StatusUnauthorized)
-				render.JSON(w, r, core.ResponseError{http.StatusUnauthorized, "", err.Error(), "", "", ""})
+				render.JSON(w, r, ghost.ResponseError{http.StatusUnauthorized, "", err.Error(), "", "", ""})
 				return
 			}
 		} else {

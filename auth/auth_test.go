@@ -22,8 +22,8 @@ import (
 
 	"log"
 
-	"github.com/ecosystemsoftware/ecosystem/core"
-	ecomail "github.com/ecosystemsoftware/ecosystem/email"
+	ghost "github.com/jpincas/ghost/tools"
+	ecomail "github.com/jpincas/ghost/email"
 	"github.com/spf13/viper"
 )
 
@@ -47,7 +47,7 @@ func TestRequestMagicCodeUserNotInDB(t *testing.T) {
 	ecomail.MailServer.Working = true
 	err := RequestMagicCode("user@notindb")
 	if err.Error() != "Email address not in user database" {
-		t.Error("User is not in DB, should return an error")
+		t.Error("User is not in App.DB, should return an error")
 	}
 	teardown()
 }
@@ -87,12 +87,12 @@ func TestGetToken(t *testing.T) {
 
 func setup() {
 
-	//Set up a mock DB
+	//Set up a mock App.DB
 	var (
 		mock sqlmock.Sqlmock
 		err  error
 	)
-	core.DB, mock, err = sqlmock.New()
+	ghost.App.DB, mock, err = sqlmock.New()
 
 	if err != nil {
 		log.Fatalf("An error '%s' was not expected when opening a stub database connection", err)
@@ -101,7 +101,7 @@ func setup() {
 	//Give it some data
 	var columns = []string{"id"}
 	dataRows := sqlmock.NewRows(columns).FromCSVString("692e8a64-7676-4790-b3f8-a86a5083d5bb")
-	mock.ExpectQuery(fmt.Sprintf(core.SQLToFindUserByEmail, "user@isindb")).WillReturnRows(dataRows)
+	mock.ExpectQuery(fmt.Sprintf(ghost.SQLToFindUserByEmail, "user@isindb")).WillReturnRows(dataRows)
 
 	//Parse the package templates
 	parseTemplates()
@@ -109,5 +109,5 @@ func setup() {
 }
 
 func teardown() {
-	core.DB.Close()
+	ghost.App.DB.Close()
 }
