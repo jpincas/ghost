@@ -1,19 +1,22 @@
 #Ghost
-A command-line application and utility package that helps you build web backend services with Go and PostgreSQL. 
+A command-line application and utility package that helps you build web backend services with Go and PostgreSQL (previously known as EcoSystem). 
 
 ## Why?
 
-Becuase building a web server project from scratch with Go and PostgreSQL tends to involve a lot of:
+I tend to write backends with a very thick database layer (PostgreSQL) and a very thin application (Go) layer.  Rather than recreate brittle functionality in application code, I prefer to take advantage of the power of Postgres, with its roles, permissions, grants, views, row-level security, functions and triggers.  I keep my business and data-control logic right in the database and totally avoid application level ORMs and suchlike.  
+
+This leads naturally to mostly generic application code, of the CRUDy, boilerplate type.  In fact, this approach leads to application code that is so generic that you could, in theory, avoid writing any at all.  The excellent projects [PostgREST] and [PostGraphQL] take the same approach and give you a REST API and/or GraphQL API respectively, without the need to touch any application code.  I strongly recommend taking a look at those projects to see if they fulfill your requirements.
+
+Ghost shares a common philosophy with the above projects - indeed Ghost has a generic 'PostgreSQL-to-REST' subpackage available should you need it.  If you like this database-first approach, but need to write your own, custom server, then Ghost could help you reduce:
 
 -  Repetitive tasks
 -  Boilerplate code
 -  Reimplementing generic functionality
 
-** Ghost ** aims to tackle these problems whilst leaving you free to write a completely custom backend service.
 
 ## How?
 
-Ghost is both a command-line utility and also a Go package that you can import into your program.  
+Ghost is both a command-line utility and a Go package that you can import into your program.  
 
 The command-line utility helps with mundane tasks like generating configuration files, installing SQL code into the database, creating users and so on.
 
@@ -21,7 +24,7 @@ The Go package (which the command-line utility is built on) gives you quick acce
 
 In the future, Ghost will be extended with handy sub-packages.  At the moment, we have `auth`, which gives you utilites, handlers and even routes, all for dealing with authentication.  You can use the basic utilities only, use the handlers in your own routes, or just take the routes as they come, hook them into the central router and fire up.  All future Ghost pakages will work that way.
 
-## Quickstart
+## Hello World
 
 You should have Go (> 1.7) already installed and your $GOPATH correctly configured.  You should also have a PostgreSQL server somewhere that you can access - easiest for development would be to have one on *localhost:5432*.
 
@@ -45,13 +48,25 @@ You should have Go (> 1.7) already installed and your $GOPATH correctly configur
 
 5) Create a new 'bundle' (more on those later) by entering `ghost new bundle mybundle`.
 
-6) In *mybundle/install/00_install.sql* write some (valid) SQL.
+6) In *mybundle/install/00_install.sql*, paste this SQL to create a table: 
 
-7) Install your new bundle with `ghost install mybundle`
+```
+CREATE TABLE helloworld(
+	hello text);
+```
 
-### Create your custom server
+7) In *mybundle/demodata/00_demodata.sql*, paste this SQL to add a new row: 
 
-1) Create a `main.go` and copy this short program:
+```
+INSERT INTO helloworld(hello)
+VALUES ('world');
+```
+
+8) Install your new bundle and demo data with `ghost install mybundle --demodata`
+
+### Create and run a simple custom server
+
+1) Create `main.go` and copy this short program:
 
 ```
 package main
@@ -67,24 +82,39 @@ import (
 
 func main() {
 
-	//Hook into 'BeforeServe' and add simple custom route and handler
+	//Hook into Ghost's BeforeServe' callback
+	//Add our custom route 'hello' which triggers the 'helloWorld' handler
 	cmds.BeforeServe = func() {
-		ghost.App.Router.Get("/hello", func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("Hello World"))
-		})
+
+		ghost.App.Router.Get("/hello", helloWorld)
 	}
 
-	//Run the 'Serve' command
+	//Run Ghost's 'Serve' command to start the server
 	if err := cmds.ServeCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
 
 }
+
+//our helloWorld handler
+func helloWorld(w http.ResponseWriter, r *http.Request) {
+
+	var json string //to hold our db result
+
+	//Use Ghost's convenience functions to build a simple SQL query
+	// We ask for all fields from table 'helloworld'
+	// executing the query as 'admin' and returning JSON from Postgres
+	sql := ghost.SqlQuery(fmt.Sprintf(ghost.SQLToSelectAllFieldsFrom, "mybundle", "helloworld")).RequestSingleResultAsJSONObject().SetQueryRole("admin").ToSQLString()
+
+	ghost.App.DB.QueryRow(sql).Scan(&json)
+	w.Write([]byte(json))
+	return
+
+}
+
 ```
 
-2) Build with `go build` and then run with `./myghostapp -s=secret`
+2) Build with `go build` and then run in 'debug' mode with `./myghostapp -s=secret -b`
 
-
-
-BeforeServe
+3) Visit *localhost:3000/hello* with your browser and get the response `{"hello":"world"}`. Notice how Ghost logs the SQL query executed since we ran it in debug mode.

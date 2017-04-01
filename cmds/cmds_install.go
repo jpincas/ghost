@@ -61,7 +61,7 @@ var unInstallCmd = &cobra.Command{
 func unInstallBundle(cmd *cobra.Command, args []string) error {
 
 	configFile := viper.GetString("configfile")
-	ghost.App.Config.Setup(configFile)
+	ghost.App.Setup(viper.GetString("configfile"))
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -109,7 +109,7 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 func installBundle(cmd *cobra.Command, args []string) error {
 
 	configFile := viper.GetString("configfile")
-	ghost.App.Config.Setup(configFile)
+	ghost.App.Setup(viper.GetString("configfile"))
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -195,11 +195,11 @@ func installBundle(cmd *cobra.Command, args []string) error {
 				if err != nil {
 					//IF there is any type of error, drop the schema, log and exit
 					db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
-					ghost.LogFatal("ghost.INSTALL", false, "Installation of '"+file.Name()+"' failed", err)
+					ghost.LogFatal("INSTALL", false, "Installation of '"+file.Name()+"' failed", err)
 					return nil
 				}
 
-				ghost.Log("ghost.INSTALL", true, file.Name()+" installed OK", nil)
+				ghost.Log("INSTALL", true, file.Name()+" installed OK", nil)
 
 			}
 		}
@@ -220,7 +220,7 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	}
 
 	//Bundle installation complete
-	ghost.Log("NSTALL", true, "Installation of bundle "+args[0]+" completed", nil)
+	ghost.Log("INSTALL", true, "Installation of bundle "+args[0]+" completed", nil)
 	return nil
 
 }

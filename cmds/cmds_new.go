@@ -91,7 +91,7 @@ func createNewUser(cmd *cobra.Command, args []string) error {
 
 func createNewBundle(cmd *cobra.Command, args []string) error {
 
-	ghost.App.Setup(viper.GetString("configfile"))
+	fs := afero.NewOsFs()
 
 	//Check for bundle name
 	if len(args) < 1 {
@@ -100,7 +100,7 @@ func createNewBundle(cmd *cobra.Command, args []string) error {
 
 	//Check that bundle doesn't already exists
 	basePath := path.Join("bundles", args[0])
-	exists, _ := afero.IsDir(ghost.App.FileSystem, basePath)
+	exists, _ := afero.IsDir(fs, basePath)
 	if exists {
 		ghost.LogFatal("NEW", true, "Bundle "+args[0]+" already exists. Please provide a different name", nil)
 	}
