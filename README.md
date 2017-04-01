@@ -1,4 +1,4 @@
-![](https://raw.githubusercontent.com/jpincas/ghost/ghost-refactor/logo.png)
+![](https://github.com/jpincas/ghost/raw/master/logo.png)
 
 # Ghost
 A command-line application and utility package that helps you build web backend services with Go and PostgreSQL (previously known as EcoSystem). 
