@@ -1,7 +1,3 @@
-ghost
-bundles
-ghost-admin
-img
 .DS_Store
 nohup.out
 config.json
