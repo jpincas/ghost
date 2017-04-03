@@ -19,7 +19,6 @@ package ghost
 import (
 	"net/http"
 
-	"github.com/jpincas/ghost/ghost"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -50,7 +49,7 @@ var ServeCmd = &cobra.Command{
 
 func serve(cmd *cobra.Command, args []string) error {
 
-	ghost.App.Setup(viper.GetString("configfile"))
+	App.Setup(viper.GetString("configfile"))
 	preServe()
 	startServer()
 	return nil
@@ -62,30 +61,30 @@ var BeforeServe func()
 func preServe() {
 
 	//Setup the email system if required
-	if ghost.App.Config.ActivateEmail {
-		ghost.App.MailServer.Setup()
+	if App.Config.ActivateEmail {
+		App.MailServer.Setup()
 	}
 
 	//Check to make sure a secret has been provided
 	//No default provided as a security measure, server will exit of nothing provided
 	if viper.GetString("secret") == "" {
-		ghost.LogFatal("ghost.SERVE", false, "No signing secret provided", nil)
+		LogFatal("SERVE", false, "No signing secret provided", nil)
 	}
 
 	//Establish a temporary connection as the super user
-	dbTemp := ghost.SuperUserDBConfig.ReturnDBConnection("")
+	dbTemp := SuperUserDBConfig.ReturnDBConnection("")
 
 	//Generate a random server password, set it and get out
-	serverPW := ghost.RandomString(16)
-	_, err := dbTemp.Exec(fmt.Sprintf(ghost.SQLToSetServerRolePassword, serverPW))
+	serverPW := RandomString(16)
+	_, err := dbTemp.Exec(fmt.Sprintf(SQLToSetServerRolePassword, serverPW))
 	if err != nil {
-		ghost.LogFatal("ghost.SERVE", false, "Error setting server role password:", err)
+		LogFatal("SERVE", false, "Error setting server role password:", err)
 	}
 
 	dbTemp.Close()
 
 	//Establish a permanent connection
-	ghost.App.DB = ghost.ServerUserDBConfig.ReturnDBConnection(serverPW)
+	App.DB = ServerUserDBConfig.ReturnDBConnection(serverPW)
 
 	BeforeServe()
 
@@ -93,7 +92,7 @@ func preServe() {
 
 func startServer() {
 
-	ghost.Log("ghost.SERVE", true, "Server started on port "+viper.GetString("apiPort"), nil)
-	http.ListenAndServe(":"+viper.GetString("apiPort"), ghost.App.Router)
+	Log("SERVE", true, "Server started on port "+viper.GetString("apiPort"), nil)
+	http.ListenAndServe(":"+viper.GetString("apiPort"), App.Router)
 
 }

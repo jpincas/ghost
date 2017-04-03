@@ -78,7 +78,6 @@ import (
 	"net/http"
 	"os"
 
-	cmds "github.com/jpincas/ghost/cmds"
 	"github.com/jpincas/ghost/ghost"
 )
 
@@ -86,13 +85,13 @@ func main() {
 
 	//Hook into Ghost's BeforeServe' callback
 	//Add our custom route 'hello' which triggers the 'helloWorld' handler
-	cmds.BeforeServe = func() {
+	ghost.BeforeServe = func() {
 
 		ghost.App.Router.Get("/hello", helloWorld)
 	}
 
 	//Run Ghost's 'Serve' command to start the server
-	if err := cmds.ServeCmd.Execute(); err != nil {
+	if err := ghost.ServeCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
@@ -114,6 +113,7 @@ func helloWorld(w http.ResponseWriter, r *http.Request) {
 	return
 
 }
+
 
 ```
 

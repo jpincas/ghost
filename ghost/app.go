@@ -14,9 +14,12 @@
 
 package ghost
 
-import "database/sql"
-import "github.com/pressly/chi"
-import "github.com/spf13/afero"
+import (
+	"database/sql"
+
+	"github.com/pressly/chi"
+	"github.com/spf13/afero"
+)
 
 //App is the container for the app-wide constructs like database, router and mailserver
 var App application
