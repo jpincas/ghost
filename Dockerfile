@@ -1,4 +1,6 @@
-FROM golang
+FROM golang:alpine
+
+RUN apk add --update --no-cache git
 
 RUN mkdir -p /go/src/github.com/jpincas/ghost
 WORKDIR /go/src/github.com/jpincas/ghost
