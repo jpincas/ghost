@@ -29,12 +29,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-var isInstallDemoData, isReinstall bool
+var isInstallDemoData, isReinstall, demoDataOnly bool
 
 func init() {
 	RootCmd.AddCommand(installCmd)
 	RootCmd.AddCommand(unInstallCmd)
 	installCmd.Flags().BoolVar(&isInstallDemoData, "demodata", false, "Install bundle demo data if available")
+	installCmd.Flags().BoolVar(&demoDataOnly, "demodataonly", false, "Install bundle demo data if available")
 	installCmd.Flags().BoolVarP(&isReinstall, "reinstall", "r", false, "Uninstall bundle before installing")
 }
 
@@ -116,98 +117,29 @@ func installBundle(cmd *cobra.Command, args []string) error {
 		return errors.New("a bundle name must be provided")
 	}
 
-	//Check that bundle installation folder exists
-	basePath := "./bundles/" + args[0] + "/install"
-
-	exists, err := afero.IsDir(ghost.App.FileSystem, basePath)
-
-	if !exists || err != nil {
-		//Exit if doesn't exist
-		ghost.LogFatal("INSTALL", false, "Bundle '"+args[0]+"' install folder not found or unreadable.", err)
-	}
-
-	//Uninstall first if requested
-	if isReinstall {
-		ghost.Log("INSTALL", true, "Uninstalling bundle "+args[0]+" before reinstalling", nil)
-		unInstallBundle(cmd, args)
-	}
-
-	//Check for error reading directory or zero files
-	filesInDirectory, err := afero.ReadDir(ghost.App.FileSystem, basePath)
-	if err != nil || len(filesInDirectory) == 0 {
-		ghost.LogFatal("INSTALL", false, "No installation files could be read for bundle", err)
-		return nil
-	}
-
-	ghost.Log("INSTALL", true, "Installing bundle '"+args[0]+"'", nil)
-
 	//Establish a temporary connection as the super user
 	db := ghost.SuperUserDBConfig.ReturnDBConnection("")
 	defer db.Close()
 
-	//Set up a schema for the bundle
-	err = setupDBSchema(db, args[0])
-	if err != nil {
-		//IF there is any type of error, drop the schema, log and exit
-		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
-		ghost.LogFatal("INSTALL", false, "Schema creation failed with error", err)
+	bundleName := args[0]
+	if demoDataOnly {
+		installBundleDemoData(bundleName, db)
 		return nil
 	}
 
-	//Iterate over the installation files
-	for _, file := range filesInDirectory {
-		//Ignore directories
-		if !file.IsDir() {
-			//Attempt to processes the sqlfile
-			err := processBundleFile(db, path.Join(basePath, file.Name()))
-			if err != nil {
-				//IF there is any type of error, drop the schema, log and exit
-				db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
-				ghost.LogFatal("INSTALL", false, "Installation of '"+file.Name()+"' failed", err)
-				return nil
-			}
-			ghost.Log("INSTALL", true, file.Name()+" installed OK", nil)
-		}
+	if isReinstall {
+		ghost.Log("INSTALL", true, "Uninstalling bundle "+bundleName+" before reinstalling", nil)
+		unInstallBundle(cmd, args)
 	}
 
-	//If the user has asked for demo data
+	installBundleSchema(bundleName, db)
+
 	if isInstallDemoData {
-
-		ghost.Log("INSTALL", true, "Installing demo data", nil)
-
-		basePath := "./bundles/" + args[0] + "/demodata"
-
-		//Check for error reading directory or zero files
-		filesInDirectory, err := afero.ReadDir(ghost.App.FileSystem, basePath)
-		if err != nil || len(filesInDirectory) == 0 {
-			//IF there is any type of error, drop the schema, log and exit
-			db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
-			ghost.LogFatal("INSTALL", false, "No demo data files could be read for bundle", err)
-			return nil
-		}
-
-		//Iterate over the demodata files
-		for _, file := range filesInDirectory {
-			//Ignore directories
-			if !file.IsDir() {
-				//Attempt to processes the sqlfile
-				err := processBundleFile(db, path.Join(basePath, file.Name()))
-				if err != nil {
-					//IF there is any type of error, drop the schema, log and exit
-					db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
-					ghost.LogFatal("INSTALL", false, "Installation of '"+file.Name()+"' failed", err)
-					return nil
-				}
-
-				ghost.Log("INSTALL", true, file.Name()+" installed OK", nil)
-
-			}
-		}
-
+		installBundleDemoData(bundleName, db)
 	}
 
 	//Attempt to update the bundles installed list
-	if err := ghost.App.Config.InstallBundle(args[0]); err != nil {
+	if err := ghost.App.Config.InstallBundle(bundleName); err != nil {
 		ghost.Log("INSTALL", false, "Error installing bundle", err)
 	}
 
@@ -220,8 +152,83 @@ func installBundle(cmd *cobra.Command, args []string) error {
 	}
 
 	//Bundle installation complete
-	ghost.Log("INSTALL", true, "Installation of bundle "+args[0]+" completed", nil)
+	ghost.Log("INSTALL", true, "Installation of bundle "+bundleName+" completed", nil)
 	return nil
+
+}
+
+func installBundleSchema(bundleName string, db *sql.DB) {
+
+	//Check that bundle installation folder exists
+	basePath := "./bundles/" + bundleName + "/install"
+	exists, err := afero.IsDir(ghost.App.FileSystem, basePath)
+	if !exists || err != nil {
+		ghost.LogFatal("INSTALL", false, "Bundle '"+bundleName+"' install folder not found or unreadable.", err)
+	}
+
+	//Check for error reading directory or zero files
+	filesInDirectory, err := afero.ReadDir(ghost.App.FileSystem, basePath)
+	if err != nil || len(filesInDirectory) == 0 {
+		ghost.LogFatal("INSTALL", false, "No installation files could be read for bundle", err)
+	}
+
+	ghost.Log("INSTALL", true, "Installing bundle '"+bundleName+"'", nil)
+
+	//Set up a schema for the bundle
+	err = setupDBSchema(db, bundleName)
+	if err != nil {
+		//IF there is any type of error, drop the schema, log and exit
+		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+		ghost.LogFatal("INSTALL", false, "Schema creation failed with error", err)
+	}
+
+	//Iterate over the installation files
+	for _, file := range filesInDirectory {
+		//Ignore directories
+		if !file.IsDir() {
+			//Attempt to processes the sqlfile
+			err := processBundleFile(db, path.Join(basePath, file.Name()))
+			if err != nil {
+				//IF there is any type of error, drop the schema, log and exit
+				db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+				ghost.LogFatal("INSTALL", false, "Installation of '"+file.Name()+"' failed", err)
+			}
+			ghost.Log("INSTALL", true, file.Name()+" installed OK", nil)
+		}
+	}
+
+}
+
+func installBundleDemoData(bundleName string, db *sql.DB) {
+
+	ghost.Log("INSTALL", true, "Installing demo data", nil)
+
+	basePath := "./bundles/" + bundleName + "/demodata"
+
+	//Check for error reading directory or zero files
+	filesInDirectory, err := afero.ReadDir(ghost.App.FileSystem, basePath)
+	if err != nil || len(filesInDirectory) == 0 {
+		//IF there is any type of error, drop the schema, log and exit
+		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+		ghost.LogFatal("INSTALL", false, "No demo data files could be read for bundle", err)
+	}
+
+	//Iterate over the demodata files
+	for _, file := range filesInDirectory {
+		//Ignore directories
+		if !file.IsDir() {
+			//Attempt to processes the sqlfile
+			err := processBundleFile(db, path.Join(basePath, file.Name()))
+			if err != nil {
+				//IF there is any type of error, drop the schema, log and exit
+				db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+				ghost.LogFatal("INSTALL", false, "Installation of '"+file.Name()+"' failed", err)
+			}
+
+			ghost.Log("INSTALL", true, file.Name()+" installed OK", nil)
+
+		}
+	}
 
 }
 
