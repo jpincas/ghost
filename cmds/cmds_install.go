@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path"
 
 	"database/sql"
@@ -179,7 +180,15 @@ func installBundleSchema(bundleName string, db *sql.DB) {
 	if err != nil {
 		//IF there is any type of error, drop the schema, log and exit
 		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
-		ghost.LogFatal("INSTALL", false, "Schema creation failed with error", err)
+		ghost.LogFatal("INSTALL", false, "Schema creation failed", err)
+	}
+
+	//Set the search path to the bundle schema so that all SQL commands take
+	//place within the schema
+	_, err = db.Exec(fmt.Sprintf(ghost.SQLToSetSearchPathForBundle, bundleName))
+	if err != nil {
+		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+		ghost.LogFatal("INSTALL", false, "Failed to set schema search path", err)
 	}
 
 	//Iterate over the installation files
@@ -211,6 +220,16 @@ func installBundleDemoData(bundleName string, db *sql.DB) {
 		//IF there is any type of error, drop the schema, log and exit
 		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
 		ghost.LogFatal("INSTALL", false, "No demo data files could be read for bundle", err)
+	}
+
+	log.Println("installing demo data...")
+
+	//Set the search path to the bundle schema so that all SQL commands take
+	//place within the schema
+	_, err = db.Exec(fmt.Sprintf(ghost.SQLToSetSearchPathForBundle, bundleName))
+	if err != nil {
+		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+		ghost.LogFatal("INSTALL", false, "Failed to set schema search path", err)
 	}
 
 	//Iterate over the demodata files
@@ -261,14 +280,6 @@ func setupDBSchema(db *sql.DB, bundleName string) error {
 
 	//Set admin privileges for everything in this schema going forwards
 	_, err = db.Exec(fmt.Sprintf(ghost.SQLToGrantBundleAdminPermissions, bundleName, bundleName, bundleName))
-
-	if err != nil {
-		return err
-	}
-
-	//Set the search path to the bundle schema so that all SQL commands take
-	//place within the schema
-	_, err = db.Exec(fmt.Sprintf(ghost.SQLToSetSearchPathForBundle, bundleName))
 
 	if err != nil {
 		return err
