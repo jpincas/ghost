@@ -45,6 +45,11 @@ type Query struct {
 	Role string
 	//UserID to set on the query context
 	UserID string
+	//CacheLevel specifies the level of caching to use: all, role, user
+	//Omitting, or using any other value, will bypass caching
+	CacheLevel string
+	//cacheKey is the key used to store the SQL query in the cache
+	cacheKey []byte
 }
 
 //Execute runs a query against the data store and returns JSON
@@ -79,19 +84,35 @@ func (q Query) Execute() (string, error) {
 		sqlQuery = sqlQuery.RequestSingleResultAsJSONObject()
 	}
 
-	//Add role and user id if required
+	//Add sql role and user id, caching as you go depending
+	//on the cache level specified
+	if q.CacheLevel == "all" {
+		q.cacheKey = sqlQuery.ToSQLCacheKey()
+	}
+
+	//Add role
 	if q.Role != "" {
 		sqlQuery = sqlQuery.SetQueryRole(q.Role)
 	}
+
+	if q.CacheLevel == "role" {
+		q.cacheKey = sqlQuery.ToSQLCacheKey()
+	}
+
+	//Add user id
 	if q.UserID != "" {
 		sqlQuery = sqlQuery.SetUserID(q.UserID)
 	}
 
-	//Transform to SQL string
-	queryString := sqlQuery.ToSQLString()
+	if q.CacheLevel == "user" {
+		q.cacheKey = sqlQuery.ToSQLCacheKey()
+	}
 
-	//Execure the query
-	return App.Store.executeQuery(queryString)
+	//Transform to SQL string and reset on the struct
+	q.SQL = sqlQuery.ToSQLString()
+
+	//Execute the query
+	return App.Store.executeQuery(q)
 
 }
 
@@ -169,6 +190,13 @@ func (s SqlQuery) SetUserID(userID string) SqlQuery {
 
 	newQuery := SqlQuery(fmt.Sprintf(SQLToSetUserID, userID, s))
 	return newQuery
+}
+
+//ToSQLCacheKey transforms the SQL query into a cacheable string key
+func (s SqlQuery) ToSQLCacheKey() []byte {
+
+	return []byte(s)
+
 }
 
 //ToSQLString transforms an SqlQuery to a plain string

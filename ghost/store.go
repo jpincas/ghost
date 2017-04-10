@@ -12,10 +12,10 @@ import "strings"
 
 type store struct{}
 
-func (s store) executeQuery(queryString string) (string, error) {
+func (s store) executeQuery(q Query) (string, error) {
 
 	var JSONResponse string
-	if err := App.DB.QueryRow(queryString).Scan(&JSONResponse); err != nil {
+	if err := App.DB.QueryRow(q.SQL).Scan(&JSONResponse); err != nil {
 		//Only one row is returned as JSON is returned by Postgres
 		//Empty result
 		if strings.Contains(err.Error(), "sql") {

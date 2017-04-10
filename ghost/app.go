@@ -16,7 +16,6 @@ package ghost
 
 import (
 	"database/sql"
-	"strings"
 
 	"github.com/pressly/chi"
 	"github.com/spf13/afero"
