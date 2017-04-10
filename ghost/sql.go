@@ -49,7 +49,7 @@ type Query struct {
 	//Omitting, or using any other value, will bypass caching
 	CacheLevel string
 	//cacheKey is the key used to store the SQL query in the cache
-	cacheKey []byte
+	cacheKey string
 }
 
 //Execute runs a query against the data store and returns JSON
@@ -193,9 +193,9 @@ func (s SqlQuery) SetUserID(userID string) SqlQuery {
 }
 
 //ToSQLCacheKey transforms the SQL query into a cacheable string key
-func (s SqlQuery) ToSQLCacheKey() []byte {
+func (s SqlQuery) ToSQLCacheKey() string {
 
-	return []byte(s)
+	return fmt.Sprint(s)
 
 }
 

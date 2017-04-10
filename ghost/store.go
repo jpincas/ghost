@@ -15,6 +15,19 @@ type store struct{}
 func (s store) executeQuery(q Query) (string, error) {
 
 	var JSONResponse string
+
+	//Caching case
+	//Return the cached result if there is a cache key present
+	//AND there is a result from the cache
+	if q.cacheKey != "" {
+		cacheResult, ok := App.QueryCache.Get(q.cacheKey)
+		if ok {
+			LogDebug("STORE", true, "Returning from cache, using key: "+q.cacheKey, nil)
+			return cacheResult.(string), nil
+		}
+	}
+
+	//No caching case
 	if err := App.DB.QueryRow(q.SQL).Scan(&JSONResponse); err != nil {
 		//Only one row is returned as JSON is returned by Postgres
 		//Empty result
@@ -27,6 +40,11 @@ func (s store) executeQuery(q Query) (string, error) {
 
 	}
 
+	//Set the cache if a cache key has been provided
+	if q.cacheKey != "" {
+		LogDebug("STORE", true, "Caching result with key: "+q.cacheKey, nil)
+		App.QueryCache.Set(q.cacheKey, JSONResponse)
+	}
 	return JSONResponse, nil
 
 }
