@@ -107,24 +107,6 @@ type Query struct {
 	UserID           string
 }
 
-func commaSeparatedStringify(i ...interface{}) string {
-
-	tempArrayString := "["
-
-	for k, v := range i {
-		if k == 0 {
-			tempArrayString += fmt.Sprintf(`%v`, v)
-		} else {
-			tempArrayString += fmt.Sprintf(`, %v`, v)
-		}
-
-	}
-
-	tempArrayString += "]"
-
-	return tempArrayString
-}
-
 func (q Query) ExecuteToJSON() (string, error) {
 
 	//First, test to see if complete SQL has been provided
@@ -141,7 +123,7 @@ func (q Query) ExecuteToJSON() (string, error) {
 			q.WhereAnyOfKey = "id"
 		}
 
-		q.SQL += fmt.Sprintf(` WHERE %s = ANY(ARRAY%v)`, q.WhereAnyOfKey, commaSeparatedStringify(q.WhereAnyOfValues...))
+		q.SQL += fmt.Sprintf(SQLToAddWhereAnyOfValues, q.WhereAnyOfKey, commaSeparatedStringify(q.WhereAnyOfValues...))
 	}
 
 	//Create the sqlQuery
@@ -233,4 +215,22 @@ func (q Query) ExecuteToMap() (map[string]interface{}, error) {
 
 	return result, nil
 
+}
+
+func commaSeparatedStringify(i ...interface{}) string {
+
+	tempArrayString := "["
+
+	for k, v := range i {
+		if k == 0 {
+			tempArrayString += fmt.Sprintf(`%v`, v)
+		} else {
+			tempArrayString += fmt.Sprintf(`, %v`, v)
+		}
+
+	}
+
+	tempArrayString += "]"
+
+	return tempArrayString
 }
