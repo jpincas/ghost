@@ -24,6 +24,120 @@ import (
 	sq "gopkg.in/Masterminds/squirrel.v1"
 )
 
+//Query is the basic building block of an SQL query
+type Query struct {
+	//SQL is for when you need to provide complete, preformed SQL
+	//This option will override any BaseAQL + args
+	SQL string
+	//BaseSQL is a formatted SQL string with placeholder for SQLArgs
+	BaseSQL string
+	//SQLArgs are inserted into the BaseSQL in the order they appear
+	SQLArgs []interface{}
+	//WhereAnyOfValues appends a WHERE clause to match multiple values
+	//If 'WherAnyOfKey' is not provided, it will default to 'id'
+	WhereAnyOfValues []interface{}
+	//The fieldname for the multiple-matching WHERE clause
+	WhereAnyOfKey string
+	//Indicate whether to rquest JSON array or object
+	//and when unmarshalling, whether map or slice of maps
+	IsList bool
+	//Role to execute the query as
+	Role string
+	//UserID to set on the query context
+	UserID string
+}
+
+//Execute runs a query against the data store and returns JSON
+func (q Query) Execute() (string, error) {
+
+	//First, test to see if complete SQL has been provided
+	//If it hasn't, then create it based on 'BaseSQL' and 'SQLArgs'
+	if q.SQL == "" {
+
+		q.SQL = fmt.Sprintf(q.BaseSQL, q.SQLArgs...)
+
+		//For a multiple whereanyof
+		if len(q.WhereAnyOfValues) != 0 {
+
+			//Default to id
+			if q.WhereAnyOfKey == "" {
+				q.WhereAnyOfKey = "id"
+			}
+
+			q.SQL += fmt.Sprintf(SQLToAddWhereAnyOfValues, q.WhereAnyOfKey, commaSeparatedStringify(q.WhereAnyOfValues...))
+		}
+
+	}
+
+	//Create the sqlQuery
+	sqlQuery := SqlQuery(q.SQL)
+
+	//Return JSON array or object
+	if q.IsList {
+		sqlQuery = sqlQuery.RequestMultipleResultsAsJSONArray()
+	} else {
+		sqlQuery = sqlQuery.RequestSingleResultAsJSONObject()
+	}
+
+	//Add role and user id if required
+	if q.Role != "" {
+		sqlQuery = sqlQuery.SetQueryRole(q.Role)
+	}
+	if q.UserID != "" {
+		sqlQuery = sqlQuery.SetUserID(q.UserID)
+	}
+
+	//Transform to SQL string
+	queryString := sqlQuery.ToSQLString()
+
+	//Execure the query
+	return App.Store.executeQuery(queryString)
+
+}
+
+//ExecuteAndUnmarshall runs a query against the datastore and returns either
+//for lists: []map[string]interfaace{}
+//for objects: map[string]interface{}
+func (q Query) ExecuteAndUnmarshall() (interface{}, error) {
+
+	//Execute to JSON first
+	var dbResponse string
+	dbResponse, err := q.Execute()
+	if err != nil {
+		return nil, err
+	}
+
+	if q.IsList {
+		var result []map[string]interface{}
+
+		//Check for empty result from DB
+		if dbResponse == "" {
+			return result, nil
+		}
+
+		if err := json.Unmarshal([]byte(dbResponse), &result); err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
+
+	//If not a list, then unmarhsall to a map
+	var result map[string]interface{}
+
+	//Check for empty result from DB
+	if dbResponse == "" {
+		return result, nil
+	}
+
+	if err := json.Unmarshal([]byte(dbResponse), &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+
+}
+
 //SqlQuery is an SQL query string with various methods available for transformation
 type SqlQuery string
 
@@ -65,8 +179,8 @@ func (s SqlQuery) ToSQLString() string {
 	return fmt.Sprint(s)
 }
 
-//QueryBuilder builds an SqlQuery from multiple URL query paramaters
 //TODO: deprecate this
+//QueryBuilder builds an SqlQuery from multiple URL query paramaters
 func QueryBuilder(schema string, table string, queries url.Values) SqlQuery {
 
 	//Concat - schema.table
@@ -93,144 +207,4 @@ func QueryBuilder(schema string, table string, queries url.Values) SqlQuery {
 	sql, _, _ := p.ToSql()
 	//Return as JSON array request
 	return SqlQuery(sql)
-}
-
-//Query
-type Query struct {
-	SQL              string
-	BaseSQL          string
-	SQLArgs          []interface{}
-	WhereAnyOfKey    string
-	WhereAnyOfValues []interface{}
-	IsList           bool
-	Role             string
-	UserID           string
-}
-
-func (q Query) ExecuteToJSON() (string, error) {
-
-	//First, test to see if complete SQL has been provided
-	//If it hasn't, then create it based on 'BaseSQL' and 'SQLArgs'
-	if q.SQL == "" {
-		q.SQL = fmt.Sprintf(q.BaseSQL, q.SQLArgs...)
-	}
-
-	//For a multiple whereanyof
-	if len(q.WhereAnyOfValues) != 0 {
-
-		//Default to id
-		if q.WhereAnyOfKey == "" {
-			q.WhereAnyOfKey = "id"
-		}
-
-		q.SQL += fmt.Sprintf(SQLToAddWhereAnyOfValues, q.WhereAnyOfKey, commaSeparatedStringify(q.WhereAnyOfValues...))
-	}
-
-	//Create the sqlQuery
-	sqlQuery := SqlQuery(q.SQL)
-
-	//Return JSON array or object
-	if q.IsList {
-		sqlQuery = sqlQuery.RequestMultipleResultsAsJSONArray()
-	} else {
-		sqlQuery = sqlQuery.RequestSingleResultAsJSONObject()
-	}
-
-	//Add role and user id if required
-	if q.Role != "" {
-		sqlQuery = sqlQuery.SetQueryRole(q.Role)
-	}
-	if q.UserID != "" {
-		sqlQuery = sqlQuery.SetUserID(q.UserID)
-	}
-
-	//Transform to SQL string
-	sqlString := sqlQuery.ToSQLString()
-
-	//Execure the query
-	var dbResponse string
-	if err := App.DB.QueryRow(sqlString).Scan(&dbResponse); err != nil {
-		//Only one row is returned as JSON is returned by Postgres
-		//Empty result
-		if strings.Contains(err.Error(), "sql") {
-			return "", nil
-		}
-
-		//Else its a database error
-		return "", err
-
-	}
-
-	return dbResponse, nil
-
-}
-
-func (q Query) ExecuteToSlice() ([]map[string]interface{}, error) {
-
-	q.IsList = true
-
-	//Execute to JSON first
-	var dbResponse string
-	dbResponse, err := q.ExecuteToJSON()
-	if err != nil {
-		return nil, err
-	}
-
-	var result []map[string]interface{}
-
-	//Check for empty result from DB
-	if dbResponse == "" {
-		return result, nil
-	}
-
-	if err := json.Unmarshal([]byte(dbResponse), &result); err != nil {
-		return nil, err
-	}
-
-	return result, nil
-
-}
-
-func (q Query) ExecuteToMap() (map[string]interface{}, error) {
-
-	q.IsList = false
-
-	//Execute to JSON first
-	var dbResponse string
-	dbResponse, err := q.ExecuteToJSON()
-	if err != nil {
-		return nil, err
-	}
-
-	var result map[string]interface{}
-
-	//Check for empty result from DB
-	if dbResponse == "" {
-		return result, nil
-	}
-
-	if err := json.Unmarshal([]byte(dbResponse), &result); err != nil {
-		return nil, err
-	}
-
-	return result, nil
-
-}
-
-func commaSeparatedStringify(i ...interface{}) string {
-
-	tempArrayString := "["
-
-	for k, v := range i {
-		if k == 0 {
-			tempArrayString += fmt.Sprintf(`%v`, v)
-		} else {
-			tempArrayString += fmt.Sprintf(`, %v`, v)
-		}
-
-	}
-
-	tempArrayString += "]"
-
-	return tempArrayString
 }
