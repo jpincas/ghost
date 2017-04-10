@@ -20,7 +20,7 @@ func (s store) executeQuery(q Query) (string, error) {
 	//Return the cached result if there is a cache key present
 	//AND there is a result from the cache
 	if q.cacheKey != "" {
-		cacheResult, ok := App.QueryCache.Get(q.cacheKey)
+		cacheResult, ok := App.Cache.Get(q.cacheKey)
 		if ok {
 			LogDebug("STORE", true, "Returning from cache, using key: "+q.cacheKey, nil)
 			return cacheResult.(string), nil
@@ -43,7 +43,7 @@ func (s store) executeQuery(q Query) (string, error) {
 	//Set the cache if a cache key has been provided
 	if q.cacheKey != "" {
 		LogDebug("STORE", true, "Caching result with key: "+q.cacheKey, nil)
-		App.QueryCache.Set(q.cacheKey, JSONResponse)
+		App.Cache.Set(q.cacheKey, JSONResponse)
 	}
 	return JSONResponse, nil
 

@@ -41,7 +41,7 @@ type application struct {
 	//Normally your applications would interact with Store rather than DB or Cache
 	Store store
 	//Cache is the app wide cache for SQL queries
-	QueryCache *ttlcache.Cache
+	Cache *ttlcache.Cache
 }
 
 //Setup bootstraps the whole application
@@ -58,6 +58,7 @@ func (a *application) Setup(configFileName string) {
 	a.FileSystem = afero.NewOsFs()
 
 	//Initialise the cache
-	a.QueryCache.SetTTL(time.Duration(60 * time.Second))
+	a.Cache = ttlcache.NewCache()
+	a.Cache.SetTTL(time.Duration(60 * time.Second))
 
 }

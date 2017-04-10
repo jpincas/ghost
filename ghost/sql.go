@@ -116,46 +116,43 @@ func (q Query) Execute() (string, error) {
 
 }
 
-//ExecuteAndUnmarshall runs a query against the datastore and returns either
+//ExecuteAndUnmarshall runs a query against the datastore and returns both
 //for lists: []map[string]interfaace{}
 //for objects: map[string]interface{}
-func (q Query) ExecuteAndUnmarshall() (interface{}, error) {
+//The corresponding unused data structure is set to nil
+func (q Query) ExecuteAndUnmarshall() (list []map[string]interface{}, single map[string]interface{}, err error) {
 
 	//Execute to JSON first
 	var dbResponse string
-	dbResponse, err := q.Execute()
+	dbResponse, err = q.Execute()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if q.IsList {
-		var result []map[string]interface{}
 
 		//Check for empty result from DB
 		if dbResponse == "" {
-			return result, nil
+			return list, nil, nil
 		}
 
-		if err := json.Unmarshal([]byte(dbResponse), &result); err != nil {
-			return nil, err
+		if err := json.Unmarshal([]byte(dbResponse), &list); err != nil {
+			return nil, nil, err
 		}
 
-		return result, nil
+		return list, nil, nil
 	}
-
-	//If not a list, then unmarhsall to a map
-	var result map[string]interface{}
 
 	//Check for empty result from DB
 	if dbResponse == "" {
-		return result, nil
+		return nil, single, nil
 	}
 
-	if err := json.Unmarshal([]byte(dbResponse), &result); err != nil {
-		return nil, err
+	if err := json.Unmarshal([]byte(dbResponse), &single); err != nil {
+		return nil, nil, err
 	}
 
-	return result, nil
+	return nil, single, nil
 
 }
 
