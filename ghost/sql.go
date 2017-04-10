@@ -97,12 +97,32 @@ func QueryBuilder(schema string, table string, queries url.Values) SqlQuery {
 
 //Query
 type Query struct {
-	SQL     string
-	BaseSQL string
-	SQLArgs []interface{}
-	IsList  bool
-	Role    string
-	UserID  string
+	SQL              string
+	BaseSQL          string
+	SQLArgs          []interface{}
+	WhereAnyOfKey    string
+	WhereAnyOfValues []interface{}
+	IsList           bool
+	Role             string
+	UserID           string
+}
+
+func commaSeparatedStringify(i ...interface{}) string {
+
+	tempArrayString := "["
+
+	for k, v := range i {
+		if k == 0 {
+			tempArrayString += fmt.Sprintf(`%v`, v)
+		} else {
+			tempArrayString += fmt.Sprintf(`, %v`, v)
+		}
+
+	}
+
+	tempArrayString += "]"
+
+	return tempArrayString
 }
 
 func (q Query) ExecuteToJSON() (string, error) {
@@ -111,6 +131,17 @@ func (q Query) ExecuteToJSON() (string, error) {
 	//If it hasn't, then create it based on 'BaseSQL' and 'SQLArgs'
 	if q.SQL == "" {
 		q.SQL = fmt.Sprintf(q.BaseSQL, q.SQLArgs...)
+	}
+
+	//For a multiple whereanyof
+	if len(q.WhereAnyOfValues) != 0 {
+
+		//Default to id
+		if q.WhereAnyOfKey == "" {
+			q.WhereAnyOfKey = "id"
+		}
+
+		q.SQL += fmt.Sprintf(` WHERE %s = ANY(ARRAY%v)`, q.WhereAnyOfKey, commaSeparatedStringify(q.WhereAnyOfValues...))
 	}
 
 	//Create the sqlQuery
