@@ -35,6 +35,8 @@ type application struct {
 	Config config
 	//FileSystem is the main FileSystem
 	FileSystem afero.Fs
+	//Store
+	Store store
 }
 
 //Setup bootstraps the whole application
@@ -50,4 +52,25 @@ func (a *application) Setup(configFileName string) {
 	//Initialise the filesysem
 	a.FileSystem = afero.NewOsFs()
 
+}
+
+type store struct
+
+func (s store) execute(queryString string) (string, error){
+
+		var dbResponse string
+	if err := App.DB.QueryRow(sqlString).Scan(&dbResponse); err != nil {
+		//Only one row is returned as JSON is returned by Postgres
+		//Empty result
+		if strings.Contains(err.Error(), "sql") {
+			return "", nil
+		}
+
+		//Else its a database error
+		return "", err
+
+	}
+
+	return dbResponse, nil
+	
 }
