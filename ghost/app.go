@@ -58,7 +58,9 @@ func (a *application) Setup(configFileName string) {
 	a.FileSystem = afero.NewOsFs()
 
 	//Initialise the cache
+	//TODO: Reimplement the cache with a new library
 	a.Cache = ttlcache.NewCache()
-	a.Cache.SetTTL(time.Duration(60 * time.Second))
+	a.Cache.SetTTL(time.Duration(5 * time.Second))
+	a.Cache.
 
 }
