@@ -5,3 +5,4 @@ testing
 run-api-tests
 run-unit-tests
 README-ecosystem.md
+/ghost/*.go.bu

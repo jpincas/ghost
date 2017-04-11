@@ -47,23 +47,15 @@ const (
 
 	//General
 	//NO SEMI COLONS AT THE END
-	SQLToSelectAllFieldsFrom            = `SELECT * FROM %s.%s`
-	SQLToSelectWhere                    = `SELECT * FROM %s.%s WHERE id = '%v'` //depracated
-	SQLToSelectByID                     = `SELECT * FROM %s.%s WHERE id = '%v'`
-	SQLToSelectWhereXEqualsY            = `SELECT * FROM %s.%s WHERE %s = '%v'`
-	SQLToAddWhereAnyOfValues            = ` WHERE %s = ANY(ARRAY%v)`
+	SQLToSelectAllFieldsFrom = `SELECT * FROM %s.%s`
+	SQLToSelectWhere         = `SELECT * FROM %s.%s WHERE id = '%v'` //depracated
+	SQLToSelectByID          = `SELECT * FROM %s.%s WHERE id = '%v'`
+	SQLToSelectWhereXEqualsY = `SELECT * FROM %s.%s WHERE %s = '%v'`
+
 	SQLToInsertReturningJSON            = `INSERT INTO %s.%s(%s) VALUES (%s) returning row_to_json(%s)`
 	SQLToInsertAllDefaultsReturningJSON = `INSERT INTO %s.%s DEFAULT VALUES returning row_to_json(%s)`
 	SQLToDeleteWhere                    = `DELETE FROM %s.%s WHERE id = '%v'`
 	SQLToUpdateWhereReturningJSON       = `UPDATE %s.%s SET (%s) = (%s) WHERE id = '%v' returning row_to_json(%s)`
-
-	//JSON Conversion
-	SQLToRequestMultipleResultsAsJSONArray = `WITH results AS (%s) SELECT array_to_json(array_agg(row_to_json(results))) from results;`
-	SQLToRequestSingleResultAsJSONObject   = `WITH results AS (%s) SELECT row_to_json(results) from results;`
-
-	//Setting local role and user id
-	SQLToSetLocalRole = `SET LOCAL ROLE %s; %s `
-	SQLToSetUserID    = `SET my.user_id = '%s'; %s `
 
 	//Full text search_path
 	SQLToFullTextSearch = `with item as (select to_tsvector(%s::text) @@ to_tsquery('%s') AS found, %s.* FROM %s.%s) select array_to_json(array_agg(row_to_json(item))) FROM item WHERE item.found = TRUE`

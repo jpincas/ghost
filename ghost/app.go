@@ -61,6 +61,5 @@ func (a *application) Setup(configFileName string) {
 	//TODO: Reimplement the cache with a new library
 	a.Cache = ttlcache.NewCache()
 	a.Cache.SetTTL(time.Duration(5 * time.Second))
-	a.Cache.
 
 }
