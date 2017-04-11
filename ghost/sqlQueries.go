@@ -51,7 +51,7 @@ const (
 	SQLToSelectWhere                    = `SELECT * FROM %s.%s WHERE id = '%v'` //depracated
 	SQLToSelectByID                     = `SELECT * FROM %s.%s WHERE id = '%v'`
 	SQLToSelectWhereXEqualsY            = `SELECT * FROM %s.%s WHERE %s = '%v'`
-	SQLToAddWhereAnyOfValues            = ` WHERE %s = ANY(ARRAY%v)`
+	SQLToAddWhereAnyOfValues            = ` WHERE %s = ANY(ARRAY%s)`
 	SQLToInsertReturningJSON            = `INSERT INTO %s.%s(%s) VALUES (%s) returning row_to_json(%s)`
 	SQLToInsertAllDefaultsReturningJSON = `INSERT INTO %s.%s DEFAULT VALUES returning row_to_json(%s)`
 	SQLToDeleteWhere                    = `DELETE FROM %s.%s WHERE id = '%v'`
