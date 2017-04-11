@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"reflect"
 	"strconv"
 
 	"strings"
@@ -123,7 +124,13 @@ func (q Query) ExecuteToJSON() (string, error) {
 			q.WhereAnyOfKey = "id"
 		}
 
-		q.SQL += fmt.Sprintf(SQLToAddWhereAnyOfValues, q.WhereAnyOfKey, commaSeparatedStringify(q.WhereAnyOfValues...))
+		//For strings, must surround with ''
+		//But for numbers, doing so causes an error
+		//This is unlike regular behaviour (not in arrays),
+		//where postgres CAN deal with numbers in ''
+		valueType := reflect.TypeOf(q.WhereAnyOfValues[0]).Name()
+
+		q.SQL += fmt.Sprintf(SQLToAddWhereAnyOfValues, q.WhereAnyOfKey, toCsvSqlArrayString(q.WhereAnyOfValues, valueType))
 	}
 
 	//Create the sqlQuery
@@ -217,15 +224,30 @@ func (q Query) ExecuteToMap() (map[string]interface{}, error) {
 
 }
 
-func commaSeparatedStringify(i ...interface{}) string {
+func toCsvSqlArrayString(i []interface{}, valueType string) string {
 
 	tempArrayString := "["
 
-	for k, v := range i {
-		if k == 0 {
-			tempArrayString += fmt.Sprintf(`%v`, v)
-		} else {
-			tempArrayString += fmt.Sprintf(`, %v`, v)
+	//For strings, wrap in ''
+	if valueType == "string" {
+
+		for k, v := range i {
+			if k == 0 {
+				tempArrayString += fmt.Sprintf(`'%s'`, v)
+			} else {
+				tempArrayString += fmt.Sprintf(`, '%s'`, v)
+			}
+		}
+
+		// For anything else other than string, dont wrap
+	} else {
+
+		for k, v := range i {
+			if k == 0 {
+				tempArrayString += fmt.Sprintf(`%v`, v)
+			} else {
+				tempArrayString += fmt.Sprintf(`, %v`, v)
+			}
 		}
 
 	}
