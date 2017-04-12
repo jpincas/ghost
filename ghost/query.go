@@ -2,6 +2,14 @@ package ghost
 
 import "fmt"
 
+type whereConfig struct {
+	key        string
+	operator   string
+	value      interface{}
+	anyValue   []interface{}
+	joinWithOr bool
+}
+
 //Query is the basic building block of an SQL query
 type Query struct {
 	//userQueryString is for when you need to provide complete, preformed SQL
@@ -11,11 +19,12 @@ type Query struct {
 	BaseSQL string
 	//SQLArgs are inserted into the BaseSQL in the order they appear
 	SQLArgs []interface{}
-	//WhereAnyOfValues appends a WHERE clause to match multiple values
-	//If 'WherAnyOfKey' is not provided, it will default to 'id'
-	WhereAnyOfValues []interface{}
-	//The fieldname for the multiple-matching WHERE clause
-	WhereAnyOfKey string
+	//SELECT fields
+	Select []string
+	//From Schema.Table
+	Schema, Table string
+	//Where
+	Where []whereConfig
 	//Indicate whether to rquest JSON array or object
 	//and when unmarshalling, whether map or slice of maps
 	IsList bool
@@ -42,17 +51,19 @@ func (q *Query) Build() error {
 		return nil
 	}
 
-	tempQueryString := queryBuilder(fmt.Sprintf(q.BaseSQL, q.SQLArgs...))
+	tempQueryString := queryBuilder("")
 
-	//For a multiple whereanyof
-	if len(q.WhereAnyOfValues) != 0 {
+	//If base sql + args have been supplied, use them
+	//otherwise build from parameters
+	if q.BaseSQL != "" && len(q.SQLArgs) != 0 {
+		tempQueryString = queryBuilder(fmt.Sprintf(q.BaseSQL, q.SQLArgs...))
+	} else {
+		tempQueryString = tempQueryString.basicSelect(q.Schema, q.Table, q.Select)
+	}
 
-		//Default to id
-		if q.WhereAnyOfKey == "" {
-			q.WhereAnyOfKey = "id"
-		}
-
-		tempQueryString = tempQueryString.addWhereAnyOfValues(q.WhereAnyOfKey, q.WhereAnyOfValues)
+	//For basic where clauses
+	if len(q.Where) != 0 {
+		tempQueryString = tempQueryString.addWhereClauses(q.Where)
 	}
 
 	//Return JSON array or object

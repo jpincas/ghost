@@ -3,6 +3,7 @@ package ghost
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 const (
@@ -15,11 +16,70 @@ const (
 	sqlToSetLocalRole = `SET LOCAL ROLE %s; %s `
 	sqlToSetUserID    = `SET my.user_id = '%s'; %s `
 
-	sqlToAddWhereAnyOfValues = `%s WHERE %s = ANY(ARRAY%s)`
+	//Basics
+	sqlToSelectFieldsFromTableSchema = `SELECT %s FROM %s.%s`
+
+	//Where clauses
+	sqlToAddFirstWhereClause          = `%s WHERE %s %s '%s'` //safe to escape here
+	sqlToAddFirstWhereAnyClause       = `%s WHERE %s = ANY(ARRAY%s)`
+	sqlToAddSubsequentWhereClauses    = `%s %s %s %s '%s'` //safe to escape here
+	sqlToAddSubsequentWhereAnyClauses = `%s %s %s = ANY(ARRAY%s)`
 )
 
 //queryBuilder is an SQL query string with various methods available for transformation
 type queryBuilder string
+
+//basicSelect is the simple type of base query
+func (s queryBuilder) basicSelect(schema string, table string, selectFields []string) queryBuilder {
+
+	return queryBuilder(fmt.Sprintf(sqlToSelectFieldsFromTableSchema, toListString(selectFields), schema, table))
+
+}
+
+//addWhere clauses appends multiple where clauses conjoined with AND or OR
+func (s queryBuilder) addWhereClauses(whereClauses []whereConfig) queryBuilder {
+
+	for k, v := range whereClauses {
+
+		//Default the key to id
+		if v.key == "" {
+			v.key = "id"
+		}
+
+		//For the first where clause
+		if k == 0 {
+
+			if len(v.anyValue) != 0 {
+				//For strings, must surround with ''
+				//But for numbers, doing so causes an error
+				//This is unlike regular behaviour (not in arrays),
+				//where postgres CAN deal with numbers in ''
+				valueType := reflect.TypeOf(v.anyValue[0]).Name()
+				s = queryBuilder(fmt.Sprintf(sqlToAddFirstWhereAnyClause, s, v.key, toCsvSqlArrayString(v.anyValue, valueType)))
+			} else {
+				s = queryBuilder(fmt.Sprintf(sqlToAddFirstWhereClause, s, v.key, v.operator, v.value))
+			}
+
+		} else {
+
+			conjunction := "AND"
+			if v.joinWithOr {
+				conjunction = "OR"
+			}
+
+			if len(v.anyValue) != 0 {
+				valueType := reflect.TypeOf(v.anyValue[0]).Name()
+				s = queryBuilder(fmt.Sprintf(sqlToAddSubsequentWhereAnyClauses, s, conjunction, v.key, toCsvSqlArrayString(v.anyValue, valueType)))
+			} else {
+				s = queryBuilder(fmt.Sprintf(sqlToAddSubsequentWhereClauses, s, conjunction, v.key, v.operator, v.value))
+			}
+		}
+
+	}
+
+	return s
+
+}
 
 //RequestMultipleResultsAsJSONArray transforms the SQL query to return a JSON array of results
 //Use when multiple lines are going to be returned
@@ -51,17 +111,6 @@ func (s queryBuilder) setUserID(userID string) queryBuilder {
 
 }
 
-func (s queryBuilder) addWhereAnyOfValues(key string, values []interface{}) queryBuilder {
-
-	//For strings, must surround with ''
-	//But for numbers, doing so causes an error
-	//This is unlike regular behaviour (not in arrays),
-	//where postgres CAN deal with numbers in ''
-	valueType := reflect.TypeOf(values[0]).Name()
-	return queryBuilder(fmt.Sprintf(sqlToAddWhereAnyOfValues, s, key, toCsvSqlArrayString(values, valueType)))
-
-}
-
 //ToSQLCacheKey transforms the SQL query into a cacheable string key
 func (s queryBuilder) toSQLCacheKey() string {
 
@@ -77,6 +126,8 @@ func (s queryBuilder) toSQLString() string {
 	return fmt.Sprint(s)
 }
 
+//Helpers
+//toCsvSqlArrayString
 func toCsvSqlArrayString(i []interface{}, valueType string) string {
 
 	tempArrayString := "["
@@ -108,5 +159,12 @@ func toCsvSqlArrayString(i []interface{}, valueType string) string {
 	tempArrayString += "]"
 
 	return tempArrayString
+
+}
+
+//toListString removes the [] from a slice and returns the comma separated string
+func toListString(l []string) string {
+
+	return strings.Replace(strings.TrimPrefix(strings.TrimSuffix(fmt.Sprintf(`%s`, l), "]"), "["), " ", ",", -1)
 
 }
