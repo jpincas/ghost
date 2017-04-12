@@ -64,7 +64,7 @@ func (q *Query) Build() error {
 		tempQueryString = tempQueryString.basicSelect(q.Schema, q.Table, q.Select)
 	}
 
-	//For basic where clauses
+	//For WHERE clauses
 	if len(q.Where) != 0 {
 		tempQueryString = tempQueryString.addWhereClauses(q.Where)
 	}

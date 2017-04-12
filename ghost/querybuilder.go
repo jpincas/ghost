@@ -20,9 +20,9 @@ const (
 	sqlToSelectFieldsFromTableSchema = `SELECT %s FROM %s.%s`
 
 	//Where clauses
-	sqlToAddFirstWhereClause          = `%s WHERE %s %s '%s'` //safe to escape here
+	sqlToAddFirstWhereClause          = `%s WHERE %s %s '%v'` //safe to escape here
 	sqlToAddFirstWhereAnyClause       = `%s WHERE %s = ANY(ARRAY%s)`
-	sqlToAddSubsequentWhereClauses    = `%s %s %s %s '%s'` //safe to escape here
+	sqlToAddSubsequentWhereClauses    = `%s %s %s %s '%v'` //safe to escape here
 	sqlToAddSubsequentWhereAnyClauses = `%s %s %s = ANY(ARRAY%s)`
 )
 
@@ -39,7 +39,13 @@ func (s queryBuilder) basicSelect(schema string, table string, selectFields []st
 //addWhere clauses appends multiple where clauses conjoined with AND or OR
 func (s queryBuilder) addWhereClauses(whereClauses []WhereConfig) queryBuilder {
 
-	for k, v := range whereClauses {
+	//Set up a where clause counter
+	//and only increment it when a WHERE clause is actually appended
+	//We do this instead of using the main for loop index,
+	//because on some loops, no Where clause is actually appended
+	whereClauseCounter := 0
+
+	for _, v := range whereClauses {
 
 		//Default the key to id
 		if v.Key == "" {
@@ -47,7 +53,7 @@ func (s queryBuilder) addWhereClauses(whereClauses []WhereConfig) queryBuilder {
 		}
 
 		//For the first where clause
-		if k == 0 {
+		if whereClauseCounter == 0 {
 
 			if len(v.AnyValue) != 0 {
 				//For strings, must surround with ''
@@ -56,10 +62,23 @@ func (s queryBuilder) addWhereClauses(whereClauses []WhereConfig) queryBuilder {
 				//where postgres CAN deal with numbers in ''
 				valueType := reflect.TypeOf(v.AnyValue[0]).Name()
 				s = queryBuilder(fmt.Sprintf(sqlToAddFirstWhereAnyClause, s, v.Key, toCsvSqlArrayString(v.AnyValue, valueType)))
+				whereClauseCounter++
+
 			} else {
-				s = queryBuilder(fmt.Sprintf(sqlToAddFirstWhereClause, s, v.Key, v.Operator, v.Value))
+
+				//Only append a where clause if there's actually something in the value
+				//This gives you the option to specify nil or blank value fields on the query
+				//builder without messing up the query
+				//Useful for when assigning some kind of argument to the value
+				//but when you don't know 100% that the argument will be present.
+				if v.Value != nil && v.Value != "" {
+					s = queryBuilder(fmt.Sprintf(sqlToAddFirstWhereClause, s, v.Key, v.Operator, v.Value))
+					whereClauseCounter++
+				}
+
 			}
 
+			//For subsequent where clauses
 		} else {
 
 			conjunction := "AND"
@@ -68,10 +87,18 @@ func (s queryBuilder) addWhereClauses(whereClauses []WhereConfig) queryBuilder {
 			}
 
 			if len(v.AnyValue) != 0 {
+
 				valueType := reflect.TypeOf(v.AnyValue[0]).Name()
 				s = queryBuilder(fmt.Sprintf(sqlToAddSubsequentWhereAnyClauses, s, conjunction, v.Key, toCsvSqlArrayString(v.AnyValue, valueType)))
+				whereClauseCounter++
+
 			} else {
-				s = queryBuilder(fmt.Sprintf(sqlToAddSubsequentWhereClauses, s, conjunction, v.Key, v.Operator, v.Value))
+
+				if v.Value != nil && v.Value != "" {
+					s = queryBuilder(fmt.Sprintf(sqlToAddSubsequentWhereClauses, s, conjunction, v.Key, v.Operator, v.Value))
+					whereClauseCounter++
+				}
+
 			}
 		}
 
