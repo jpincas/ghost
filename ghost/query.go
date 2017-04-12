@@ -104,33 +104,3 @@ func (q *Query) Build() error {
 	return nil
 
 }
-
-//TODO: deprecate this
-//QueryBuilder builds an SqlQuery from multiple URL query paramaters
-// func QueryBuilder(schema string, table string, queries url.Values) SqlQuery {
-
-// 	//Concat - schema.table
-// 	tn := fmt.Sprintf("%s.%s", schema, table)
-
-// 	//Start with all the products from the table
-// 	p := sq.Select("*").From(tn)
-
-// 	//Loop through all the URL qeueries
-// 	for key, value := range queries {
-
-// 		if strings.ToLower(key) == "orderby" {
-// 			p = p.OrderBy(value[0])
-// 		} else if strings.ToLower(key) == "limit" {
-// 			l, _ := strconv.ParseUint(value[0], 10, 64)
-// 			p = p.Limit(l)
-// 		} else {
-// 			p = p.Where(fmt.Sprintf(`%s %s`, key, value[0]))
-// 		}
-// 	}
-
-// 	//Build the basic SQL
-// 	sql, _, _ := p.ToSql()
-// 	//Return as JSON array request
-// 	return SqlQuery(sql)
-
-// }
