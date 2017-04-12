@@ -37,6 +37,8 @@ type Query struct {
 	CacheLevel string
 	//cacheKey is the key used to store the SQL query in the cache
 	cacheKey string
+	//CacheExpiry
+	CacheExpiry int
 	//queryString is the output sql string ready to be executed
 	queryString string
 }

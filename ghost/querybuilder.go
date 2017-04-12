@@ -13,8 +13,8 @@ const (
 	sqlToRequestSingleResultAsJSONObject   = `WITH results AS (%s) SELECT row_to_json(results) from results;`
 
 	//Setting local role and user id
-	sqlToSetLocalRole = `SET LOCAL ROLE %s; %s `
-	sqlToSetUserID    = `SET my.user_id = '%s'; %s `
+	sqlToSetLocalRole = `SET LOCAL ROLE %s; %s`
+	sqlToSetUserID    = `SET my.user_id = '%s'; %s`
 
 	//Basics
 	sqlToSelectFieldsFromTableSchema = `SELECT %s FROM %s.%s`

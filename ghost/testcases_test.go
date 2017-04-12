@@ -134,4 +134,53 @@ var testCases = []struct {
 		"[{'some':'object'}]",
 		"Simple WHERE clause + multiple-value any WHERE clause joined with OR",
 	},
+	{
+		Query{
+			Select: []string{"*"},
+			Schema: "public",
+			Table:  "test_table",
+			IsList: true,
+		},
+		"WITH results AS (SELECT * FROM public.test_table) SELECT array_to_json(array_agg(row_to_json(results))) from results;",
+		"[{'some':'object'}]",
+		"Select specified with schema and table, return a list",
+	},
+	{
+		Query{
+			Select: []string{"*"},
+			Schema: "public",
+			Table:  "test_table",
+			IsList: true,
+			Role:   "admin",
+		},
+		"SET LOCAL ROLE admin; WITH results AS (SELECT * FROM public.test_table) SELECT array_to_json(array_agg(row_to_json(results))) from results;",
+		"[{'some':'object'}]",
+		"Select specified with schema and table, return a list, add role",
+	},
+	{
+		Query{
+			Select: []string{"*"},
+			Schema: "public",
+			Table:  "test_table",
+			IsList: true,
+			Role:   "admin",
+			UserID: "123456",
+		},
+		"SET my.user_id = '123456'; SET LOCAL ROLE admin; WITH results AS (SELECT * FROM public.test_table) SELECT array_to_json(array_agg(row_to_json(results))) from results;",
+		"[{'some':'object'}]",
+		"Select specified with schema and table, return a list, add role and user id",
+	},
 }
+
+// {
+// 		Query{
+// 			Select: []string{"*"},
+// 			Schema: "public",
+// 			Table:  "test_table",
+// 			UserID: "123456",
+// 			IsList: true,
+// 		},
+// 		"SET my.user_id = '123456'; WITH results AS (SELECT * FROM public.test_table) SELECT array_to_json(array_agg(row_to_json(results))) from results;",
+// 		"[{'some':'object'}]",
+// 		"Select specified with schema and table, return a list, user id set",
+// 	},
