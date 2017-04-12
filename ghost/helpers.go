@@ -163,3 +163,23 @@ func AskForConfirmation(s string) bool {
 		}
 	}
 }
+
+//commaSeparatedStringify takes a list of any type and returns a
+//comma separated array as a string e.g., [1, 2, 3, 4]
+func commaSeparatedStringify(i ...interface{}) string {
+
+	tempArrayString := "["
+
+	for k, v := range i {
+		if k == 0 {
+			tempArrayString += fmt.Sprintf(`%v`, v)
+		} else {
+			tempArrayString += fmt.Sprintf(`, %v`, v)
+		}
+
+	}
+
+	tempArrayString += "]"
+
+	return tempArrayString
+}

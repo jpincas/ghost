@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"log"
 
+	"testing"
+
 	"github.com/spf13/viper"
 	"github.com/wsxiaoys/terminal/color"
 )
@@ -69,5 +71,16 @@ func LogDebug(module string, isOk bool, message string, err error) {
 		log.Println(logText)
 
 	}
+
+}
+
+func TestErrorFatal(t *testing.T, description string, got string, expected string) {
+
+	logText := fmt.Sprintf(`
+	Test: %s 
+	Got : %s 
+	Exp : %s`,
+		description, got, expected)
+	t.Errorf(logText)
 
 }

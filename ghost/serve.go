@@ -25,6 +25,8 @@ import (
 	"fmt"
 )
 
+const sqlToSetServerRolePassword = `ALTER ROLE server NOINHERIT LOGIN PASSWORD '%s' VALID UNTIL 'infinity';`
+
 func init() {
 
 	ServeCmd.Flags().String("smtppw", "", "SMTP server password for outgoing mail")
@@ -76,7 +78,7 @@ func preServe() {
 
 	//Generate a random server password, set it and get out
 	serverPW := RandomString(16)
-	_, err := dbTemp.Exec(fmt.Sprintf(SQLToSetServerRolePassword, serverPW))
+	_, err := dbTemp.Exec(fmt.Sprintf(sqlToSetServerRolePassword, serverPW))
 	if err != nil {
 		LogFatal("SERVE", false, "Error setting server role password:", err)
 	}

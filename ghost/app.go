@@ -16,7 +16,9 @@ package ghost
 
 import (
 	"database/sql"
+	"time"
 
+	"github.com/diegobernardes/ttlcache"
 	"github.com/pressly/chi"
 	"github.com/spf13/afero"
 )
@@ -35,6 +37,11 @@ type application struct {
 	Config config
 	//FileSystem is the main FileSystem
 	FileSystem afero.Fs
+	//Store is the data abstraction layer
+	//Normally your applications would interact with Store rather than DB or Cache
+	Store store
+	//Cache is the app wide cache for SQL queries
+	Cache *ttlcache.Cache
 }
 
 //Setup bootstraps the whole application
@@ -49,5 +56,10 @@ func (a *application) Setup(configFileName string) {
 
 	//Initialise the filesysem
 	a.FileSystem = afero.NewOsFs()
+
+	//Initialise the cache
+	//TODO: Reimplement the cache with a new library
+	a.Cache = ttlcache.NewCache()
+	a.Cache.SetTTL(time.Duration(5 * time.Second))
 
 }
