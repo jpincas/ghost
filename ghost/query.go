@@ -2,12 +2,13 @@ package ghost
 
 import "fmt"
 
-type whereConfig struct {
-	key        string
-	operator   string
-	value      interface{}
-	anyValue   []interface{}
-	joinWithOr bool
+//WhereConfig describes one or more where clauses
+type WhereConfig struct {
+	Key        string
+	Operator   string
+	Value      interface{}
+	AnyValue   []interface{}
+	JoinWithOr bool
 }
 
 //Query is the basic building block of an SQL query
@@ -24,7 +25,7 @@ type Query struct {
 	//From Schema.Table
 	Schema, Table string
 	//Where
-	Where []whereConfig
+	Where []WhereConfig
 	//Indicate whether to rquest JSON array or object
 	//and when unmarshalling, whether map or slice of maps
 	IsList bool

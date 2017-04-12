@@ -40,99 +40,99 @@ var testCases = []struct {
 			Select: []string{"field1", "field2"},
 			Schema: "public",
 			Table:  "test_table",
-			Where: []whereConfig{
-				whereConfig{
-					key:      "id",
-					operator: "=",
-					value:    "test",
+			Where: []WhereConfig{
+				WhereConfig{
+					Key:      "id",
+					Operator: "=",
+					Value:    "test",
 				},
 			},
 		},
 		"WITH results AS (SELECT field1,field2 FROM public.test_table WHERE id = 'test') SELECT row_to_json(results) from results;",
 		"[{'some':'object'}]",
-		"Single where clause",
+		"Single Where clause",
 	},
 	{
 		Query{
 			Select: []string{"field1", "field2"},
 			Schema: "public",
 			Table:  "test_table",
-			Where: []whereConfig{
-				whereConfig{
-					key:      "id",
-					operator: "=",
-					value:    "test",
+			Where: []WhereConfig{
+				WhereConfig{
+					Key:      "id",
+					Operator: "=",
+					Value:    "test",
 				},
-				whereConfig{
-					key:      "id2",
-					operator: "=",
-					value:    "test2",
+				WhereConfig{
+					Key:      "id2",
+					Operator: "=",
+					Value:    "test2",
 				},
 			},
 		},
 		"WITH results AS (SELECT field1,field2 FROM public.test_table WHERE id = 'test' AND id2 = 'test2') SELECT row_to_json(results) from results;",
 		"[{'some':'object'}]",
-		"Two where clauses joined by AND",
+		"Two Where clauses joined by AND",
 	},
 	{
 		Query{
 			Select: []string{"field1", "field2"},
 			Schema: "public",
 			Table:  "test_table",
-			Where: []whereConfig{
-				whereConfig{
-					key:      "id",
-					operator: "=",
-					value:    "test",
+			Where: []WhereConfig{
+				WhereConfig{
+					Key:      "id",
+					Operator: "=",
+					Value:    "test",
 				},
-				whereConfig{
-					key:        "id2",
-					operator:   "=",
-					value:      "test2",
-					joinWithOr: true,
+				WhereConfig{
+					Key:        "id2",
+					Operator:   "=",
+					Value:      "test2",
+					JoinWithOr: true,
 				},
 			},
 		},
 		"WITH results AS (SELECT field1,field2 FROM public.test_table WHERE id = 'test' OR id2 = 'test2') SELECT row_to_json(results) from results;",
 		"[{'some':'object'}]",
-		"Two where clauses joined by OR",
+		"Two Where clauses joined by OR",
 	},
 	{
 		Query{
 			Select: []string{"field1", "field2"},
 			Schema: "public",
 			Table:  "test_table",
-			Where: []whereConfig{
-				whereConfig{
-					key:      "id",
-					anyValue: []interface{}{1, 2, 3},
+			Where: []WhereConfig{
+				WhereConfig{
+					Key:      "id",
+					AnyValue: []interface{}{1, 2, 3},
 				},
 			},
 		},
 		"WITH results AS (SELECT field1,field2 FROM public.test_table WHERE id = ANY(ARRAY[1, 2, 3])) SELECT row_to_json(results) from results;",
 		"[{'some':'object'}]",
-		"Single multiple value WHERE CLAUSE",
+		"Single multiple Value WHERE CLAUSE",
 	},
 	{
 		Query{
 			Select: []string{"field1", "field2"},
 			Schema: "public",
 			Table:  "test_table",
-			Where: []whereConfig{
-				whereConfig{
-					key:      "id",
-					anyValue: []interface{}{1, 2, 3},
+			Where: []WhereConfig{
+				WhereConfig{
+					Key:      "id",
+					AnyValue: []interface{}{1, 2, 3},
 				},
-				whereConfig{
-					key:        "name",
-					anyValue:   []interface{}{"jon", "jessi"},
-					joinWithOr: true,
+				WhereConfig{
+					Key:        "name",
+					AnyValue:   []interface{}{"jon", "jessi"},
+					JoinWithOr: true,
 				},
 			},
 		},
 		"WITH results AS (SELECT field1,field2 FROM public.test_table WHERE id = ANY(ARRAY[1, 2, 3]) OR name = ANY(ARRAY['jon', 'jessi'])) SELECT row_to_json(results) from results;",
 		"[{'some':'object'}]",
-		"Simple WHERE clause + multiple-value any WHERE clause joined with OR",
+		"Simple WHERE clause + multiple-Value any WHERE clause joined with OR",
 	},
 	{
 		Query{

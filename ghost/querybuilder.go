@@ -37,41 +37,41 @@ func (s queryBuilder) basicSelect(schema string, table string, selectFields []st
 }
 
 //addWhere clauses appends multiple where clauses conjoined with AND or OR
-func (s queryBuilder) addWhereClauses(whereClauses []whereConfig) queryBuilder {
+func (s queryBuilder) addWhereClauses(whereClauses []WhereConfig) queryBuilder {
 
 	for k, v := range whereClauses {
 
 		//Default the key to id
-		if v.key == "" {
-			v.key = "id"
+		if v.Key == "" {
+			v.Key = "id"
 		}
 
 		//For the first where clause
 		if k == 0 {
 
-			if len(v.anyValue) != 0 {
+			if len(v.AnyValue) != 0 {
 				//For strings, must surround with ''
 				//But for numbers, doing so causes an error
 				//This is unlike regular behaviour (not in arrays),
 				//where postgres CAN deal with numbers in ''
-				valueType := reflect.TypeOf(v.anyValue[0]).Name()
-				s = queryBuilder(fmt.Sprintf(sqlToAddFirstWhereAnyClause, s, v.key, toCsvSqlArrayString(v.anyValue, valueType)))
+				valueType := reflect.TypeOf(v.AnyValue[0]).Name()
+				s = queryBuilder(fmt.Sprintf(sqlToAddFirstWhereAnyClause, s, v.Key, toCsvSqlArrayString(v.AnyValue, valueType)))
 			} else {
-				s = queryBuilder(fmt.Sprintf(sqlToAddFirstWhereClause, s, v.key, v.operator, v.value))
+				s = queryBuilder(fmt.Sprintf(sqlToAddFirstWhereClause, s, v.Key, v.Operator, v.Value))
 			}
 
 		} else {
 
 			conjunction := "AND"
-			if v.joinWithOr {
+			if v.JoinWithOr {
 				conjunction = "OR"
 			}
 
-			if len(v.anyValue) != 0 {
-				valueType := reflect.TypeOf(v.anyValue[0]).Name()
-				s = queryBuilder(fmt.Sprintf(sqlToAddSubsequentWhereAnyClauses, s, conjunction, v.key, toCsvSqlArrayString(v.anyValue, valueType)))
+			if len(v.AnyValue) != 0 {
+				valueType := reflect.TypeOf(v.AnyValue[0]).Name()
+				s = queryBuilder(fmt.Sprintf(sqlToAddSubsequentWhereAnyClauses, s, conjunction, v.Key, toCsvSqlArrayString(v.AnyValue, valueType)))
 			} else {
-				s = queryBuilder(fmt.Sprintf(sqlToAddSubsequentWhereClauses, s, conjunction, v.key, v.operator, v.value))
+				s = queryBuilder(fmt.Sprintf(sqlToAddSubsequentWhereClauses, s, conjunction, v.Key, v.Operator, v.Value))
 			}
 		}
 
