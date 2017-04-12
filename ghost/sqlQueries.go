@@ -1,49 +1,9 @@
-// Copyright 2017 Jonathan Pincas
-
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-
-// 	http://www.apache.org/licenses/LICENSE-2.0
-
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
 package ghost
 
 //SQl query strings for application-wide use
 const (
-
-	//Install extensions
-	SQLToCreateUUIDExtension = `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
-
-	//Create built-in tables
-	SQLToCreateUsersTable = `CREATE TABLE users (id uuid PRIMARY KEY, email varchar(256) UNIQUE, role varchar(16) NOT NULL default 'anon');`
-
-	//Built in user logic and cmd line user creation
-	SQLToCreateFuncToGenerateNewUserID = `CREATE FUNCTION generate_new_user() RETURNS trigger AS $$ BEGIN NEW.id := uuid_generate_v4(); RETURN NEW; END; $$ LANGUAGE plpgsql;`
-	SQLToCreateTriggerOnNewUserInsert  = `CREATE TRIGGER new_user BEFORE INSERT ON users FOR EACH ROW EXECUTE PROCEDURE generate_new_user();`
-	SQLToCreateAdministrator           = `INSERT INTO users(email, role) VALUES ('%s', '%s');`
-	SQLToFindUserByEmail               = `SELECT id from users WHERE email = '%s';`
-	SQLToGetUsersRole                  = `SELECT role from users WHERE id = '%s';`
-
-	//Built in roles
-	SQLToCreateServerRole        = `CREATE ROLE server NOINHERIT LOGIN PASSWORD NULL;`
-	SQLToSetServerRolePassword   = `ALTER ROLE server NOINHERIT LOGIN PASSWORD '%s' VALID UNTIL 'infinity';`
-	SQLToCreateAnonRole          = `CREATE ROLE anon;`
-	SQLToCreateAdminRole         = `CREATE ROLE admin BYPASSRLS;`
-	SQLToGrantBuiltInPermissions = `GRANT anon, admin TO server; GRANT SELECT ON TABLE users TO server;`
-
-	//Admin permissions
-	SQLToGrantAdminPermissions = `ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO admin;`
-
-	//Schema manipulation for bundles
-	SQLToCreateSchema                = `CREATE SCHEMA %s;`
-	SQLToGrantBundleAdminPermissions = `GRANT USAGE ON SCHEMA %s TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT ALL ON TABLES TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT USAGE ON SEQUENCES TO admin;`
-	SQLToDropSchema                  = `DROP SCHEMA %s CASCADE;`
-	SQLToSetSearchPathForBundle      = `SET search_path TO %s, public;`
+	SQLToFindUserByEmail = `SELECT id from users WHERE email = '%s';`
+	SQLToGetUsersRole    = `SELECT role from users WHERE id = '%s';`
 
 	//General
 	//NO SEMI COLONS AT THE END

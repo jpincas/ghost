@@ -30,6 +30,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	sqlToDropSchema                  = `DROP SCHEMA %s CASCADE;`
+	sqlToSetSearchPathForBundle      = `SET search_path TO %s, public;`
+	sqlToCreateSchema                = `CREATE SCHEMA %s;`
+	sqlToGrantBundleAdminPermissions = `GRANT USAGE ON SCHEMA %s TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT ALL ON TABLES TO admin; ALTER DEFAULT PRIVILEGES IN SCHEMA %s GRANT USAGE ON SEQUENCES TO admin;`
+)
+
 var isInstallDemoData, isReinstall, demoDataOnly bool
 
 func init() {
@@ -86,7 +93,7 @@ func unInstallBundle(cmd *cobra.Command, args []string) error {
 
 		//Drop the schema
 		//If it doesn't exist, it won't be dropped - no big deal
-		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, args[0]))
+		db.Exec(fmt.Sprintf(sqlToDropSchema, args[0]))
 
 		//Attempt to updated the bundles installed list
 		if err := ghost.App.Config.UnInstallBundle(args[0]); err != nil {
@@ -179,15 +186,15 @@ func installBundleSchema(bundleName string, db *sql.DB) {
 	err = setupDBSchema(db, bundleName)
 	if err != nil {
 		//IF there is any type of error, drop the schema, log and exit
-		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+		db.Exec(fmt.Sprintf(sqlToDropSchema, bundleName))
 		ghost.LogFatal("INSTALL", false, "Schema creation failed", err)
 	}
 
 	//Set the search path to the bundle schema so that all SQL commands take
 	//place within the schema
-	_, err = db.Exec(fmt.Sprintf(ghost.SQLToSetSearchPathForBundle, bundleName))
+	_, err = db.Exec(fmt.Sprintf(sqlToSetSearchPathForBundle, bundleName))
 	if err != nil {
-		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+		db.Exec(fmt.Sprintf(sqlToDropSchema, bundleName))
 		ghost.LogFatal("INSTALL", false, "Failed to set schema search path", err)
 	}
 
@@ -199,7 +206,7 @@ func installBundleSchema(bundleName string, db *sql.DB) {
 			err := processBundleFile(db, path.Join(basePath, file.Name()))
 			if err != nil {
 				//IF there is any type of error, drop the schema, log and exit
-				db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+				db.Exec(fmt.Sprintf(sqlToDropSchema, bundleName))
 				ghost.LogFatal("INSTALL", false, "Installation of '"+file.Name()+"' failed", err)
 			}
 			ghost.Log("INSTALL", true, file.Name()+" installed OK", nil)
@@ -218,7 +225,7 @@ func installBundleDemoData(bundleName string, db *sql.DB) {
 	filesInDirectory, err := afero.ReadDir(ghost.App.FileSystem, basePath)
 	if err != nil || len(filesInDirectory) == 0 {
 		//IF there is any type of error, drop the schema, log and exit
-		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+		db.Exec(fmt.Sprintf(sqlToDropSchema, bundleName))
 		ghost.LogFatal("INSTALL", false, "No demo data files could be read for bundle", err)
 	}
 
@@ -226,9 +233,9 @@ func installBundleDemoData(bundleName string, db *sql.DB) {
 
 	//Set the search path to the bundle schema so that all SQL commands take
 	//place within the schema
-	_, err = db.Exec(fmt.Sprintf(ghost.SQLToSetSearchPathForBundle, bundleName))
+	_, err = db.Exec(fmt.Sprintf(sqlToSetSearchPathForBundle, bundleName))
 	if err != nil {
-		db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+		db.Exec(fmt.Sprintf(sqlToDropSchema, bundleName))
 		ghost.LogFatal("INSTALL", false, "Failed to set schema search path", err)
 	}
 
@@ -240,7 +247,7 @@ func installBundleDemoData(bundleName string, db *sql.DB) {
 			err := processBundleFile(db, path.Join(basePath, file.Name()))
 			if err != nil {
 				//IF there is any type of error, drop the schema, log and exit
-				db.Exec(fmt.Sprintf(ghost.SQLToDropSchema, bundleName))
+				db.Exec(fmt.Sprintf(sqlToDropSchema, bundleName))
 				ghost.LogFatal("INSTALL", false, "Installation of '"+file.Name()+"' failed", err)
 			}
 
@@ -272,14 +279,14 @@ func processBundleFile(db *sql.DB, filename string) error {
 func setupDBSchema(db *sql.DB, bundleName string) error {
 
 	//Attempt to create a schema matching the bundle's name,
-	_, err := db.Exec(fmt.Sprintf(ghost.SQLToCreateSchema, bundleName))
+	_, err := db.Exec(fmt.Sprintf(sqlToCreateSchema, bundleName))
 
 	if err != nil {
 		return err
 	}
 
 	//Set admin privileges for everything in this schema going forwards
-	_, err = db.Exec(fmt.Sprintf(ghost.SQLToGrantBundleAdminPermissions, bundleName, bundleName, bundleName))
+	_, err = db.Exec(fmt.Sprintf(sqlToGrantBundleAdminPermissions, bundleName, bundleName, bundleName))
 
 	if err != nil {
 		return err

@@ -27,6 +27,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+const sqlToCreateAdministrator = `INSERT INTO users(email, role) VALUES ('%s', '%s');`
+
 var isAdmin bool
 
 func init() {
@@ -78,7 +80,7 @@ func createNewUser(cmd *cobra.Command, args []string) error {
 		role = "admin"
 	}
 
-	_, err := db.Exec(fmt.Sprintf(ghost.SQLToCreateAdministrator, args[0], role))
+	_, err := db.Exec(fmt.Sprintf(sqlToCreateAdministrator, args[0], role))
 	if err != nil {
 		ghost.LogFatal("NEW", true, "Could not create new user", err)
 		return nil
